@@ -1,0 +1,187 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import {
+  MORE_GENRES,
+  POPULAR_GENRES,
+  type Subgenre,
+  type Track,
+} from "@/data/tracks";
+import { useUserSession } from "@/hooks/useUserSession";
+import { useStreamAccessStore } from "@/store/useStreamAccessStore";
+
+export type NavFilter = "All" | Subgenre;
+
+interface SidebarProps {
+  filter: NavFilter;
+  onFilterChange: (filter: NavFilter) => void;
+  visibleTracks: Track[];
+  isPlaying: boolean;
+  onStartRadio: (tracks: Track[]) => void;
+}
+
+function ShieldIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      aria-hidden
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6l7-3z"
+      />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M9.5 12l1.8 1.8L15 10"
+      />
+    </svg>
+  );
+}
+
+function ChevronIcon({
+  className,
+  expanded,
+}: {
+  className?: string;
+  expanded: boolean;
+}) {
+  return (
+    <svg
+      className={`${className ?? ""} transition-transform duration-200 ${
+        expanded ? "rotate-180" : ""
+      }`}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      aria-hidden
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" d="M6 9l6 6 6-6" />
+    </svg>
+  );
+}
+
+function GenreButton({
+  item,
+  active,
+  onSelect,
+}: {
+  item: NavFilter;
+  active: boolean;
+  onSelect: (filter: NavFilter) => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(item)}
+      className={`rounded-lg px-3 py-2.5 text-left text-sm transition ${
+        active
+          ? "bg-cyan-400/10 text-cyan-300 shadow-[inset_0_0_0_1px_rgba(34,211,238,0.35)]"
+          : "text-white/50 hover:bg-white/5 hover:text-white/80"
+      }`}
+    >
+      {item}
+    </button>
+  );
+}
+
+export default function Sidebar({
+  filter,
+  onFilterChange,
+  visibleTracks,
+  isPlaying,
+  onStartRadio,
+}: SidebarProps) {
+  const { isAdmin, subscriptionLabel } = useUserSession();
+  const streamingAllowed = useStreamAccessStore((s) => s.allowed);
+  const [showMore, setShowMore] = useState(
+    () => MORE_GENRES.includes(filter as Subgenre),
+  );
+  const moreExpanded =
+    showMore || MORE_GENRES.includes(filter as Subgenre);
+
+  return (
+    <aside className="sticky top-0 hidden h-screen w-56 shrink-0 flex-col border-r border-white/10 bg-[#0a0614]/80 px-4 py-8 backdrop-blur-md lg:flex">
+      <div className="mb-10 px-2">
+        <p className="font-[family-name:var(--font-display)] text-xl font-bold tracking-[0.15em] text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-400 to-cyan-300">
+          Rithmgen
+        </p>
+        {subscriptionLabel && (
+          <p className="mt-3 inline-flex rounded-md border border-cyan-400/25 bg-cyan-400/10 px-2 py-1 text-[10px] font-medium tracking-wide text-cyan-300/90 shadow-[0_0_12px_rgba(34,211,238,0.15)]">
+            {subscriptionLabel}
+          </p>
+        )}
+      </div>
+
+      <nav
+        className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto"
+        aria-label="Genres"
+      >
+        <GenreButton
+          item="All"
+          active={filter === "All"}
+          onSelect={onFilterChange}
+        />
+        {POPULAR_GENRES.map((item) => (
+          <GenreButton
+            key={item}
+            item={item}
+            active={filter === item}
+            onSelect={onFilterChange}
+          />
+        ))}
+
+        <button
+          type="button"
+          onClick={() => setShowMore((v) => !v)}
+          aria-expanded={moreExpanded}
+          className="mt-1 flex items-center justify-between rounded-lg px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-widest text-white/40 transition hover:bg-white/5 hover:text-white/70"
+        >
+          More genres
+          <ChevronIcon className="h-3.5 w-3.5" expanded={moreExpanded} />
+        </button>
+
+        {moreExpanded &&
+          MORE_GENRES.map((item) => (
+            <GenreButton
+              key={item}
+              item={item}
+              active={filter === item}
+              onSelect={(next) => {
+                setShowMore(true);
+                onFilterChange(next);
+              }}
+            />
+          ))}
+      </nav>
+
+      <div className="mt-auto flex flex-col gap-3 px-2 pt-8">
+        <button
+          type="button"
+          onClick={() => onStartRadio(visibleTracks)}
+          disabled={!streamingAllowed}
+          className="w-full rounded-xl border border-fuchsia-500/40 bg-fuchsia-500/10 py-2.5 text-xs font-semibold uppercase tracking-widest text-fuchsia-300 transition hover:bg-fuchsia-500/20 hover:shadow-[0_0_20px_rgba(217,70,239,0.25)] disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          {isPlaying ? "Reshuffle Radio" : "Start Radio"}
+        </button>
+
+        {isAdmin && (
+          <Link
+            href="/dashboard/admin"
+            className="flex items-center justify-center gap-2 rounded-xl border border-cyan-400/30 bg-cyan-400/5 py-2.5 text-xs font-semibold uppercase tracking-widest text-cyan-300 transition hover:border-cyan-400/50 hover:bg-cyan-400/10 hover:shadow-[0_0_16px_rgba(34,211,238,0.2)]"
+          >
+            <ShieldIcon className="h-3.5 w-3.5" />
+            Admin Studio
+          </Link>
+        )}
+      </div>
+    </aside>
+  );
+}
