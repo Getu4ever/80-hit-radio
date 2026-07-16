@@ -8,6 +8,7 @@ import {
   type DbTrackRow,
 } from "@/lib/catalog/static";
 import { SUBGENRES, type Subgenre, type Track } from "@/data/tracks";
+import type { Json } from "@/types/database.types";
 
 export type { CatalogSource };
 
@@ -298,7 +299,7 @@ export async function recordListenEvent(input: {
   trackId?: string | null;
   userId?: string | null;
   durationSeconds?: number;
-  metadata?: Record<string, unknown>;
+  metadata?: Json;
 }): Promise<void> {
   if (!isSupabaseConfigured()) return;
   const admin = createAdminClient();
