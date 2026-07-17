@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import AudioEngine from "@/components/AudioEngine";
+import GuestListenGate from "@/components/GuestListenGate";
 import PaywallOverlay from "@/components/PaywallOverlay";
 import { useAudioStore } from "@/store/useAudioStore";
 import {
@@ -10,13 +11,32 @@ import {
 } from "@/store/useStreamAccessStore";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/env";
+import {
+  getGuestLimitMessage,
+  hasGuestReachedListenLimit,
+} from "@/lib/guestListenLimit";
 
 type CheckStatusResponse = {
   eligible?: boolean;
   message?: string;
   reason?: StreamDenialReason;
   trialDaysRemaining?: number;
+  guest?: boolean;
 };
+
+function denyGuestLimit(
+  setAccess: ReturnType<typeof useStreamAccessStore.getState>["setAccess"],
+) {
+  if (useAudioStore.getState().isPlaying) {
+    useAudioStore.setState({ isPlaying: false });
+  }
+  setAccess({
+    allowed: false,
+    reason: "guest_limit",
+    message: getGuestLimitMessage(),
+    trialDaysRemaining: 0,
+  });
+}
 
 async function applyCheckResult(
   setAccess: ReturnType<typeof useStreamAccessStore.getState>["setAccess"],
@@ -45,6 +65,12 @@ async function applyCheckResult(
           : "Your free trial has expired. Subscribe now to keep rocking the 80s!"),
       trialDaysRemaining: 0,
     });
+    return;
+  }
+
+  // Anonymous listeners still capped at 1 cumulative hour client-side.
+  if (data.guest && hasGuestReachedListenLimit()) {
+    denyGuestLimit(setAccess);
     return;
   }
 
@@ -127,6 +153,7 @@ export default function StreamGate() {
   return (
     <>
       <AudioEngine streamingAllowed={allowed} />
+      <GuestListenGate />
       <PaywallOverlay />
     </>
   );

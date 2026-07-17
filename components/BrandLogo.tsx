@@ -11,7 +11,7 @@ type BrandLogoProps = {
 };
 
 /**
- * logo80.jpg is 1248×832 — display heights stay large so the wordmark
+ * logo80b.jpg — display heights stay large so the wordmark
  * remains clearly readable on phone and desktop.
  */
 const SIZES = {
@@ -41,7 +41,7 @@ export default function BrandLogo({
   const dim = SIZES[size];
   const image = (
     <Image
-      src="/logo/logo80.jpg"
+      src="/logo/logo80b.jpg"
       alt="RithmGen"
       width={dim.width}
       height={dim.height}

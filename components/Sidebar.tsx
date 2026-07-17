@@ -73,19 +73,22 @@ function GenreButton({
   item,
   active,
   onSelect,
+  disabled = false,
 }: {
   item: NavFilter;
   active: boolean;
   onSelect: (filter: NavFilter) => void;
+  disabled?: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={() => onSelect(item)}
-      className={`rounded-lg px-3 py-2.5 text-left text-sm transition ${
+      disabled={disabled}
+      className={`rounded-lg px-3 py-2.5 text-left text-sm transition disabled:cursor-not-allowed disabled:opacity-40 ${
         active
           ? "bg-cyan-400/10 text-cyan-300 shadow-[inset_0_0_0_1px_rgba(34,211,238,0.35)]"
-          : "text-white/50 hover:bg-white/5 hover:text-white/80"
+          : "text-white/50 hover:bg-white/5 hover:text-white/80 disabled:hover:bg-transparent disabled:hover:text-white/50"
       }`}
     >
       {item}
@@ -102,6 +105,7 @@ export default function Sidebar({
 }: SidebarProps) {
   const { isAdmin, subscriptionLabel } = useUserSession();
   const streamingAllowed = useStreamAccessStore((s) => s.allowed);
+  const controlsDisabled = !streamingAllowed;
   const [showMore, setShowMore] = useState(
     () => MORE_GENRES.includes(filter as Subgenre),
   );
@@ -127,6 +131,7 @@ export default function Sidebar({
           item="All"
           active={filter === "All"}
           onSelect={onFilterChange}
+          disabled={controlsDisabled}
         />
         {POPULAR_GENRES.map((item) => (
           <GenreButton
@@ -134,6 +139,7 @@ export default function Sidebar({
             item={item}
             active={filter === item}
             onSelect={onFilterChange}
+            disabled={controlsDisabled}
           />
         ))}
 
@@ -141,7 +147,8 @@ export default function Sidebar({
           type="button"
           onClick={() => setShowMore((v) => !v)}
           aria-expanded={moreExpanded}
-          className="mt-1 flex items-center justify-between rounded-lg px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-widest text-white/40 transition hover:bg-white/5 hover:text-white/70"
+          disabled={controlsDisabled}
+          className="mt-1 flex items-center justify-between rounded-lg px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-widest text-white/40 transition hover:bg-white/5 hover:text-white/70 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-white/40"
         >
           More genres
           <ChevronIcon className="h-3.5 w-3.5" expanded={moreExpanded} />
@@ -157,6 +164,7 @@ export default function Sidebar({
                 setShowMore(true);
                 onFilterChange(next);
               }}
+              disabled={controlsDisabled}
             />
           ))}
       </nav>

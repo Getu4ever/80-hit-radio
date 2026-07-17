@@ -4,6 +4,7 @@ export type StreamDenialReason =
   | "ok"
   | "unauthenticated"
   | "trial_expired"
+  | "guest_limit"
   | "error";
 
 interface StreamAccessState {

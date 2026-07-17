@@ -142,6 +142,8 @@ export default function RadioDashboard() {
   const catalogLoading = useCatalogStore((s) => s.loading);
   const catalogLoaded = useCatalogStore((s) => s.loaded);
   const getTracksBySubgenre = useCatalogStore((s) => s.getTracksBySubgenre);
+  const streamingAllowed = useStreamAccessStore((s) => s.allowed);
+  const controlsDisabled = !streamingAllowed;
 
   const genreTracks = useMemo(
     () => getTracksBySubgenre(filter),
@@ -182,6 +184,7 @@ export default function RadioDashboard() {
   ];
 
   const handleFilterChange = (next: NavFilter) => {
+    if (controlsDisabled) return;
     setFilter(next);
     setVisibleCount(48);
   };
@@ -193,6 +196,7 @@ export default function RadioDashboard() {
 
   /** All / Live Radio → mainstream pool only; genre filter → that genre. */
   const handleStartRadio = (seed: Track[]) => {
+    if (controlsDisabled) return;
     if (filter === "All" && !searchQuery.trim()) {
       startRadio();
     } else {
@@ -244,7 +248,8 @@ export default function RadioDashboard() {
               <button
                 type="button"
                 onClick={() => handleStartRadio(visibleTracks)}
-                className="rounded-full bg-gradient-to-r from-fuchsia-600 to-cyan-500 px-4 py-2 text-xs font-semibold text-white shadow-[0_0_16px_rgba(217,70,239,0.18)] transition hover:brightness-110"
+                disabled={controlsDisabled}
+                className="rounded-full bg-gradient-to-r from-fuchsia-600 to-cyan-500 px-4 py-2 text-xs font-semibold text-white shadow-[0_0_16px_rgba(217,70,239,0.18)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 Start Live Radio
               </button>
@@ -254,7 +259,8 @@ export default function RadioDashboard() {
                   handleFilterChange("All");
                   setVisibleCount(48);
                 }}
-                className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-xs text-white/50 transition hover:border-cyan-400/30 hover:text-cyan-300"
+                disabled={controlsDisabled}
+                className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-xs text-white/50 transition hover:border-cyan-400/30 hover:text-cyan-300 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 Browse all hits
               </button>
@@ -264,13 +270,14 @@ export default function RadioDashboard() {
                 <button
                   key={item}
                   type="button"
+                  disabled={controlsDisabled}
                   onClick={() => {
                     if (MORE_GENRES.includes(item as Subgenre)) {
                       setShowMoreGenres(true);
                     }
                     handleFilterChange(item);
                   }}
-                  className={`rounded-full px-3 py-1.5 text-xs transition ${
+                  className={`rounded-full px-3 py-1.5 text-xs transition disabled:cursor-not-allowed disabled:opacity-40 ${
                     filter === item
                       ? "bg-cyan-400/20 text-cyan-300"
                       : "bg-white/5 text-white/50"
@@ -283,7 +290,8 @@ export default function RadioDashboard() {
                 type="button"
                 onClick={() => setShowMoreGenres((v) => !v)}
                 aria-expanded={moreExpanded}
-                className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs text-white/50 transition hover:border-cyan-400/30 hover:text-cyan-300/80"
+                disabled={controlsDisabled}
+                className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs text-white/50 transition hover:border-cyan-400/30 hover:text-cyan-300/80 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {moreExpanded ? "Less genres" : "More genres"}
               </button>

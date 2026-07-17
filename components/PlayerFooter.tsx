@@ -1,6 +1,7 @@
 "use client";
 
 import { formatStreamQualityLabel } from "@/lib/broadcastAudio";
+import SoundWave from "@/components/SoundWave";
 import { useAudioStore } from "@/store/useAudioStore";
 import { useStreamAccessStore } from "@/store/useStreamAccessStore";
 
@@ -127,7 +128,11 @@ export default function PlayerFooter() {
           )}
         </div>
 
-        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+          <SoundWave
+            active={isPlaying && streamingAllowed}
+            className="mr-0.5 hidden min-[420px]:flex"
+          />
           <button
             type="button"
             onClick={previousTrack}
@@ -159,6 +164,10 @@ export default function PlayerFooter() {
           >
             <IconNext className="h-5 w-5" />
           </button>
+          <SoundWave
+            active={isPlaying && streamingAllowed}
+            className="ml-0.5 hidden sm:flex"
+          />
         </div>
 
         <div className="hidden min-w-[9rem] flex-1 items-center justify-end gap-3 sm:flex">

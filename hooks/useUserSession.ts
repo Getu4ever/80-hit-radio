@@ -8,6 +8,10 @@ import { useStreamAccessStore } from "@/store/useStreamAccessStore";
 import { useAudioStore } from "@/store/useAudioStore";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/env";
+import {
+  getGuestLimitMessage,
+  hasGuestReachedListenLimit,
+} from "@/lib/guestListenLimit";
 
 export interface SessionUser {
   id: string;
@@ -73,8 +77,9 @@ async function refreshStreamGate() {
     const data = (await res.json()) as {
       eligible?: boolean;
       message?: string;
-      reason?: "ok" | "unauthenticated" | "trial_expired" | "error";
+      reason?: "ok" | "unauthenticated" | "trial_expired" | "guest_limit" | "error";
       trialDaysRemaining?: number;
+      guest?: boolean;
     };
 
     if (res.status === 401 || res.status === 403 || data.eligible === false) {
@@ -84,6 +89,19 @@ async function refreshStreamGate() {
           data.reason ??
           (res.status === 401 ? "unauthenticated" : "trial_expired"),
         message: data.message ?? null,
+        trialDaysRemaining: 0,
+      });
+      return;
+    }
+
+    if (data.guest && hasGuestReachedListenLimit()) {
+      if (useAudioStore.getState().isPlaying) {
+        useAudioStore.setState({ isPlaying: false });
+      }
+      useStreamAccessStore.getState().setAccess({
+        allowed: false,
+        reason: "guest_limit",
+        message: getGuestLimitMessage(),
         trialDaysRemaining: 0,
       });
       return;
