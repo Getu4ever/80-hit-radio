@@ -1,0 +1,30 @@
+---
+description: Prefer Git auto-deploy; CLI fallback after commit and push
+alwaysApply: true
+---
+
+# Deploy after commit + push
+
+This Vercel project is connected to GitHub (`Getu4ever/80-hit-radio`, production branch `main`). Pushes to `main` should create production deployments automatically.
+
+## Required workflow after commit + push
+
+1. Push to `origin/main`.
+2. Verify a new Git-triggered production deployment appears for that commit SHA (`npx vercel ls --prod` or Vercel MCP `list_deployments`). Source should be git/github, not only CLI.
+3. Wait until Ready and confirm the production alias (`www.rithmgen.co.uk`).
+
+## Fallback
+
+If no Git deployment starts within ~1–2 minutes of the push, deploy manually:
+
+```bash
+npx vercel --prod --yes
+```
+
+Do not skip verifying production is Ready unless the user explicitly says not to deploy.
+
+If Git auto-deploy stops working again, reconnect with:
+
+```bash
+npx vercel git connect https://github.com/Getu4ever/80-hit-radio.git --yes
+```
