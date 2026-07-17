@@ -10,7 +10,11 @@ export type TrackImageRow = {
   data: Buffer;
 };
 
-function openDb(): DatabaseSync {
+function openReadDb(): DatabaseSync {
+  return new DatabaseSync(DB_PATH, { readOnly: true });
+}
+
+function openWriteDb(): DatabaseSync {
   fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
   const db = new DatabaseSync(DB_PATH);
   db.exec(`
@@ -31,21 +35,24 @@ export function getTrackImageFromSqlite(
 ): TrackImageRow | null {
   try {
     if (!fs.existsSync(DB_PATH)) return null;
-    const db = openDb();
-    const row = db
-      .prepare(
-        `SELECT youtube_id, content_type, data FROM track_images WHERE youtube_id = ?`,
-      )
-      .get(youtubeId) as
-      | { youtube_id: string; content_type: string; data: Buffer }
-      | undefined;
-    db.close();
-    if (!row?.data) return null;
-    return {
-      youtube_id: row.youtube_id,
-      content_type: row.content_type,
-      data: Buffer.isBuffer(row.data) ? row.data : Buffer.from(row.data),
-    };
+    const db = openReadDb();
+    try {
+      const row = db
+        .prepare(
+          `SELECT youtube_id, content_type, data FROM track_images WHERE youtube_id = ?`,
+        )
+        .get(youtubeId) as
+        | { youtube_id: string; content_type: string; data: Buffer }
+        | undefined;
+      if (!row?.data) return null;
+      return {
+        youtube_id: row.youtube_id,
+        content_type: row.content_type,
+        data: Buffer.isBuffer(row.data) ? row.data : Buffer.from(row.data),
+      };
+    } finally {
+      db.close();
+    }
   } catch {
     return null;
   }
@@ -57,23 +64,26 @@ export function upsertTrackImageSqlite(
   buffer: Buffer,
   contentType: string,
 ): void {
-  const db = openDb();
-  db.prepare(
-    `INSERT INTO track_images (youtube_id, content_type, data, byte_size, updated_at)
-     VALUES (?, ?, ?, ?, ?)
-     ON CONFLICT(youtube_id) DO UPDATE SET
-       content_type = excluded.content_type,
-       data = excluded.data,
-       byte_size = excluded.byte_size,
-       updated_at = excluded.updated_at`,
-  ).run(
-    youtubeId,
-    contentType,
-    buffer,
-    buffer.length,
-    new Date().toISOString(),
-  );
-  db.close();
+  const db = openWriteDb();
+  try {
+    db.prepare(
+      `INSERT INTO track_images (youtube_id, content_type, data, byte_size, updated_at)
+       VALUES (?, ?, ?, ?, ?)
+       ON CONFLICT(youtube_id) DO UPDATE SET
+         content_type = excluded.content_type,
+         data = excluded.data,
+         byte_size = excluded.byte_size,
+         updated_at = excluded.updated_at`,
+    ).run(
+      youtubeId,
+      contentType,
+      buffer,
+      buffer.length,
+      new Date().toISOString(),
+    );
+  } finally {
+    db.close();
+  }
 }
 
 export function sqliteDbPath(): string {
