@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Outfit, Space_Grotesk } from "next/font/google";
 import BroadcastShell from "@/components/BroadcastShell";
 import "./globals.css";
@@ -18,6 +18,13 @@ export const metadata: Metadata = {
   title: "80s Hit Radio — Non-Stop Classic Hits",
   description:
     "Stream classic hits and modern favorites across Pop, Rock, Hip-Hop, R&B, Electronic, and more.",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#07040f",
 };
 
 export default function RootLayout({

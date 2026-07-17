@@ -229,7 +229,7 @@ export default function PlayerFooter() {
   const controlsDisabled = !streamingAllowed;
 
   return (
-    <footer className="fixed inset-x-0 bottom-0 z-50 border-t border-cyan-500/20 bg-[#0a0614]/95 backdrop-blur-xl">
+    <footer className="fixed inset-x-0 bottom-0 z-50 border-t border-cyan-500/20 bg-[#0a0614]/95 pb-[env(safe-area-inset-bottom,0px)] backdrop-blur-xl">
       <div className="px-0 pt-1">
         <SeekBar
           progress={progress}
@@ -242,8 +242,8 @@ export default function PlayerFooter() {
         />
       </div>
 
-      <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3 sm:gap-6 sm:px-6">
-        <div className="min-w-0 flex-1">
+      <div className="mx-auto flex max-w-7xl items-center gap-2 px-3 py-2.5 sm:gap-6 sm:px-6 sm:py-3">
+        <div className="min-w-0 flex-1 basis-0">
           {currentTrack ? (
             <>
               <p className="truncate font-[family-name:var(--font-display)] text-sm font-semibold tracking-wide text-white sm:text-base">
@@ -253,15 +253,15 @@ export default function PlayerFooter() {
                 {currentTrack.artist}
                 <span className="mx-1.5 text-white/20">·</span>
                 {currentTrack.year}
-                <span className="mx-1.5 text-white/20">·</span>
-                {currentTrack.subgenre}
+                <span className="mx-1.5 hidden text-white/20 min-[400px]:inline">·</span>
+                <span className="hidden min-[400px]:inline">{currentTrack.subgenre}</span>
                 {broadcastEnhance && streamQuality && (
-                  <>
+                  <span className="hidden sm:inline">
                     <span className="mx-1.5 text-white/20">·</span>
                     <span className="text-fuchsia-300/80">
                       AI HD {formatStreamQualityLabel(streamQuality)}
                     </span>
-                  </>
+                  </span>
                 )}
               </p>
             </>
@@ -270,7 +270,7 @@ export default function PlayerFooter() {
               <p className="font-[family-name:var(--font-display)] text-sm font-semibold text-white/80">
                 80s Hit Radio
               </p>
-              <p className="text-xs text-white/40">
+              <p className="truncate text-xs text-white/40">
                 {controlsDisabled
                   ? "Subscription required to stream"
                   : "Press play to start the broadcast"}
@@ -279,10 +279,10 @@ export default function PlayerFooter() {
           )}
         </div>
 
-        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+        <div className="flex shrink-0 items-center gap-0.5 sm:gap-3">
           <SoundWave
             active={isPlaying && streamingAllowed}
-            className="mr-0.5 hidden min-[420px]:flex"
+            className="mr-0.5 hidden min-[520px]:flex"
           />
           <button
             type="button"

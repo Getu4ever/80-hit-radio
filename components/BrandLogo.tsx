@@ -1,29 +1,26 @@
 import Image from "next/image";
 import Link from "next/link";
 
-type BrandLogoProps = {
-  /** Visual size preset */
-  size?: "sm" | "md" | "lg";
-  /** Wrap in a home link */
-  href?: string | null;
-  className?: string;
-  priority?: boolean;
-};
-
 /**
  * logo80b.jpg — display heights stay large so the wordmark
  * remains clearly readable on phone and desktop.
  */
 const SIZES = {
+  /** Compact mark for the mobile top bar */
+  header: {
+    width: 280,
+    height: 187,
+    className: "h-10 w-auto max-w-[148px] sm:h-12 sm:max-w-[180px]",
+  },
   sm: {
     width: 420,
     height: 280,
-    className: "h-20 w-auto max-w-[min(100%,320px)] sm:h-24",
+    className: "h-16 w-auto max-w-[min(100%,240px)] sm:h-20 sm:max-w-[280px]",
   },
   md: {
     width: 560,
     height: 373,
-    className: "h-24 w-full max-w-none sm:h-28",
+    className: "h-20 w-auto max-w-[min(100%,280px)] sm:h-24 sm:max-w-[320px]",
   },
   lg: {
     width: 720,
@@ -31,6 +28,15 @@ const SIZES = {
     className: "h-28 w-full max-w-none sm:h-36",
   },
 } as const;
+
+type BrandLogoProps = {
+  /** Visual size preset */
+  size?: keyof typeof SIZES;
+  /** Wrap in a home link */
+  href?: string | null;
+  className?: string;
+  priority?: boolean;
+};
 
 export default function BrandLogo({
   size = "md",

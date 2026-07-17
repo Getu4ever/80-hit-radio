@@ -214,7 +214,7 @@ export default function RadioDashboard() {
         onStartRadio={handleStartRadio}
       />
 
-      <main className="relative flex-1 overflow-hidden pb-28">
+      <main className="relative flex-1 overflow-x-hidden overflow-y-auto pb-[calc(7.5rem+env(safe-area-inset-bottom,0px))]">
         <div
           className="pointer-events-none absolute inset-0 opacity-40"
           aria-hidden
@@ -224,17 +224,17 @@ export default function RadioDashboard() {
           <div className="absolute bottom-20 left-1/3 h-64 w-64 rounded-full bg-violet-600/10 blur-[90px]" />
         </div>
 
-        <div className="relative mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-10 lg:py-12">
+        <div className="relative mx-auto max-w-6xl px-4 py-5 sm:px-6 sm:py-8 lg:px-10 lg:py-12">
           <Header
             searchQuery={searchQuery}
             onSearchChange={handleSearchChange}
           />
 
-          <header className="mb-8 animate-fade-up sm:mb-10">
-            <p className="mb-2 text-xs uppercase tracking-[0.4em] text-cyan-400/70">
+          <header className="mb-6 animate-fade-up sm:mb-10">
+            <p className="mb-2 text-[10px] uppercase tracking-[0.35em] text-cyan-400/70 sm:text-xs sm:tracking-[0.4em]">
               Continuous 80s broadcast
             </p>
-            <h1 className="font-[family-name:var(--font-display)] text-4xl font-bold tracking-tight text-white sm:text-5xl md:text-6xl">
+            <h1 className="font-[family-name:var(--font-display)] text-3xl font-bold tracking-tight text-white sm:text-5xl md:text-6xl">
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-fuchsia-200 to-cyan-300">
                 80s Hit Radio
               </span>
