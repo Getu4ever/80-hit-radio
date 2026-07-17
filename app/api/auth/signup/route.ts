@@ -1,76 +1,12 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getAuthCallbackUrl } from "@/lib/auth/urls";
-
-const RESEND_API_URL = "https://api.resend.com/emails";
-
-/** Prefer a verified custom domain. Fallback is Resend's test sender (own inbox only). */
-function getFromEmail() {
-  const configured = (process.env.RESEND_FROM_EMAIL ?? "").trim();
-  if (configured) return configured;
-  return "RithmGen <onboarding@resend.dev>";
-}
-
-function buildHtmlMessage(email: string, actionLink: string) {
-  return `<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Confirm your Rithmgen account</title>
-  </head>
-  <body style="font-family: system-ui, sans-serif; background: #0f0920; color: #f8f8ff; margin: 0; padding: 0;">
-    <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 0 auto; padding: 32px;">
-      <tr>
-        <td style="padding: 24px; background: #110926; border-radius: 32px;">
-          <h1 style="margin: 0 0 16px; font-size: 28px; color: #f3f3ff;">Welcome to Rithmgen</h1>
-          <p style="margin: 0 0 24px; line-height: 1.7; color: #c8d2ff;">
-            Hi ${email},<br />
-            Confirm your account to start streaming 80s hits instantly.
-          </p>
-          <a
-            href="${actionLink}"
-            style="display: inline-block; padding: 16px 28px; border-radius: 14px; background: #8b5cf6; color: white; text-decoration: none; font-weight: 600;"
-          >Activate your account</a>
-          <p style="margin: 24px 0 0; color: #a6b0ff; line-height: 1.6; font-size: 14px;">
-            If the button doesn’t work, copy and paste this URL into your browser:<br />
-            <a href="${actionLink}" style="color: #7dd3fc; word-break: break-all;">${actionLink}</a>
-          </p>
-          <p style="margin: 24px 0 0; color: #797dff; font-size: 13px;">
-            If you did not sign up for Rithmgen, you can safely ignore this email.
-          </p>
-        </td>
-      </tr>
-    </table>
-  </body>
-</html>`;
-}
-
-async function sendResendEmail(email: string, actionLink: string) {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
-    throw new Error("Missing RESEND_API_KEY in server environment.");
-  }
-
-  const response = await fetch(RESEND_API_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      from: getFromEmail(),
-      to: [email],
-      subject: "Confirm your Rithmgen account",
-      html: buildHtmlMessage(email, actionLink),
-    }),
-  });
-
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(`Resend email delivery failed: ${response.status} ${body}`);
-  }
-}
+import {
+  buildAdminNewSignupEmail,
+  buildSignupConfirmEmail,
+  getAdminEmail,
+  sendResendEmail,
+} from "@/lib/email/resend";
 
 export async function POST(request: Request) {
   try {
@@ -116,7 +52,27 @@ export async function POST(request: Request) {
       );
     }
 
-    await sendResendEmail(email, actionLink);
+    const userEmail = buildSignupConfirmEmail(email, actionLink);
+    await sendResendEmail({
+      to: email,
+      subject: userEmail.subject,
+      html: userEmail.html,
+    });
+
+    // Notify admin — don't fail signup if this secondary mail fails.
+    try {
+      const adminEmail = buildAdminNewSignupEmail(email);
+      await sendResendEmail({
+        to: getAdminEmail(),
+        subject: adminEmail.subject,
+        html: adminEmail.html,
+      });
+    } catch (adminErr) {
+      console.error(
+        "POST /api/auth/signup: admin notification failed:",
+        adminErr instanceof Error ? adminErr.message : adminErr,
+      );
+    }
 
     return NextResponse.json({ ok: true });
   } catch (err) {
