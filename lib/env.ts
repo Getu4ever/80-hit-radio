@@ -71,11 +71,35 @@ export function getStripeWebhookSecret() {
   return serverRead("STRIPE_WEBHOOK_SECRET") || "whsec_placeholder";
 }
 
+/**
+ * Absolute public site origin used for auth redirects and email assets.
+ * Never returns localhost in Vercel production.
+ */
 export function getAppUrl() {
-  const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? "").trim();
-  if (appUrl) return appUrl.replace(/\/$/, "");
+  const candidates = [
+    serverRead("APP_URL"),
+    (process.env.NEXT_PUBLIC_APP_URL ?? "").trim(),
+  ];
+
+  for (const candidate of candidates) {
+    if (!candidate) continue;
+    const normalized = candidate.replace(/\/$/, "");
+    if (
+      process.env.VERCEL_ENV === "production" &&
+      /localhost|127\.0\.0\.1/i.test(normalized)
+    ) {
+      continue;
+    }
+    return normalized;
+  }
+
+  if (process.env.VERCEL_ENV === "production") {
+    return "https://www.rithmgen.co.uk";
+  }
+
   if (process.env.VERCEL_URL) {
     return `https://${process.env.VERCEL_URL.replace(/\/$/, "")}`;
   }
+
   return "http://localhost:3000";
 }

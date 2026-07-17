@@ -27,6 +27,7 @@ export async function POST(request: Request) {
 
     const admin = createAdminClient();
     const redirectTo = getAuthCallbackUrl("/");
+    console.info("POST /api/auth/signup redirectTo=", redirectTo);
 
     const { data, error } = await admin.auth.admin.generateLink({
       type: "signup",
@@ -57,6 +58,7 @@ export async function POST(request: Request) {
       to: email,
       subject: userEmail.subject,
       html: userEmail.html,
+      text: userEmail.text,
     });
 
     // Notify admin — don't fail signup if this secondary mail fails.
@@ -66,6 +68,7 @@ export async function POST(request: Request) {
         to: getAdminEmail(),
         subject: adminEmail.subject,
         html: adminEmail.html,
+        text: adminEmail.text,
       });
     } catch (adminErr) {
       console.error(
