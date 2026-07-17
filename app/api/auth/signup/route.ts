@@ -3,7 +3,13 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getAuthCallbackUrl } from "@/lib/auth/urls";
 
 const RESEND_API_URL = "https://api.resend.com/emails";
-const FROM_EMAIL = "Rithmgen <onboarding@resend.dev>";
+
+/** Prefer a verified custom domain. Fallback is Resend's test sender (own inbox only). */
+function getFromEmail() {
+  const configured = (process.env.RESEND_FROM_EMAIL ?? "").trim();
+  if (configured) return configured;
+  return "RithmGen <onboarding@resend.dev>";
+}
 
 function buildHtmlMessage(email: string, actionLink: string) {
   return `<!DOCTYPE html>
@@ -53,7 +59,7 @@ async function sendResendEmail(email: string, actionLink: string) {
       Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      from: FROM_EMAIL,
+      from: getFromEmail(),
       to: [email],
       subject: "Confirm your Rithmgen account",
       html: buildHtmlMessage(email, actionLink),
