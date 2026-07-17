@@ -2,16 +2,29 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import BrandLogo from "@/components/BrandLogo";
 import { useStreamAccessStore } from "@/store/useStreamAccessStore";
 
+/** Auth / checkout flows must stay usable even when streaming is locked. */
+function shouldSuppressPaywall(pathname: string | null): boolean {
+  if (!pathname) return false;
+  return (
+    pathname.startsWith("/auth") ||
+    pathname.startsWith("/checkout") ||
+    pathname.startsWith("/pricing")
+  );
+}
+
 export default function PaywallOverlay() {
+  const pathname = usePathname();
   const allowed = useStreamAccessStore((s) => s.allowed);
   const checked = useStreamAccessStore((s) => s.checked);
   const message = useStreamAccessStore((s) => s.message);
   const reason = useStreamAccessStore((s) => s.reason);
 
-  const locked = checked && !allowed;
+  const suppress = shouldSuppressPaywall(pathname);
+  const locked = checked && !allowed && !suppress;
 
   useEffect(() => {
     if (!locked) return;
