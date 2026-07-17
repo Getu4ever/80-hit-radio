@@ -172,9 +172,9 @@ export default function AdminListeners() {
               hint: `${metrics.conversionRate}% conversion`,
             },
             {
-              label: "Free month",
+              label: "Free trial",
               value: metrics.trialingUsers,
-              hint: "Within trial window",
+              hint: "Within 14-day window",
             },
             {
               label: "New this week",

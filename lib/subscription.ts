@@ -1,6 +1,6 @@
 import type { Profile, StripeSubscriptionStatus } from "@/types/database.types";
 
-export const TRIAL_DAYS = 30;
+export const TRIAL_DAYS = 14;
 
 export function getAccountAgeDays(createdAt: string, now = new Date()): number {
   const created = new Date(createdAt).getTime();
@@ -18,8 +18,8 @@ export function getTrialDaysRemaining(
 
 /**
  * Streaming eligibility:
- * - Within first 30 days of account → allowed (free trial)
- * - After 30 days → only `active` Stripe subscriptions may stream
+ * - Within first 14 days of account → allowed (free trial)
+ * - After 14 days → only `active` Stripe subscriptions may stream
  */
 export function isStreamingEligible(
   profile: Pick<Profile, "created_at" | "stripe_subscription_status">,
@@ -39,7 +39,7 @@ export function isStreamingEligible(
   return {
     eligible: false,
     reason:
-      "Your free month has expired. Subscribe now to keep rocking the 80s!",
+      "Your free trial has expired. Subscribe now to keep rocking the 80s!",
     accountAgeDays,
   };
 }

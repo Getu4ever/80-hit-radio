@@ -1,4 +1,5 @@
 import { type ReactNode } from "react";
+import BrandLogo from "@/components/BrandLogo";
 
 type AuthFrameProps = {
   eyebrow: string;
@@ -26,9 +27,11 @@ export default function AuthFrame({
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#07040f] px-4 text-white">
       <div className="w-full max-w-md rounded-2xl border border-cyan-400/20 bg-[#0a0614]/90 p-8 shadow-[0_0_40px_rgba(34,211,238,0.12)]">
-        <div className="mb-4 flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-xs uppercase tracking-[0.35em] text-white/70">
-          <span className="font-semibold text-white">Rithmgen</span>
-          <span className="text-cyan-300">80s Hit Radio</span>
+        <div className="mb-4 rounded-2xl border border-white/10 bg-black/40 px-3 py-3">
+          <BrandLogo size="lg" href="/" />
+          <p className="mt-1 text-xs uppercase tracking-[0.28em] text-cyan-300/90">
+            80s Hit Radio
+          </p>
         </div>
 
         {mobileHero && <div className="mb-6 lg:hidden">{mobileHero}</div>}

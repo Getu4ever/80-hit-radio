@@ -1,4 +1,5 @@
 import catalog from "./catalog.json";
+import { trackImagePath } from "@/lib/trackImages";
 
 export type Subgenre =
   | "Pop"
@@ -29,7 +30,7 @@ export interface Track {
   year: number;
   youtubeId: string;
   subgenre: Subgenre;
-  /** YouTube thumbnail — always relevant to the track. */
+  /** Same-origin path — artwork is served from the database via /api/track-images. */
   imageUrl: string;
 }
 
@@ -74,11 +75,14 @@ export const POPULAR_GENRES: Subgenre[] = [
 ];
 
 export const MORE_GENRES: Subgenre[] = SUBGENRES.filter(
-  (g) => !POPULAR_GENRES.includes(g),
+  (g) =>
+    !POPULAR_GENRES.includes(g) &&
+    ((catalog as Record<string, unknown[]>)[g]?.length ?? 0) > 0,
 );
 
+/** @deprecated Use trackImagePath — external YouTube thumbs are unreliable. */
 export function youtubeThumb(youtubeId: string): string {
-  return `https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg`;
+  return trackImagePath(youtubeId);
 }
 
 type CatalogRow = [string, string, number, string];
@@ -101,7 +105,7 @@ function buildTracks(): Track[] {
         year,
         youtubeId,
         subgenre: genre,
-        imageUrl: youtubeThumb(youtubeId),
+        imageUrl: trackImagePath(youtubeId),
       });
     }
   }

@@ -21,6 +21,7 @@ export interface YoutubePlayerApi {
   setPlaybackQuality?: (quality: string) => void;
   getPlaybackQuality?: () => string;
   setVolume?: (volume: number) => void;
+  mute?: () => void;
   unMute?: () => void;
 }
 
@@ -37,12 +38,32 @@ export function pickBestQuality(levels: string[]): string | null {
 }
 
 /**
- * AI-assisted stream optimizer: selects the highest available YouTube
- * playback tier and normalizes volume for radio-style loudness.
+ * Force mute/volume on the YouTube iframe API. React `muted` / `volume` props
+ * are unreliable on hidden embeds — both slots can become audible without this.
  */
-export function applyBroadcastEnhancement(
+export function syncPlayerAudioState(
   playerEl: YoutubePlayerElement | null,
-  volume: number,
+  { volume, muted }: { volume: number; muted: boolean },
+): void {
+  const api = playerEl?.api;
+  if (!api) return;
+
+  try {
+    if (muted) {
+      api.mute?.();
+      api.setVolume?.(0);
+    } else {
+      api.unMute?.();
+      api.setVolume?.(Math.round(Math.min(1, Math.max(0, volume)) * 100));
+    }
+  } catch {
+    // ignore volume sync errors during handoff
+  }
+}
+
+/** Select the highest available YouTube playback tier for the live slot. */
+export function applyBroadcastQuality(
+  playerEl: YoutubePlayerElement | null,
 ): YoutubeQuality | null {
   const api = playerEl?.api;
   if (!api?.getAvailableQualityLevels || !api?.setPlaybackQuality) {
@@ -59,15 +80,20 @@ export function applyBroadcastEnhancement(
     }
   }
 
-  try {
-    api.unMute?.();
-    api.setVolume?.(Math.round(Math.min(1, Math.max(0, volume)) * 100));
-  } catch {
-    // ignore volume sync errors during handoff
-  }
-
   const current = api.getPlaybackQuality?.();
   return (current as YoutubeQuality | undefined) ?? (best as YoutubeQuality | null);
+}
+
+/**
+ * AI-assisted stream optimizer: selects the highest available YouTube
+ * playback tier and normalizes volume for radio-style loudness.
+ */
+export function applyBroadcastEnhancement(
+  playerEl: YoutubePlayerElement | null,
+  volume: number,
+): YoutubeQuality | null {
+  syncPlayerAudioState(playerEl, { volume, muted: false });
+  return applyBroadcastQuality(playerEl);
 }
 
 /** Hidden HD viewport — YouTube uses this for adaptive stream selection. */

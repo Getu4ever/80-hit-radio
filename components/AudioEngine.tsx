@@ -9,9 +9,10 @@ import {
 } from "react";
 import dynamic from "next/dynamic";
 import {
-  applyBroadcastEnhancement,
+  applyBroadcastQuality,
   BROADCAST_PLAYER_HEIGHT,
   BROADCAST_PLAYER_WIDTH,
+  syncPlayerAudioState,
   YOUTUBE_PLAYER_CONFIG,
   type YoutubePlayerElement,
 } from "@/lib/broadcastAudio";
@@ -138,33 +139,64 @@ export default function AudioEngine({
 
   const livePlayerRef = liveSlot === "a" ? playerARef : playerBRef;
 
-  const runEnhancement = useCallback(
-    (slot: PlayerSlot = liveSlotRef.current) => {
-      if (!broadcastEnhance) return;
-      const ref = slot === "a" ? playerARef : playerBRef;
-      const quality = applyBroadcastEnhancement(
-        ref.current as YoutubePlayerElement | null,
-        volume,
-      );
-      if (quality && slot === liveSlotRef.current) {
-        useAudioStore.getState().setStreamQuality(quality);
-      }
-    },
-    [broadcastEnhance, volume],
-  );
-
-  const scheduleEnhancement = useCallback(
-    (slot: PlayerSlot = liveSlotRef.current) => {
-      runEnhancement(slot);
-      window.setTimeout(() => runEnhancement(slot), 500);
-      window.setTimeout(() => runEnhancement(slot), 2000);
-    },
-    [runEnhancement],
-  );
-
   const slotRef = useCallback(
     (slot: PlayerSlot) => (slot === "a" ? playerARef : playerBRef),
     [],
+  );
+
+  const playerEl = useCallback(
+    (slot: PlayerSlot) => slotRef(slot).current as YoutubePlayerElement | null,
+    [slotRef],
+  );
+
+  const syncSlotAudio = useCallback(
+    (slot: PlayerSlot) => {
+      const isLive = slot === liveSlotRef.current;
+      syncPlayerAudioState(playerEl(slot), {
+        volume: isLive ? volume : 0,
+        muted: !isLive,
+      });
+    },
+    [playerEl, volume],
+  );
+
+  const syncAllSlotsAudio = useCallback(() => {
+    syncSlotAudio("a");
+    syncSlotAudio("b");
+  }, [syncSlotAudio]);
+
+  const pauseSlot = useCallback(
+    (slot: PlayerSlot) => {
+      const media = slotRef(slot).current;
+      if (media && !media.paused) {
+        media.pause();
+      }
+      syncSlotAudio(slot);
+    },
+    [slotRef, syncSlotAudio],
+  );
+
+  const runSlotSync = useCallback(
+    (slot: PlayerSlot = liveSlotRef.current) => {
+      syncSlotAudio(slot);
+
+      if (!broadcastEnhance || slot !== liveSlotRef.current) return;
+
+      const quality = applyBroadcastQuality(playerEl(slot));
+      if (quality) {
+        useAudioStore.getState().setStreamQuality(quality);
+      }
+    },
+    [broadcastEnhance, playerEl, syncSlotAudio],
+  );
+
+  const scheduleSlotSync = useCallback(
+    (slot: PlayerSlot = liveSlotRef.current) => {
+      runSlotSync(slot);
+      window.setTimeout(() => runSlotSync(slot), 500);
+      window.setTimeout(() => runSlotSync(slot), 2000);
+    },
+    [runSlotSync],
   );
 
   const emitPlayingBench = useCallback(
@@ -181,22 +213,23 @@ export default function AudioEngine({
         slot,
         promoted,
       });
-      scheduleEnhancement(slot);
+      scheduleSlotSync(slot);
     },
-    [scheduleEnhancement],
+    [scheduleSlotSync],
   );
 
   const tryPlaySlot = useCallback(
     (slot: PlayerSlot) => {
       const media = slotRef(slot).current;
       if (!media || slot !== liveSlotRef.current) return false;
+      syncSlotAudio(slot);
       if (!media.paused) return true;
       if (media.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
         void media.play().catch(() => {});
       }
       return !media.paused;
     },
-    [slotRef],
+    [slotRef, syncSlotAudio],
   );
 
   const awaitPromotedPlayback = useCallback(
@@ -254,13 +287,17 @@ export default function AudioEngine({
     tryPlaySlot,
     emitPlayingBench,
     awaitPromotedPlayback,
-    runEnhancement,
+    runSlotSync,
+    pauseSlot,
+    syncAllSlotsAudio,
   });
   promoteHandlersRef.current = {
     tryPlaySlot,
     emitPlayingBench,
     awaitPromotedPlayback,
-    runEnhancement,
+    runSlotSync,
+    pauseSlot,
+    syncAllSlotsAudio,
   };
 
   useEffect(() => {
@@ -299,10 +336,13 @@ export default function AudioEngine({
         prefetchReady: true,
       });
       const nextLive = prefetch;
-      const nextPrefetch = otherSlot(nextLive);
+      const demotedSlot = otherSlot(nextLive);
       liveSlotRef.current = nextLive;
       setLiveSlot(nextLive);
 
+      pauseSlot(demotedSlot);
+
+      const nextPrefetch = otherSlot(nextLive);
       if (nextPrefetch === "a") {
         slotAIdRef.current = upcomingTrack?.id ?? null;
         setSlotAId(upcomingTrack?.id ?? null);
@@ -316,7 +356,8 @@ export default function AudioEngine({
       queueMicrotask(() => {
         const handlers = promoteHandlersRef.current;
         const attempt = () => {
-          handlers.runEnhancement(nextLive);
+          handlers.syncAllSlotsAudio();
+          handlers.runSlotSync(nextLive);
           if (handlers.tryPlaySlot(nextLive)) {
             handlers.emitPlayingBench(nextLive, true);
             return;
@@ -370,11 +411,13 @@ export default function AudioEngine({
     }
 
     if (liveTrackChanged) {
+      pauseSlot(otherSlot(live));
       queueMicrotask(() => {
+        promoteHandlersRef.current.syncAllSlotsAudio();
         promoteHandlersRef.current.awaitPromotedPlayback(live);
       });
     }
-  }, [currentTrack?.id, upcomingTrack?.id]);
+  }, [currentTrack?.id, upcomingTrack?.id, pauseSlot]);
 
   useEffect(() => {
     if (!currentTrack) return;
@@ -399,16 +442,24 @@ export default function AudioEngine({
   }, [streamingAllowed, currentTrack?.id]);
 
   useEffect(() => {
-    if (!broadcastEnhance || !isPlaying) return;
-    runEnhancement();
-    const id = window.setInterval(runEnhancement, QUALITY_REASSERT_MS);
-    return () => window.clearInterval(id);
-  }, [broadcastEnhance, isPlaying, runEnhancement, liveSlot, currentTrack?.id]);
+    if (!isPlaying) {
+      pauseSlot("a");
+      pauseSlot("b");
+      return;
+    }
+    syncAllSlotsAudio();
+  }, [isPlaying, liveSlot, pauseSlot, syncAllSlotsAudio]);
 
   useEffect(() => {
-    if (!broadcastEnhance) return;
-    runEnhancement();
-  }, [volume, broadcastEnhance, runEnhancement]);
+    syncAllSlotsAudio();
+  }, [volume, syncAllSlotsAudio]);
+
+  useEffect(() => {
+    if (!broadcastEnhance || !isPlaying) return;
+    runSlotSync();
+    const id = window.setInterval(() => runSlotSync(), QUALITY_REASSERT_MS);
+    return () => window.clearInterval(id);
+  }, [broadcastEnhance, isPlaying, runSlotSync, liveSlot, currentTrack?.id]);
 
   useEffect(() => {
     if (!upcomingTrack || !streamingAllowed || !isPlaying) return;
@@ -524,12 +575,13 @@ export default function AudioEngine({
         slot,
       });
       const media = slotRef(slot).current;
+      syncSlotAudio(slot);
       if (media && streamingAllowed && isPlaying) {
         void media.play().catch(() => {});
       }
-      queueMicrotask(() => scheduleEnhancement(slot));
+      queueMicrotask(() => scheduleSlotSync(slot));
     },
-    [scheduleEnhancement, slotRef, streamingAllowed, isPlaying],
+    [scheduleSlotSync, slotRef, streamingAllowed, isPlaying, syncSlotAudio],
   );
 
   const handlePlaying = useCallback(
@@ -553,23 +605,25 @@ export default function AudioEngine({
         return;
       }
       benchLog("prefetch:buffered", { trackId, slot });
+      syncSlotAudio(slot);
       const media = slotRef(slot).current;
       if (media && streamingAllowed && isPlaying) {
         void media.play().catch(() => {});
       }
     },
-    [emitPlayingBench, isPlaying, slotRef, streamingAllowed, tryPlaySlot],
+    [emitPlayingBench, isPlaying, slotRef, streamingAllowed, syncSlotAudio, tryPlaySlot],
   );
 
   const handlePause = useCallback(
     (slot: PlayerSlot) => {
       if (slot === liveSlotRef.current) return;
+      syncSlotAudio(slot);
       const media = slotRef(slot).current;
       if (media && streamingAllowed && isPlaying) {
         void media.play().catch(() => {});
       }
     },
-    [isPlaying, slotRef, streamingAllowed],
+    [isPlaying, slotRef, streamingAllowed, syncSlotAudio],
   );
 
   const handlePrefetchError = useCallback(

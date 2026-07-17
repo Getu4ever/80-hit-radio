@@ -6,6 +6,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { getClientAuthCallbackUrl } from "@/lib/auth/urls";
 import { isSupabaseConfigured, isLocalDevelopment } from "@/lib/env";
+import BrandLogo from "@/components/BrandLogo";
 
 export default function SignupPage() {
   const [email, setEmail] = useState("");
@@ -80,18 +81,20 @@ export default function SignupPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#07040f] px-4 text-white">
       <div className="w-full max-w-md rounded-2xl border border-fuchsia-400/20 bg-[#0a0614]/90 p-8 shadow-[0_0_40px_rgba(217,70,239,0.12)]">
-        <div className="mb-4 flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-xs uppercase tracking-[0.35em] text-white/70">
-          <span className="font-semibold text-white">Rithmgen</span>
-          <span className="text-cyan-300">80s Hit Radio</span>
+        <div className="mb-4 rounded-2xl border border-white/10 bg-black/40 px-3 py-3">
+          <BrandLogo size="lg" href="/" />
+          <p className="mt-1 text-xs uppercase tracking-[0.28em] text-cyan-300/90">
+            80s Hit Radio
+          </p>
         </div>
         <p className="text-xs uppercase tracking-[0.35em] text-fuchsia-400/70">
-          Free month
+          Free trial
         </p>
         <h1 className="mt-2 font-[family-name:var(--font-display)] text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-400 to-cyan-300">
           Create account
         </h1>
         <p className="mt-2 text-sm text-white/50">
-          One month of unlimited 80s hits — no card required to start.
+          14 days of unlimited 80s hits — no card required to start.
         </p>
 
         {ready && !configured && (
@@ -180,7 +183,7 @@ export default function SignupPage() {
           disabled={loading || (ready && !configured)}
           className="w-full rounded-xl bg-gradient-to-r from-fuchsia-600 to-cyan-500 py-3 text-sm font-semibold text-white shadow-[0_0_20px_rgba(217,70,239,0.35)] transition hover:brightness-110 disabled:opacity-60"
         >
-          {loading ? "Creating…" : "Start free month"}
+          {loading ? "Creating…" : "Start free trial"}
         </button>
       </form>
 

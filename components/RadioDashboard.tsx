@@ -36,8 +36,16 @@ function TrackCard({ track }: { track: Track }) {
   const playTrack = useAudioStore((s) => s.playTrack);
   const togglePlay = useAudioStore((s) => s.togglePlay);
   const streamingAllowed = useStreamAccessStore((s) => s.allowed);
-  const [artSrc, setArtSrc] = useState(track.imageUrl);
   const [artFailed, setArtFailed] = useState(false);
+  const artSrc = track.imageUrl;
+
+  // Reset failure state when the track (or its art URL) changes
+  const artKey = `${track.id}:${track.imageUrl}`;
+  const [prevArtKey, setPrevArtKey] = useState(artKey);
+  if (prevArtKey !== artKey) {
+    setPrevArtKey(artKey);
+    setArtFailed(false);
+  }
 
   const isActive = currentTrack?.id === track.id;
   const isThisPlaying = isActive && isPlaying && streamingAllowed;
@@ -73,14 +81,7 @@ function TrackCard({ track }: { track: Track }) {
             className="object-cover transition duration-500 group-hover:scale-105"
             priority={track.id === "1"}
             unoptimized
-            onError={() => {
-              const mq = `https://i.ytimg.com/vi/${track.youtubeId}/mqdefault.jpg`;
-              if (artSrc !== mq) {
-                setArtSrc(mq);
-              } else {
-                setArtFailed(true);
-              }
-            }}
+            onError={() => setArtFailed(true)}
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center p-4 text-center">
@@ -132,6 +133,7 @@ function TrackCard({ track }: { track: Track }) {
 
 export default function RadioDashboard() {
   const [filter, setFilter] = useState<NavFilter>("All");
+  const [searchQuery, setSearchQuery] = useState("");
   const [showMoreGenres, setShowMoreGenres] = useState(false);
   const [visibleCount, setVisibleCount] = useState(48);
   const startRadio = useAudioStore((s) => s.startRadio);
@@ -141,10 +143,29 @@ export default function RadioDashboard() {
   const catalogLoaded = useCatalogStore((s) => s.loaded);
   const getTracksBySubgenre = useCatalogStore((s) => s.getTracksBySubgenre);
 
-  const visibleTracks = useMemo(
+  const genreTracks = useMemo(
     () => getTracksBySubgenre(filter),
     [filter, getTracksBySubgenre, catalogLoaded],
   );
+
+  const visibleTracks = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return genreTracks;
+    return genreTracks.filter((track) => {
+      const haystack = [
+        track.title,
+        track.artist,
+        String(track.year),
+        track.subgenre,
+      ]
+        .join(" ")
+        .toLowerCase();
+      return q
+        .split(/\s+/)
+        .filter(Boolean)
+        .every((token) => haystack.includes(token));
+    });
+  }, [genreTracks, searchQuery]);
 
   const shownTracks = useMemo(
     () => visibleTracks.slice(0, visibleCount),
@@ -165,9 +186,14 @@ export default function RadioDashboard() {
     setVisibleCount(48);
   };
 
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query);
+    setVisibleCount(48);
+  };
+
   /** All / Live Radio → mainstream pool only; genre filter → that genre. */
   const handleStartRadio = (seed: Track[]) => {
-    if (filter === "All") {
+    if (filter === "All" && !searchQuery.trim()) {
       startRadio();
     } else {
       startRadio(seed);
@@ -195,7 +221,10 @@ export default function RadioDashboard() {
         </div>
 
         <div className="relative mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-10 lg:py-12">
-          <Header />
+          <Header
+            searchQuery={searchQuery}
+            onSearchChange={handleSearchChange}
+          />
 
           <header className="mb-8 animate-fade-up sm:mb-10">
             <p className="mb-2 text-xs uppercase tracking-[0.4em] text-cyan-400/70">
@@ -273,9 +302,15 @@ export default function RadioDashboard() {
           <p className="mb-4 text-xs text-white/35">
             {catalogLoading && !catalogLoaded
               ? "Loading catalog…"
-              : `Showing ${shownTracks.length} of ${visibleTracks.length} tracks${
-                  filter !== "All" ? ` in ${filter}` : ""
-                }`}
+              : searchQuery.trim()
+                ? `Found ${visibleTracks.length} match${
+                    visibleTracks.length === 1 ? "" : "es"
+                  } for “${searchQuery.trim()}”${
+                    filter !== "All" ? ` in ${filter}` : ""
+                  }`
+                : `Showing ${shownTracks.length} of ${visibleTracks.length} tracks${
+                    filter !== "All" ? ` in ${filter}` : ""
+                  }`}
           </p>
 
           <div className="grid grid-cols-1 gap-4 animate-fade-up sm:grid-cols-2 sm:gap-5 md:grid-cols-3 xl:grid-cols-4 [animation-delay:120ms]">
@@ -298,7 +333,9 @@ export default function RadioDashboard() {
 
           {visibleTracks.length === 0 && (
             <p className="mt-12 text-center text-white/40">
-              No tracks in this category yet.
+              {searchQuery.trim()
+                ? "No tracks match your search. Try another song, artist, or year."
+                : "No tracks in this category yet."}
             </p>
           )}
         </div>

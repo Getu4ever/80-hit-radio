@@ -44,7 +44,7 @@ export default function PaywallOverlay() {
           {message ??
             (isAuth
               ? "Email confirmed. Sign in with your password to unlock the radio."
-              : "Your free month has expired. Subscribe now to keep rocking the 80s!")}
+              : "Your free trial has expired. Subscribe now to keep rocking the 80s!")}
         </p>
 
         <div className="relative mt-6 flex flex-col gap-3 sm:flex-row">

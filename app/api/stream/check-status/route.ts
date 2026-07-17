@@ -34,7 +34,7 @@ export async function GET() {
       eligible: true,
       reason: "ok",
       guest: true,
-      message: "Listening as guest. Sign in to save your free month.",
+      message: "Listening as guest. Sign in to save your free trial.",
     });
   }
 
@@ -52,7 +52,7 @@ export async function GET() {
           error: "Access Denied",
           message:
             reason ??
-            "Your free month has expired. Subscribe now to keep rocking the 80s!",
+            "Your free trial has expired. Subscribe now to keep rocking the 80s!",
           accountAgeDays,
           stripeSubscriptionStatus: profile.stripe_subscription_status,
           trialDaysRemaining: 0,
@@ -82,7 +82,7 @@ export async function GET() {
         reason: "trial_expired",
         error: "Access Denied",
         message:
-          "Your free month has expired. Subscribe now to keep rocking the 80s!",
+          "Your free trial has expired. Subscribe now to keep rocking the 80s!",
         accountAgeDays,
         trialDaysRemaining: 0,
       },

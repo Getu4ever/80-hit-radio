@@ -134,6 +134,33 @@ export type Database = {
           },
         ];
       };
+      track_images: {
+        Row: {
+          youtube_id: string;
+          content_type: string;
+          data: string;
+          byte_size: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          youtube_id: string;
+          content_type?: string;
+          data: string;
+          byte_size: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          youtube_id?: string;
+          content_type?: string;
+          data?: string;
+          byte_size?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       listen_events: {
         Row: {
           id: string;

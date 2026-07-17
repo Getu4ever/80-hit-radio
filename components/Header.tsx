@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useUserSession } from "@/hooks/useUserSession";
+import BrandLogo from "@/components/BrandLogo";
 
 function UserIcon({ className }: { className?: string }) {
   return (
@@ -34,13 +35,53 @@ function ChevronIcon({ className }: { className?: string }) {
   );
 }
 
-export default function Header() {
+function SearchIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      aria-hidden
+    >
+      <circle cx="11" cy="11" r="7" />
+      <path strokeLinecap="round" d="M20 20l-3.5-3.5" />
+    </svg>
+  );
+}
+
+function ClearIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      aria-hidden
+    >
+      <path strokeLinecap="round" d="M6 6l12 12M18 6L6 18" />
+    </svg>
+  );
+}
+
+type HeaderProps = {
+  searchQuery?: string;
+  onSearchChange?: (query: string) => void;
+};
+
+export default function Header({
+  searchQuery = "",
+  onSearchChange,
+}: HeaderProps) {
   const router = useRouter();
   const { user, isLoggedIn, isAdmin, signOut } = useUserSession();
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0, width: 0 });
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!menuOpen || !triggerRef.current) return;
@@ -90,6 +131,17 @@ export default function Header() {
       document.removeEventListener("keydown", onKeyDown);
     };
   }, [menuOpen]);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        searchRef.current?.focus();
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, []);
 
   const handleSignOut = async () => {
     setMenuOpen(false);
@@ -149,49 +201,110 @@ export default function Header() {
       : null;
 
   return (
-    <div className="relative z-[80] mb-6 flex items-center justify-end animate-fade-up sm:mb-8">
-      {!isLoggedIn ? (
-        <Link
-          href="/auth/signup"
-          className="rounded-xl bg-gradient-to-r from-fuchsia-600 to-cyan-500 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_0_24px_rgba(217,70,239,0.45),0_0_40px_rgba(34,211,238,0.25)] transition hover:brightness-110 hover:shadow-[0_0_32px_rgba(217,70,239,0.55),0_0_48px_rgba(34,211,238,0.35)] sm:px-5"
-        >
-          Sign In / Start Free Month
-        </Link>
-      ) : (
-        <div className="relative">
-          <button
-            ref={triggerRef}
-            type="button"
-            onClick={() => setMenuOpen((open) => !open)}
-            className="flex items-center gap-2 rounded-full border border-cyan-400/30 bg-white/[0.04] py-1.5 pl-1.5 pr-3 transition hover:border-fuchsia-400/40 hover:bg-white/[0.07]"
-            aria-expanded={menuOpen}
-            aria-haspopup="menu"
-            aria-label="Account menu"
-          >
-            <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-fuchsia-500/80 to-cyan-400/80 text-[#0a0614] shadow-[0_0_12px_rgba(34,211,238,0.35)]">
-              {user?.avatarUrl ? (
-                <img
-                  src={user.avatarUrl}
-                  alt=""
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <UserIcon className="h-4 w-4" />
-              )}
-            </span>
-            <span className="hidden max-w-[8rem] truncate text-sm text-white/80 sm:inline">
-              {user?.displayName}
-            </span>
-            <ChevronIcon
-              className={`h-4 w-4 text-white/40 transition ${
-                menuOpen ? "rotate-180" : ""
-              }`}
-            />
-          </button>
-
-          {menu}
+    <div className="relative z-[80] mb-6 animate-fade-up sm:mb-8">
+      <div className="flex items-center gap-3 sm:gap-4">
+        <div className="min-w-0 shrink-0 lg:hidden">
+          <BrandLogo size="md" priority />
         </div>
-      )}
+
+        {onSearchChange && (
+          <form
+            role="search"
+            className="relative min-w-0 flex-1"
+            onSubmit={(event) => {
+              event.preventDefault();
+              searchRef.current?.blur();
+            }}
+          >
+            <label htmlFor="catalog-search" className="sr-only">
+              Search songs, artists, or years
+            </label>
+            <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-cyan-300/70 sm:left-3.5 sm:h-5 sm:w-5" />
+            <input
+              ref={searchRef}
+              id="catalog-search"
+              type="search"
+              value={searchQuery}
+              onChange={(event) => onSearchChange(event.target.value)}
+              placeholder="Search song, artist, year…"
+              autoComplete="off"
+              className="w-full rounded-xl border border-white/10 bg-white/[0.05] py-2.5 pl-10 pr-20 text-sm text-white placeholder:text-white/35 shadow-[inset_0_0_0_1px_rgba(34,211,238,0.08)] outline-none transition focus:border-cyan-400/45 focus:bg-white/[0.07] focus:shadow-[0_0_20px_rgba(34,211,238,0.12)] sm:py-3 sm:pl-11 sm:pr-24 sm:text-base"
+            />
+            <div className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-1">
+              {searchQuery ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onSearchChange("");
+                    searchRef.current?.focus();
+                  }}
+                  className="rounded-lg p-1.5 text-white/45 transition hover:bg-white/10 hover:text-white"
+                  aria-label="Clear search"
+                >
+                  <ClearIcon className="h-4 w-4" />
+                </button>
+              ) : (
+                <kbd className="hidden rounded-md border border-white/10 bg-white/5 px-1.5 py-0.5 text-[10px] font-medium tracking-wide text-white/35 sm:inline">
+                  ⌘K
+                </kbd>
+              )}
+              <button
+                type="submit"
+                className="rounded-lg bg-cyan-400/15 px-2.5 py-1.5 text-xs font-semibold uppercase tracking-wider text-cyan-300 transition hover:bg-cyan-400/25"
+                aria-label="Search"
+              >
+                Search
+              </button>
+            </div>
+          </form>
+        )}
+
+        <div className="shrink-0">
+          {!isLoggedIn ? (
+            <Link
+              href="/auth/signup"
+              className="rounded-xl bg-gradient-to-r from-fuchsia-600 to-cyan-500 px-3 py-2.5 text-xs font-semibold text-white shadow-[0_0_24px_rgba(217,70,239,0.45),0_0_40px_rgba(34,211,238,0.25)] transition hover:brightness-110 hover:shadow-[0_0_32px_rgba(217,70,239,0.55),0_0_48px_rgba(34,211,238,0.35)] sm:px-5 sm:text-sm"
+            >
+              <span className="sm:hidden">Sign In</span>
+              <span className="hidden sm:inline">Sign In / Start Free Trial</span>
+            </Link>
+          ) : (
+            <div className="relative">
+              <button
+                ref={triggerRef}
+                type="button"
+                onClick={() => setMenuOpen((open) => !open)}
+                className="flex items-center gap-2 rounded-full border border-cyan-400/30 bg-white/[0.04] py-1.5 pl-1.5 pr-3 transition hover:border-fuchsia-400/40 hover:bg-white/[0.07]"
+                aria-expanded={menuOpen}
+                aria-haspopup="menu"
+                aria-label="Account menu"
+              >
+                <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-fuchsia-500/80 to-cyan-400/80 text-[#0a0614] shadow-[0_0_12px_rgba(34,211,238,0.35)]">
+                  {user?.avatarUrl ? (
+                    <img
+                      src={user.avatarUrl}
+                      alt=""
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <UserIcon className="h-4 w-4" />
+                  )}
+                </span>
+                <span className="hidden max-w-[8rem] truncate text-sm text-white/80 sm:inline">
+                  {user?.displayName}
+                </span>
+                <ChevronIcon
+                  className={`h-4 w-4 text-white/40 transition ${
+                    menuOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+
+              {menu}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

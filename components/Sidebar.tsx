@@ -10,6 +10,7 @@ import {
 } from "@/data/tracks";
 import { useUserSession } from "@/hooks/useUserSession";
 import { useStreamAccessStore } from "@/store/useStreamAccessStore";
+import BrandLogo from "@/components/BrandLogo";
 
 export type NavFilter = "All" | Subgenre;
 
@@ -108,11 +109,9 @@ export default function Sidebar({
     showMore || MORE_GENRES.includes(filter as Subgenre);
 
   return (
-    <aside className="sticky top-0 hidden h-screen w-56 shrink-0 flex-col border-r border-white/10 bg-[#0a0614]/80 px-4 py-8 backdrop-blur-md lg:flex">
-      <div className="mb-10 px-2">
-        <p className="font-[family-name:var(--font-display)] text-xl font-bold tracking-[0.15em] text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-400 to-cyan-300">
-          Rithmgen
-        </p>
+    <aside className="sticky top-0 hidden h-screen w-72 shrink-0 flex-col border-r border-white/10 bg-[#0a0614]/80 px-4 py-8 backdrop-blur-md lg:flex">
+      <div className="mb-8 w-full">
+        <BrandLogo size="lg" priority />
         {subscriptionLabel && (
           <p className="mt-3 inline-flex rounded-md border border-cyan-400/25 bg-cyan-400/10 px-2 py-1 text-[10px] font-medium tracking-wide text-cyan-300/90 shadow-[0_0_12px_rgba(34,211,238,0.15)]">
             {subscriptionLabel}

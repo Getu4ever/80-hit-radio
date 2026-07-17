@@ -3,6 +3,7 @@ import { getCurrentProfile } from "@/lib/auth/session";
 import {
   formatSubscriptionLabel,
   getTrialDaysRemaining,
+  TRIAL_DAYS,
 } from "@/lib/subscription";
 import DashboardChrome from "@/components/DashboardChrome";
 import ProfileMembershipPanel from "@/components/ProfileMembershipPanel";
@@ -25,7 +26,7 @@ export default async function ProfileDashboardPage() {
   });
   const trialProgress = Math.min(
     100,
-    Math.max(0, ((30 - trialDays) / 30) * 100),
+    Math.max(0, ((TRIAL_DAYS - trialDays) / TRIAL_DAYS) * 100),
   );
 
   return (

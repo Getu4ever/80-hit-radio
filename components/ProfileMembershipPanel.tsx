@@ -161,7 +161,7 @@ export default function ProfileMembershipPanel({
                 Plan & billing
               </p>
               <h2 className="mt-2 font-[family-name:var(--font-display)] text-xl font-semibold text-white">
-                {isPremium ? "Premium Membership" : "Free Month Access"}
+                {isPremium ? "Premium Membership" : "Free Trial Access"}
               </h2>
             </div>
             {isPremium ? (
@@ -188,7 +188,7 @@ export default function ProfileMembershipPanel({
           ) : (
             <div className="mt-5">
               <div className="mb-2 flex justify-between text-xs text-white/40">
-                <span>Free month progress</span>
+                <span>Free trial progress</span>
                 <span>{Math.round(trialProgress)}%</span>
               </div>
               <div className="h-2 overflow-hidden rounded-full bg-white/10">
@@ -198,7 +198,7 @@ export default function ProfileMembershipPanel({
                 />
               </div>
               <p className="mt-3 text-sm text-white/50">
-                After your free month, Premium keeps the decade spinning without
+                After your free trial, Premium keeps the decade spinning without
                 interruption.
               </p>
             </div>

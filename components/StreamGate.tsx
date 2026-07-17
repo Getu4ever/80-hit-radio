@@ -41,8 +41,8 @@ async function applyCheckResult(
       message:
         data.message ??
         (reason === "unauthenticated"
-          ? "Sign in to start your free month and stream classic 80s hits."
-          : "Your free month has expired. Subscribe now to keep rocking the 80s!"),
+          ? "Sign in to start your free 14-day trial and stream classic 80s hits."
+          : "Your free trial has expired. Subscribe now to keep rocking the 80s!"),
       trialDaysRemaining: 0,
     });
     return;

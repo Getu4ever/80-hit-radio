@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useUserSession } from "@/hooks/useUserSession";
 import { useAudioStore } from "@/store/useAudioStore";
+import BrandLogo from "@/components/BrandLogo";
 
 function LiveDot({ active }: { active: boolean }) {
   return (
@@ -42,6 +43,9 @@ export default function DashboardChrome({
 
   return (
     <header className="mb-10 animate-fade-up">
+      <div className="mb-5">
+        <BrandLogo size="lg" href="/" />
+      </div>
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-xs uppercase tracking-[0.35em] text-cyan-400/70">

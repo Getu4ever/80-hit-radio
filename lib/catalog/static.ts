@@ -1,10 +1,6 @@
 import catalog from "@/data/catalog.json";
-import {
-  SUBGENRES,
-  youtubeThumb,
-  type Subgenre,
-  type Track,
-} from "@/data/tracks";
+import { trackImagePath } from "@/lib/trackImages";
+import { SUBGENRES, type Subgenre, type Track } from "@/data/tracks";
 
 type CatalogRow = [string, string, number, string];
 type CatalogMap = Record<string, CatalogRow[]>;
@@ -27,7 +23,7 @@ export function buildStaticTracks(): Track[] {
         year,
         youtubeId,
         subgenre: genre as Subgenre,
-        imageUrl: youtubeThumb(youtubeId),
+        imageUrl: trackImagePath(youtubeId),
       });
     }
   }
@@ -55,7 +51,6 @@ export interface DbTrackRow {
 }
 
 export function dbTrackToTrack(row: DbTrackRow): Track {
-  const artistImage = row.artists?.image_url ?? null;
   return {
     id: row.id,
     title: row.title,
@@ -63,6 +58,7 @@ export function dbTrackToTrack(row: DbTrackRow): Track {
     year: row.year,
     youtubeId: row.youtube_id,
     subgenre: row.subgenre as Subgenre,
-    imageUrl: artistImage ?? youtubeThumb(row.youtube_id),
+    // Always use DB-backed track art — never external YouTube / artist URLs.
+    imageUrl: trackImagePath(row.youtube_id),
   };
 }

@@ -3,7 +3,7 @@
  * sync-assets.js — Populate Supabase Storage (`rithmgen-assets`) with artist & genre images.
  *
  * Reads the same catalog source used by `data/tracks.ts` (`data/catalog.json`),
- * fetches open-license images from Unsplash, uploads them with the service role,
+ * fetches open-license images from Pexels, uploads them with the service role,
  * and prints a manifest you can paste into TypeScript mappings.
  *
  * ─────────────────────────────────────────────────────────────────────────────
@@ -16,9 +16,9 @@
  *    Optional aliases also supported:
  *      SUPABASE_URL=...
  *
- * 2. Create a free Unsplash developer app and add to `.env.local`:
- *      UNSPLASH_ACCESS_KEY=your_access_key
- *    https://unsplash.com/developers
+ * 2. Create a free Pexels API key and add to `.env.local`:
+ *      PEXELS_API_KEY=your_api_key
+ *    https://www.pexels.com/api/
  *
  * 3. Confirm the public bucket exists in Supabase Storage:
  *      Bucket name: rithmgen-assets
@@ -39,7 +39,7 @@
  *   node scripts/sync-assets.js --artists-only
  *   node scripts/sync-assets.js --genres-only
  *
- *   # Slower / gentler on Unsplash rate limits (default 400ms between fetches)
+ *   # Slower / gentler on Pexels rate limits (default 400ms between fetches)
  *   node scripts/sync-assets.js --delay 800
  *
  * ─────────────────────────────────────────────────────────────────────────────
@@ -85,7 +85,7 @@ const SUBGENRES = [
   "New Age / Ambient",
 ];
 
-/** Retro / music-themed search hints per genre for better Unsplash results. */
+/** Retro / music-themed search hints per genre for better Pexels results. */
 const GENRE_SEARCH_HINTS = {
   Pop: "80s pop neon retro",
   Rock: "80s rock concert guitar",
@@ -222,37 +222,38 @@ function genreStoragePath(genreName) {
   return `genres/${slugify(genreName)}.jpg`;
 }
 
-// ─── Unsplash fetch ──────────────────────────────────────────────────────────
+// ─── Pexels fetch ────────────────────────────────────────────────────────────
 
-async function searchUnsplashPhoto(query, accessKey) {
-  const url = new URL("https://api.unsplash.com/search/photos");
+const PEXELS_SEARCH_URL = "https://api.pexels.com/v1/search";
+
+async function searchPexelsPhoto(query) {
+  const url = new URL(PEXELS_SEARCH_URL);
   url.searchParams.set("query", query);
-  url.searchParams.set("orientation", "squarish");
+  url.searchParams.set("orientation", "square");
   url.searchParams.set("per_page", "1");
-  url.searchParams.set("content_filter", "high");
 
   const res = await fetch(url, {
-    headers: {
-      Authorization: `Client-ID ${accessKey}`,
-      "Accept-Version": "v1",
-    },
+    headers: { Authorization: process.env.PEXELS_API_KEY },
   });
 
   if (!res.ok) {
     const body = await res.text();
-    throw new Error(`Unsplash search failed (${res.status}): ${body.slice(0, 200)}`);
+    throw new Error(`Pexels search failed (${res.status}): ${body.slice(0, 200)}`);
   }
 
-  const json = await res.json();
-  const photo = json.results?.[0];
-  if (!photo?.urls?.regular) {
-    throw new Error(`No Unsplash results for query: ${query}`);
+  const response = await res.json();
+  const photo = response.photos?.[0];
+  const downloadUrl =
+    photo?.src?.large ?? photo?.src?.large2x ?? photo?.src?.medium ?? photo?.src?.original;
+
+  if (!downloadUrl) {
+    throw new Error(`No Pexels results for query: ${query}`);
   }
 
   return {
-    pageUrl: photo.links?.html ?? "https://unsplash.com",
-    downloadUrl: photo.urls.regular,
-    photographer: photo.user?.name ?? "Unknown",
+    pageUrl: photo.url ?? "https://www.pexels.com",
+    downloadUrl,
+    photographer: photo.photographer ?? "Unknown",
   };
 }
 
@@ -311,7 +312,7 @@ async function uploadToBucket(supabase, storagePath, buffer, contentType) {
  * }} item
  */
 async function syncAsset(item, ctx) {
-  const { supabase, unsplashKey, dryRun, delayMs } = ctx;
+  const { supabase, dryRun, delayMs } = ctx;
 
   console.log(`\n→ [${item.type}] ${item.name}`);
   console.log(`  query: ${item.query}`);
@@ -327,7 +328,7 @@ async function syncAsset(item, ctx) {
   }
 
   await sleep(delayMs);
-  const photo = await searchUnsplashPhoto(item.query, unsplashKey);
+  const photo = await searchPexelsPhoto(item.query);
   const { buffer, contentType } = await downloadImageBuffer(photo.downloadUrl);
   await uploadToBucket(supabase, item.storagePath, buffer, contentType);
 
@@ -335,7 +336,7 @@ async function syncAsset(item, ctx) {
   const publicUrl = `${supabaseUrl}/storage/v1/object/public/${BUCKET}/${item.storagePath}`;
 
   console.log(`  ✓ uploaded (${contentType}, ${buffer.length} bytes)`);
-  console.log(`  ✓ unsplash: ${photo.pageUrl} (by ${photo.photographer})`);
+  console.log(`  ✓ pexels: ${photo.pageUrl} (by ${photo.photographer})`);
 
   return {
     ...item,
@@ -393,17 +394,16 @@ async function main() {
 
   console.log(`Queued assets  : ${limitedQueue.length}`);
 
-  const unsplashKey = process.env.UNSPLASH_ACCESS_KEY?.trim();
-  if (!opts.dryRun && !unsplashKey) {
+  const pexelsApiKey = process.env.PEXELS_API_KEY?.trim();
+  if (!opts.dryRun && !pexelsApiKey) {
     throw new Error(
-      "Missing UNSPLASH_ACCESS_KEY. Create a free app at https://unsplash.com/developers and add the key to .env.local",
+      "Missing PEXELS_API_KEY. Create a free key at https://www.pexels.com/api/ and add it to .env.local",
     );
   }
 
   const supabase = opts.dryRun ? null : createSupabaseAdmin();
   const ctx = {
     supabase,
-    unsplashKey: unsplashKey || "dry-run",
     dryRun: opts.dryRun,
     delayMs: opts.delayMs,
   };

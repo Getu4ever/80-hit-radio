@@ -36,15 +36,6 @@ const GENRE_KEYS = [
   "New Age / Ambient",
 ];
 
-const MAJOR = new Set([
-  "Pop",
-  "Rock",
-  "Hip-Hop / Rap",
-  "R&B",
-  "Electronic / Dance",
-  "Reggae",
-]);
-
 const SEED_MAP = {
   "Pop": () => readJson(path.join(dataDir, "_pop.json")),
   "Rock": () => readJson(path.join(dataDir, "_rock.json")),
@@ -106,21 +97,20 @@ for (const key of GENRE_KEYS) {
 const outPath = path.join(dataDir, "catalog.json");
 fs.writeFileSync(outPath, JSON.stringify(catalog, null, 2) + "\n");
 
-let ok = true;
+// A-list bar: only massive international 80s hits — no padding floors.
+// Genres may be thin or empty if nothing qualifies.
 const counts = {};
 for (const key of GENRE_KEYS) {
   const n = catalog[key].length;
   counts[key] = n;
-  const min = MAJOR.has(key) ? 100 : 20;
-  const status = n >= min ? "OK" : "FAIL";
-  if (n < min) ok = false;
-  console.log(`${status.padEnd(4)} ${String(n).padStart(4)}  ${key}`);
+  console.log(`${"OK".padEnd(4)} ${String(n).padStart(4)}  ${key}`);
 }
 
 console.log(`\nWrote ${outPath}`);
-if (!ok) {
-  console.error("\nValidation failed: majors need >= 100, all genres >= 20.");
+const total = Object.values(counts).reduce((a, b) => a + b, 0);
+if (total < 50) {
+  console.error("\nValidation failed: catalog too small after A-list prune.");
   process.exit(1);
 }
-console.log("\nValidation passed.");
+console.log(`\nValidation passed (${total} A-list tracks).`);
 process.exit(0);
