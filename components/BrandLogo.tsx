@@ -11,24 +11,24 @@ type BrandLogoProps = {
 };
 
 /**
- * logo.jpg is 1152×768 with letterboxing — display heights must be large
- * so the wordmark itself stays clearly readable on phone and desktop.
+ * logo80.jpg is 1248×832 — display heights stay large so the wordmark
+ * remains clearly readable on phone and desktop.
  */
 const SIZES = {
   sm: {
-    width: 360,
-    height: 240,
-    className: "h-16 w-auto max-w-[min(100%,280px)] sm:h-[4.5rem]",
+    width: 420,
+    height: 280,
+    className: "h-20 w-auto max-w-[min(100%,320px)] sm:h-24",
   },
   md: {
-    width: 480,
-    height: 320,
-    className: "h-20 w-full max-w-none sm:h-24",
+    width: 560,
+    height: 373,
+    className: "h-24 w-full max-w-none sm:h-28",
   },
   lg: {
-    width: 640,
-    height: 426,
-    className: "h-24 w-full max-w-none sm:h-28",
+    width: 720,
+    height: 480,
+    className: "h-28 w-full max-w-none sm:h-36",
   },
 } as const;
 
@@ -41,12 +41,12 @@ export default function BrandLogo({
   const dim = SIZES[size];
   const image = (
     <Image
-      src="/logo.jpg"
+      src="/logo/logo80.jpg"
       alt="RithmGen"
       width={dim.width}
       height={dim.height}
       priority={priority}
-      sizes="(max-width: 640px) 280px, 360px"
+      sizes="(max-width: 640px) 320px, 420px"
       className={`${dim.className} object-contain object-left ${className}`}
     />
   );
