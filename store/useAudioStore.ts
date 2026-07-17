@@ -58,6 +58,9 @@ interface AudioState {
   volume: number;
   playedSeconds: number;
   duration: number;
+  /** Monotonic id — AudioEngine applies `pendingSeekSeconds` when this changes. */
+  seekRequestId: number;
+  pendingSeekSeconds: number | null;
   /** AI-assisted HD stream optimizer (max tier + loudness normalize). */
   broadcastEnhance: boolean;
   streamQuality: string | null;
@@ -72,6 +75,8 @@ interface AudioState {
   setVolume: (volume: number) => void;
   setPlayedSeconds: (seconds: number) => void;
   setDuration: (seconds: number) => void;
+  seekTo: (seconds: number) => void;
+  clearSeekRequest: () => void;
   ensureUpcoming: () => void;
   markTrackFailed: (trackId: string) => void;
   setBroadcastEnhance: (enabled: boolean) => void;
@@ -91,6 +96,8 @@ export const useAudioStore = create<AudioState>((set, get) => ({
   volume: 0.8,
   playedSeconds: 0,
   duration: 0,
+  seekRequestId: 0,
+  pendingSeekSeconds: null,
   broadcastEnhance: true,
   streamQuality: null,
 
@@ -296,6 +303,19 @@ export const useAudioStore = create<AudioState>((set, get) => ({
   setPlayedSeconds: (playedSeconds) => set({ playedSeconds }),
 
   setDuration: (duration) => set({ duration }),
+
+  seekTo: (seconds) => {
+    const { duration } = get();
+    if (!(duration > 0) || !Number.isFinite(seconds)) return;
+    const clamped = Math.min(Math.max(0, seconds), Math.max(0, duration - 0.15));
+    set((state) => ({
+      pendingSeekSeconds: clamped,
+      playedSeconds: clamped,
+      seekRequestId: state.seekRequestId + 1,
+    }));
+  },
+
+  clearSeekRequest: () => set({ pendingSeekSeconds: null }),
 
   setBroadcastEnhance: (broadcastEnhance) => set({ broadcastEnhance }),
 

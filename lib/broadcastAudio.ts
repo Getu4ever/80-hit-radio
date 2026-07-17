@@ -23,6 +23,7 @@ export interface YoutubePlayerApi {
   setVolume?: (volume: number) => void;
   mute?: () => void;
   unMute?: () => void;
+  seekTo?: (seconds: number, allowSeekAhead?: boolean) => void;
 }
 
 export interface YoutubePlayerElement extends HTMLElement {

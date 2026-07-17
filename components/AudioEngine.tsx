@@ -436,6 +436,33 @@ export default function AudioEngine({
     });
   }, [currentTrack?.id, currentTrack?.title]);
 
+  const seekRequestId = useAudioStore((s) => s.seekRequestId);
+  const pendingSeekSeconds = useAudioStore((s) => s.pendingSeekSeconds);
+
+  useEffect(() => {
+    if (pendingSeekSeconds == null) return;
+    const media = slotRef(liveSlotRef.current).current;
+    if (media) {
+      const target = Math.max(0, pendingSeekSeconds);
+      try {
+        const max =
+          Number.isFinite(media.duration) && media.duration > 0
+            ? media.duration - 0.15
+            : target;
+        media.currentTime = Math.min(target, Math.max(0, max));
+      } catch {
+        // Some embeds reject seeks until buffered.
+      }
+      const yt = media as YoutubePlayerElement;
+      try {
+        yt.api?.seekTo?.(target, true);
+      } catch {
+        // Optional YouTube iframe API path.
+      }
+    }
+    useAudioStore.getState().clearSeekRequest();
+  }, [seekRequestId, pendingSeekSeconds, slotRef]);
+
   useEffect(() => {
     if (!streamingAllowed || !currentTrack) return;
     useAudioStore.getState().ensureUpcoming();
