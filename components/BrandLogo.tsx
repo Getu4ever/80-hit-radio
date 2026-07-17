@@ -2,25 +2,24 @@ import Image from "next/image";
 import Link from "next/link";
 
 /**
- * logo80b.jpg — display heights stay large so the wordmark
- * remains clearly readable on phone and desktop.
+ * Always use public/logo/logo80b.jpg — only display size changes by preset.
  */
 const SIZES = {
-  /** Compact mark for the mobile top bar */
+  /** Mobile top-bar mark — keep clearly readable on phones */
   header: {
-    width: 280,
-    height: 187,
-    className: "h-10 w-auto max-w-[148px] sm:h-12 sm:max-w-[180px]",
+    width: 420,
+    height: 280,
+    className: "h-14 w-auto max-w-[200px] sm:h-16 sm:max-w-[240px]",
   },
   sm: {
     width: 420,
     height: 280,
-    className: "h-16 w-auto max-w-[min(100%,240px)] sm:h-20 sm:max-w-[280px]",
+    className: "h-20 w-auto max-w-[min(100%,280px)] sm:h-24",
   },
   md: {
     width: 560,
     height: 373,
-    className: "h-20 w-auto max-w-[min(100%,280px)] sm:h-24 sm:max-w-[320px]",
+    className: "h-24 w-auto max-w-[min(100%,320px)] sm:h-28",
   },
   lg: {
     width: 720,

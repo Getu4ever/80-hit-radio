@@ -81,7 +81,7 @@ export default function PaywallOverlay() {
 
         <p className="relative text-xs uppercase tracking-[0.35em] text-fuchsia-300/80">
           {isGuestLimit
-            ? "Free guest hour complete"
+            ? "Start your free trial"
             : isAuth
               ? "Sign in required"
               : isError
@@ -93,7 +93,7 @@ export default function PaywallOverlay() {
           className="relative mt-3 font-[family-name:var(--font-display)] text-2xl font-bold tracking-wide text-white sm:text-3xl"
         >
           {isGuestLimit
-            ? "Unlock your 14-day Premium trial"
+            ? "Continue with a 14-day free Premium trial"
             : isAuth
               ? "Welcome back"
               : isError
@@ -113,7 +113,7 @@ export default function PaywallOverlay() {
               href="/auth/signup"
               className="inline-flex flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-fuchsia-600 to-cyan-500 px-6 py-3.5 text-sm font-semibold tracking-wide text-white shadow-[0_0_28px_rgba(217,70,239,0.5),0_0_40px_rgba(34,211,238,0.25)] transition hover:brightness-110"
             >
-              Create free account — start 14-day trial
+              Start free trial
             </Link>
           ) : isAuth ? (
             <>
@@ -155,18 +155,6 @@ export default function PaywallOverlay() {
             </>
           )}
         </div>
-
-        {isGuestLimit && (
-          <p className="relative mt-5 text-center text-xs text-white/35">
-            Already have an account?{" "}
-            <Link
-              href="/auth/login"
-              className="text-cyan-300/80 underline-offset-2 transition hover:text-cyan-200 hover:underline"
-            >
-              Sign in
-            </Link>
-          </p>
-        )}
       </div>
     </div>
   );
