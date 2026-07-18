@@ -28,7 +28,7 @@ export default function DashboardChrome({
   title: string;
   eyebrow: string;
   subtitle?: string;
-  logoSize?: "sm" | "md" | "lg";
+  logoSize?: "sm" | "md" | "lg" | "xl";
 }) {
   const pathname = usePathname();
   const { isAdmin, signOut } = useUserSession();
@@ -45,12 +45,22 @@ export default function DashboardChrome({
       : []),
   ];
 
+  const largeLogo = logoSize === "lg" || logoSize === "xl";
+
   return (
     <header className="mb-6 animate-fade-up">
+      {largeLogo && (
+        <div className="mb-5">
+          <BrandLogo size={logoSize} href="/" priority />
+        </div>
+      )}
+
       <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
-          <BrandLogo size={logoSize} href="/" />
-          <p className="mt-3 text-xs uppercase tracking-[0.35em] text-cyan-400/70">
+          {!largeLogo && <BrandLogo size={logoSize} href="/" />}
+          <p
+            className={`${largeLogo ? "mt-0" : "mt-3"} text-xs uppercase tracking-[0.35em] text-cyan-400/70`}
+          >
             {eyebrow}
           </p>
           <h1 className="mt-1.5 font-[family-name:var(--font-display)] text-3xl font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-400 to-cyan-300 sm:text-[2.35rem] sm:leading-tight">

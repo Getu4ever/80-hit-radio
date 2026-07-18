@@ -408,12 +408,13 @@ export default function ProfileMembershipPanel({
           <div className="mt-5 flex flex-col gap-3">
             {isPremium ? (
               <>
-                <Link
-                  href="/dashboard/billing"
+                <button
+                  type="button"
+                  onClick={() => openExternalUrl("/dashboard/billing")}
                   className="rounded-xl bg-gradient-to-r from-fuchsia-600 to-cyan-500 px-5 py-3 text-center text-sm font-semibold text-white shadow-[0_0_20px_rgba(217,70,239,0.35)] transition hover:brightness-110"
                 >
                   Manage billing
-                </Link>
+                </button>
                 <button
                   type="button"
                   disabled={busy !== null}
@@ -425,12 +426,13 @@ export default function ProfileMembershipPanel({
               </>
             ) : isPastDue && hasStripeCustomer ? (
               <>
-                <Link
-                  href="/dashboard/billing"
+                <button
+                  type="button"
+                  onClick={() => openExternalUrl("/dashboard/billing")}
                   className="rounded-xl bg-gradient-to-r from-fuchsia-600 to-cyan-500 px-5 py-3 text-center text-sm font-semibold text-white shadow-[0_0_20px_rgba(217,70,239,0.35)] transition hover:brightness-110"
                 >
                   Update billing
-                </Link>
+                </button>
                 <Link
                   href="/pricing"
                   className="text-center text-xs text-cyan-300/70 underline-offset-2 hover:underline"

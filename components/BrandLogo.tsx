@@ -24,7 +24,13 @@ const SIZES = {
   lg: {
     width: 720,
     height: 480,
-    className: "h-28 w-full max-w-none sm:h-36",
+    className: "h-32 w-auto max-w-[min(100%,420px)] sm:h-40 sm:max-w-[520px]",
+  },
+  /** Billing / branded dashboard hero mark */
+  xl: {
+    width: 900,
+    height: 600,
+    className: "h-40 w-auto max-w-[min(100%,520px)] sm:h-52 sm:max-w-[640px]",
   },
 } as const;
 
@@ -51,7 +57,7 @@ export default function BrandLogo({
       width={dim.width}
       height={dim.height}
       priority={priority}
-      sizes="(max-width: 640px) 320px, 420px"
+      sizes="(max-width: 640px) 420px, 640px"
       className={`${dim.className} object-contain object-left ${className}`}
     />
   );

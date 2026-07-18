@@ -47,12 +47,13 @@ export default function ManageSubscriptionButton({
   return (
     <div className="flex flex-col gap-2">
       {isActive ? (
-        <Link
-          href="/dashboard/billing"
+        <button
+          type="button"
+          onClick={() => openExternalUrl("/dashboard/billing")}
           className="rounded-xl bg-gradient-to-r from-fuchsia-600 to-cyan-500 px-5 py-3 text-center text-sm font-semibold text-white shadow-[0_0_20px_rgba(217,70,239,0.35)] transition hover:brightness-110"
         >
           Manage billing
-        </Link>
+        </button>
       ) : (
         <button
           type="button"

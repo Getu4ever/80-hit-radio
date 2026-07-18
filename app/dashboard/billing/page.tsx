@@ -43,7 +43,7 @@ export default async function BillingDashboardPage() {
           eyebrow="Billing"
           title="Manage your RithmGen Premium membership"
           subtitle="Your branded membership home — the broadcast keeps playing here. Card updates and cancellation open Stripe in a new tab."
-          logoSize="lg"
+          logoSize="xl"
         />
 
         <BillingMembershipPanel

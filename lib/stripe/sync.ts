@@ -76,14 +76,13 @@ export async function getManagedSubscriptionForCustomer(
   customerId: string,
 ): Promise<Stripe.Subscription | null> {
   const stripe = getStripe();
+  // Stripe allows at most 4 expand levels. Listing already prefixes `data.`,
+  // so `data.items.data.price.product` (5) throws property_expansion_max_depth.
   const subscriptions = await stripe.subscriptions.list({
     customer: customerId,
     status: "all",
     limit: 10,
-    expand: [
-      "data.default_payment_method",
-      "data.items.data.price.product",
-    ],
+    expand: ["data.default_payment_method", "data.items.data.price"],
   });
 
   return (
@@ -129,67 +128,86 @@ function paymentMethodLabel(
   return pm.type ? pm.type.replace(/_/g, " ") : null;
 }
 
+const EMPTY_BILLING_SUMMARY: BillingSummary = {
+  subscriptionId: null,
+  planName: "RithmGen Premium",
+  priceLabel: null,
+  status: "none",
+  cancelAtPeriodEnd: false,
+  currentPeriodEnd: null,
+  paymentMethodLabel: null,
+};
+
 export async function getBillingSummaryForCustomer(
   customerId: string,
 ): Promise<BillingSummary> {
-  const stripe = getStripe();
-  const subscription = await getManagedSubscriptionForCustomer(customerId);
+  try {
+    const stripe = getStripe();
+    const subscription = await getManagedSubscriptionForCustomer(customerId);
 
-  if (!subscription) {
-    return {
-      subscriptionId: null,
-      planName: "RithmGen Premium",
-      priceLabel: null,
-      status: "none",
-      cancelAtPeriodEnd: false,
-      currentPeriodEnd: null,
-      paymentMethodLabel: null,
-    };
-  }
+    if (!subscription) {
+      return EMPTY_BILLING_SUMMARY;
+    }
 
-  const item = subscription.items.data[0];
-  const price = item?.price;
-  const product = price?.product;
-  const productName =
-    typeof product === "object" && product && !product.deleted
-      ? product.name
+    const item = subscription.items.data[0];
+    const price = item?.price;
+    const productRef = price?.product;
+
+    let productName: string | null = null;
+    if (typeof productRef === "object" && productRef && !productRef.deleted) {
+      productName = productRef.name;
+    } else if (typeof productRef === "string") {
+      try {
+        const product = await stripe.products.retrieve(productRef);
+        if (!product.deleted) productName = product.name;
+      } catch {
+        // Keep default plan name if product lookup fails.
+      }
+    }
+
+    let priceLabel: string | null = null;
+    if (price?.unit_amount != null && price.currency) {
+      const money = formatMoney(price.unit_amount, price.currency);
+      const interval = price.recurring?.interval;
+      priceLabel = interval ? `${money} per ${interval}` : money;
+    }
+
+    let pm: Stripe.PaymentMethod | string | null =
+      subscription.default_payment_method;
+
+    if (!pm || typeof pm === "string") {
+      const customer = await stripe.customers.retrieve(customerId, {
+        expand: ["invoice_settings.default_payment_method"],
+      });
+      if (!customer.deleted) {
+        pm = customer.invoice_settings?.default_payment_method ?? null;
+      }
+    }
+
+    // Stripe API 2025+ moved period end onto subscription items.
+    const periodEndUnix =
+      item && "current_period_end" in item
+        ? (item.current_period_end as number | undefined)
+        : (subscription as { current_period_end?: number }).current_period_end;
+    const periodEnd = periodEndUnix
+      ? new Date(periodEndUnix * 1000).toLocaleDateString("en-GB", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        })
       : null;
 
-  let priceLabel: string | null = null;
-  if (price?.unit_amount != null && price.currency) {
-    const money = formatMoney(price.unit_amount, price.currency);
-    const interval = price.recurring?.interval;
-    priceLabel = interval ? `${money} per ${interval}` : money;
+    return {
+      subscriptionId: subscription.id,
+      planName: productName || "RithmGen Premium",
+      priceLabel,
+      status: subscription.status,
+      cancelAtPeriodEnd: Boolean(subscription.cancel_at_period_end),
+      currentPeriodEnd: periodEnd,
+      paymentMethodLabel: paymentMethodLabel(pm),
+    };
+  } catch (err) {
+    console.error("[billing] getBillingSummaryForCustomer failed:", err);
+    return EMPTY_BILLING_SUMMARY;
   }
-
-  let pm: Stripe.PaymentMethod | string | null =
-    subscription.default_payment_method;
-
-  if (!pm || typeof pm === "string") {
-    const customer = await stripe.customers.retrieve(customerId, {
-      expand: ["invoice_settings.default_payment_method"],
-    });
-    if (!customer.deleted) {
-      pm = customer.invoice_settings?.default_payment_method ?? null;
-    }
-  }
-
-  const periodEndUnix = item?.current_period_end;
-  const periodEnd = periodEndUnix
-    ? new Date(periodEndUnix * 1000).toLocaleDateString("en-GB", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      })
-    : null;
-
-  return {
-    subscriptionId: subscription.id,
-    planName: productName || "RithmGen Premium",
-    priceLabel,
-    status: subscription.status,
-    cancelAtPeriodEnd: Boolean(subscription.cancel_at_period_end),
-    currentPeriodEnd: periodEnd,
-    paymentMethodLabel: paymentMethodLabel(pm),
-  };
 }
