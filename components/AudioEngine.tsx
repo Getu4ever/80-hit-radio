@@ -35,6 +35,8 @@ const ERROR_SKIP_COOLDOWN_MS = 800;
 const MAX_CONSECUTIVE_ERRORS = 8;
 const PROGRESS_UI_INTERVAL_MS = 400;
 const QUALITY_REASSERT_MS = 30_000;
+/** Muted cue warm-up: buffer this long, then pause at 0 so the seek UI stays still. */
+const MUTED_WARM_BUFFER_SEC = 1.25;
 
 function isYoutubeConsoleNoise(value: unknown): boolean {
   if (value == null) return true;
@@ -135,6 +137,8 @@ export default function AudioEngine({
   const lastPromotedTrackRef = useRef<string | null>(null);
   /** While true, keep the live slot playing muted so the first Play only unmutes. */
   const allowMutedWarmRef = useRef(true);
+  /** React state mirror — flipping false stops ReactPlayer `playing` after warm buffer. */
+  const [cueWarmActive, setCueWarmActive] = useState(true);
 
   liveSlotRef.current = liveSlot;
 
@@ -551,6 +555,7 @@ export default function AudioEngine({
 
   const warmSlotMuted = useCallback(
     (slot: PlayerSlot) => {
+      if (!allowMutedWarmRef.current) return;
       const media = slotRef(slot).current;
       if (!media) return;
       syncPlayerAudioState(playerEl(slot), { volume: 0, muted: true });
@@ -566,10 +571,41 @@ export default function AudioEngine({
     [playerEl, slotRef],
   );
 
+  const finishMutedWarm = useCallback(
+    (slot: PlayerSlot = liveSlotRef.current) => {
+      if (!allowMutedWarmRef.current) return;
+      allowMutedWarmRef.current = false;
+      setCueWarmActive(false);
+      const media = slotRef(slot).current;
+      if (media) {
+        try {
+          media.currentTime = 0;
+        } catch {
+          // Some embeds reject seeks until buffered.
+        }
+        try {
+          (media as YoutubePlayerElement).api?.seekTo?.(0, true);
+        } catch {
+          // Optional YouTube iframe API path.
+        }
+        if (!media.paused) media.pause();
+      }
+      syncPlayerAudioState(playerEl(slot), { volume: 0, muted: true });
+      useAudioStore.getState().setPlayedSeconds(0);
+    },
+    [playerEl, slotRef],
+  );
+
   useEffect(() => {
     if (!currentTrack) {
       allowMutedWarmRef.current = true;
+      setCueWarmActive(true);
       return;
+    }
+    // New cued track while paused: allow a fresh muted buffer pass.
+    if (!useAudioStore.getState().isPlaying) {
+      allowMutedWarmRef.current = true;
+      setCueWarmActive(true);
     }
   }, [currentTrack?.id]);
 
@@ -577,9 +613,9 @@ export default function AudioEngine({
     if (!isPlaying) {
       if (
         allowMutedWarmRef.current &&
+        cueWarmActive &&
         streamingAllowed &&
-        currentTrack &&
-        useAudioStore.getState().playedSeconds < 1
+        currentTrack
       ) {
         // Pre-start muted (allowed without a user gesture) so Play can unmute
         // inside the tap handler instead of waiting on a cold YouTube buffer.
@@ -592,6 +628,7 @@ export default function AudioEngine({
       return;
     }
     allowMutedWarmRef.current = false;
+    setCueWarmActive(false);
     if (!streamingAllowed) return;
     syncAllSlotsAudio();
     const slot = liveSlotRef.current;
@@ -603,6 +640,7 @@ export default function AudioEngine({
     streamingAllowed,
     currentTrack,
     liveSlot,
+    cueWarmActive,
     pauseSlot,
     syncAllSlotsAudio,
     tryPlaySlot,
@@ -690,6 +728,15 @@ export default function AudioEngine({
       const t = media.currentTime;
       if (!Number.isFinite(t)) return;
 
+      // Muted cue warm-up: buffer silently — do not crawl the seek head / clock
+      // or auto-skip tracks while the UI still shows Play.
+      if (!useAudioStore.getState().isPlaying) {
+        if (allowMutedWarmRef.current && t >= MUTED_WARM_BUFFER_SEC) {
+          finishMutedWarm(liveSlotRef.current);
+        }
+        return;
+      }
+
       const dur = durationRef.current;
       const remaining = dur > 0 ? dur - t : Infinity;
 
@@ -712,7 +759,7 @@ export default function AudioEngine({
         useAudioStore.getState().setPlayedSeconds(t);
       }
     },
-    [advanceNow],
+    [advanceNow, finishMutedWarm],
   );
 
   const handleDurationChange = useCallback(
@@ -853,9 +900,9 @@ export default function AudioEngine({
 
     const isLive = slot === liveSlot;
     const ref = slot === "a" ? playerARef : playerBRef;
-    // Muted warm while cued: keep playing=true so ReactPlayer doesn't pause our
-    // pre-buffer; live stays muted until isPlaying flips in a user gesture.
-    const warming = !isPlaying && allowMutedWarmRef.current;
+    // Muted warm while cued: keep playing=true briefly so ReactPlayer buffers;
+    // then finishMutedWarm pauses at 0. Live stays muted until isPlaying.
+    const warming = !isPlaying && cueWarmActive && allowMutedWarmRef.current;
     const shouldPlay = streamingAllowed && (isPlaying || warming);
     const slotMuted = !isLive || !isPlaying;
     const slotVolume = isLive && isPlaying ? volume : 0;
