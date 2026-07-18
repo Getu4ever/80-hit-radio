@@ -13,14 +13,24 @@ export async function POST(request: Request) {
     const body = (await request.json()) as {
       email?: string;
       password?: string;
+      fullName?: string;
+      full_name?: string;
     };
 
     const email = body.email?.trim();
     const password = body.password?.trim();
+    const fullName = (body.fullName ?? body.full_name ?? "").trim().slice(0, 120);
 
     if (!email || !password) {
       return NextResponse.json(
         { error: "Email and password are required for signup." },
+        { status: 400 },
+      );
+    }
+
+    if (!fullName) {
+      return NextResponse.json(
+        { error: "Full name is required for signup." },
         { status: 400 },
       );
     }
@@ -35,6 +45,9 @@ export async function POST(request: Request) {
       password,
       options: {
         redirectTo,
+        data: {
+          full_name: fullName,
+        },
       },
     });
 
@@ -43,6 +56,20 @@ export async function POST(request: Request) {
         { error: error.message ?? "Failed to create signup link." },
         { status: 500 },
       );
+    }
+
+    const userId = data.user?.id;
+    if (userId) {
+      const { error: profileError } = await admin
+        .from("profiles")
+        .update({ full_name: fullName, email })
+        .eq("id", userId);
+      if (profileError) {
+        console.error(
+          "POST /api/auth/signup profile name sync:",
+          profileError.message,
+        );
+      }
     }
 
     const hashedToken = data.properties?.hashed_token;
@@ -71,7 +98,7 @@ export async function POST(request: Request) {
       new URL(confirmUrl).host,
     );
 
-    const userEmail = buildSignupConfirmEmail(email, confirmUrl);
+    const userEmail = buildSignupConfirmEmail(email, confirmUrl, fullName);
     await sendResendEmail({
       to: email,
       subject: userEmail.subject,
@@ -81,7 +108,7 @@ export async function POST(request: Request) {
 
     // Notify admin — don't fail signup if this secondary mail fails.
     try {
-      const adminEmail = buildAdminNewSignupEmail(email);
+      const adminEmail = buildAdminNewSignupEmail(email, fullName);
       await sendResendEmail({
         to: getAdminEmail(),
         subject: adminEmail.subject,

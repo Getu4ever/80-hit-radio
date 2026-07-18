@@ -22,6 +22,8 @@ export interface Profile {
   role: UserRole;
   stripe_customer_id: string | null;
   stripe_subscription_status: StripeSubscriptionStatus;
+  full_name: string | null;
+  avatar_url: string | null;
   created_at: string;
 }
 
@@ -35,6 +37,8 @@ export type Database = {
           role: UserRole;
           stripe_customer_id: string | null;
           stripe_subscription_status: StripeSubscriptionStatus;
+          full_name: string | null;
+          avatar_url: string | null;
           created_at: string;
         };
         Insert: {
@@ -43,6 +47,8 @@ export type Database = {
           role?: UserRole;
           stripe_customer_id?: string | null;
           stripe_subscription_status?: StripeSubscriptionStatus;
+          full_name?: string | null;
+          avatar_url?: string | null;
           created_at?: string;
         };
         Update: {
@@ -51,6 +57,8 @@ export type Database = {
           role?: UserRole;
           stripe_customer_id?: string | null;
           stripe_subscription_status?: StripeSubscriptionStatus;
+          full_name?: string | null;
+          avatar_url?: string | null;
           created_at?: string;
         };
         Relationships: [

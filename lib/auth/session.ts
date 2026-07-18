@@ -2,6 +2,10 @@ import type { Profile, ProfileUpdate, UserRole } from "@/types/database.types";
 import { isSupabaseConfigured } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import {
+  avatarFromUserMetadata,
+  nameFromUserMetadata,
+} from "@/lib/profile/identity";
 import { TRIAL_DAYS } from "@/lib/subscription";
 import type { User } from "@supabase/supabase-js";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -30,18 +34,50 @@ async function readProfileById(userId: string): Promise<Profile | null> {
   }
 }
 
+/** Fill missing name/avatar from Google (or other OAuth) metadata. */
+async function syncIdentityFromAuth(
+  user: User,
+  profile: Profile,
+): Promise<Profile> {
+  const metaName = nameFromUserMetadata(user.user_metadata);
+  const metaAvatar = avatarFromUserMetadata(user.user_metadata);
+  const patch: ProfileUpdate = {};
+
+  if (!profile.full_name?.trim() && metaName) {
+    patch.full_name = metaName;
+  }
+  if (!profile.avatar_url?.trim() && metaAvatar) {
+    patch.avatar_url = metaAvatar;
+  }
+  if (user.email && user.email !== profile.email) {
+    patch.email = user.email;
+  }
+
+  if (Object.keys(patch).length === 0) return profile;
+
+  try {
+    const updated = await updateProfileById(user.id, patch);
+    return updated ?? { ...profile, ...patch };
+  } catch (err) {
+    console.error("syncIdentityFromAuth:", err);
+    return profile;
+  }
+}
+
 async function ensureProfile(
   user: User,
   userClient: SupabaseClient<Database>,
 ): Promise<Profile | null> {
   const existing = await readProfileById(user.id);
-  if (existing) return existing;
+  if (existing) return syncIdentityFromAuth(user, existing);
 
   const payload = {
     id: user.id,
     email: user.email ?? "",
     role: "user" as UserRole,
     stripe_subscription_status: "none" as const,
+    full_name: nameFromUserMetadata(user.user_metadata),
+    avatar_url: avatarFromUserMetadata(user.user_metadata),
   };
 
   // Prefer service role when available.
@@ -97,10 +133,10 @@ export async function getCurrentProfile(): Promise<Profile | null> {
       console.error("getCurrentProfile select:", error.message);
     }
 
-    if (data) return data;
+    if (data) return syncIdentityFromAuth(user, data);
 
     const serviceProfile = await readProfileById(user.id);
-    if (serviceProfile) return serviceProfile;
+    if (serviceProfile) return syncIdentityFromAuth(user, serviceProfile);
 
     return ensureProfile(user, supabase);
   } catch (err) {

@@ -44,13 +44,27 @@ type SessionApiUser = {
   createdAt: string;
   trialDaysLeft: number;
   subscriptionLabel: string;
+  fullName?: string | null;
+  displayName?: string;
+  avatarUrl?: string | null;
 };
 
 function mapApiUser(raw: SessionApiUser): SessionUser {
   return {
-    ...raw,
-    displayName: raw.email.split("@")[0] ?? raw.email,
-    avatarUrl: null,
+    id: raw.id,
+    email: raw.email,
+    role: raw.role,
+    stripeCustomerId: raw.stripeCustomerId,
+    stripeSubscriptionStatus: raw.stripeSubscriptionStatus,
+    createdAt: raw.createdAt,
+    trialDaysLeft: raw.trialDaysLeft,
+    subscriptionLabel: raw.subscriptionLabel,
+    displayName:
+      raw.displayName?.trim() ||
+      raw.fullName?.trim() ||
+      raw.email.split("@")[0] ||
+      raw.email,
+    avatarUrl: raw.avatarUrl ?? null,
   };
 }
 

@@ -36,6 +36,7 @@ export default function DashboardChrome({
   const links = [
     { href: "/", label: "On Air" },
     { href: "/dashboard/profile", label: "Listener Lounge" },
+    { href: "/help", label: "Help" },
     ...(isAdmin
       ? [{ href: "/dashboard/admin", label: "Studio Control" }]
       : []),
@@ -103,8 +104,12 @@ export default function DashboardChrome({
             </span>
           )}
         </p>
-        {user?.email && (
-          <p className="ml-auto text-xs text-white/35">{user.email}</p>
+        {user && (
+          <p className="ml-auto truncate text-xs text-white/35">
+            {user.displayName}
+            <span className="text-white/20"> · </span>
+            {user.email}
+          </p>
         )}
       </div>
     </header>

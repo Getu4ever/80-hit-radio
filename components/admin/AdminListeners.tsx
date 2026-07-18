@@ -145,6 +145,7 @@ export default function AdminListeners() {
       if (!q) return true;
       return (
         user.email.toLowerCase().includes(q) ||
+        (user.full_name?.toLowerCase().includes(q) ?? false) ||
         user.id.toLowerCase().includes(q)
       );
     });
@@ -366,7 +367,10 @@ export default function AdminListeners() {
                     }`}
                   >
                     <td className="px-4 py-3">
-                      <p>{user.email}</p>
+                      <p className="font-medium text-white/90">
+                        {user.full_name?.trim() || user.email.split("@")[0]}
+                      </p>
+                      <p className="text-white/45">{user.email}</p>
                       <p className="text-[11px] text-white/30">
                         {user.stripe_customer_id
                           ? `Stripe · ${user.stripe_customer_id.slice(0, 14)}…`

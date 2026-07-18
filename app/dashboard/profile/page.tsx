@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getCurrentProfile } from "@/lib/auth/session";
+import { displayNameForProfile } from "@/lib/profile/identity";
 import {
   formatSubscriptionLabel,
   getTrialDaysRemaining,
@@ -28,6 +29,7 @@ export default async function ProfileDashboardPage() {
     100,
     Math.max(0, ((TRIAL_DAYS - trialDays) / TRIAL_DAYS) * 100),
   );
+  const displayName = displayNameForProfile(profile);
 
   return (
     <div className="min-h-screen bg-[#07040f] px-4 py-10 pb-32 text-white sm:px-8">
@@ -41,13 +43,16 @@ export default async function ProfileDashboardPage() {
 
       <div className="relative mx-auto max-w-5xl">
         <DashboardChrome
-          eyebrow="Listener lounge"
-          title="Your membership"
-          subtitle="Control billing, keep the broadcast rolling, and sign out only when you're ready to kill the stream."
+          eyebrow="Listener Lounge"
+          title="Community dial"
+          subtitle="Your station membership — profile, listening presence, and billing — for the old-school radio community."
         />
 
         <ProfileMembershipPanel
           email={profile.email}
+          fullName={profile.full_name}
+          avatarUrl={profile.avatar_url}
+          displayName={displayName}
           role={profile.role}
           memberSince={created}
           stripeStatus={profile.stripe_subscription_status}

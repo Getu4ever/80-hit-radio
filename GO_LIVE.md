@@ -18,6 +18,11 @@ STRIPE_PRICE_ID=price_...
 STRIPE_WEBHOOK_SECRET=whsec_...
 
 NEXT_PUBLIC_APP_URL=https://your-domain.com
+
+# Resend (signup confirmation). FROM must use a verified Resend domain.
+RESEND_API_KEY=re_...
+RESEND_FROM_EMAIL=RithmGen <noreply@karoldigital.co.uk>
+ADMIN_EMAIL=support@rithmgen.co.uk
 ```
 
 | Variable | Where to find it |
@@ -29,6 +34,8 @@ NEXT_PUBLIC_APP_URL=https://your-domain.com
 | `STRIPE_PRICE_ID` | Stripe → Products → your Premium price → Price ID |
 | `STRIPE_WEBHOOK_SECRET` | Stripe → Developers → Webhooks → endpoint signing secret |
 | `NEXT_PUBLIC_APP_URL` | Your production origin (no trailing slash) |
+| `RESEND_FROM_EMAIL` | Resend verified sender (keep karoldigital until rithmgen.co.uk is verified) |
+| `ADMIN_EMAIL` | User-facing support + admin alerts (`support@rithmgen.co.uk`) |
 
 ---
 
@@ -125,6 +132,10 @@ update public.profiles
 set role = 'admin'
 where email = 'you@example.com';
 ```
+
+### Listener identity + avatars
+
+Also run `supabase/migrations/006_profile_identity.sql` (adds `full_name`, `avatar_url`, and the public `avatars` storage bucket). Required for signup name, Google profile photos, and Listener Lounge photo upload.
 
 ### Auth settings (Supabase Dashboard)
 
@@ -254,6 +265,7 @@ The free month is measured from `profiles.created_at`. Stripe status is updated 
 | `/api/stripe/checkout` | Create Checkout Session |
 | `/api/stripe/portal` | Customer Portal session |
 | `/api/stripe/webhook` | Sync subscription status → Postgres |
-| `/dashboard/profile` | Trial countdown + manage billing |
+| `/dashboard/profile` | Listener Lounge — profile, trial, billing |
 | `/dashboard/admin` | Admin metrics + role/status overrides |
+| `/help` | Help & support (`support@rithmgen.co.uk`) |
 | `/pricing` | Subscribe CTA |

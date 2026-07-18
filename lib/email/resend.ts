@@ -2,21 +2,31 @@ import { getAppUrl, PRODUCTION_APP_URL } from "@/lib/env";
 
 const RESEND_API_URL = "https://api.resend.com/emails";
 const PRODUCTION_SITE = PRODUCTION_APP_URL;
+const DEFAULT_SUPPORT_EMAIL = "support@rithmgen.co.uk";
 
 function serverRead(name: string): string {
   return (process.env[name] ?? "").trim();
 }
 
-/** Prefer the verified mailbox on karoldigital.co.uk for better inbox placement. */
+/**
+ * Send-from address must use a Resend-verified domain.
+ * Keep karoldigital.co.uk (or your verified domain) here until rithmgen.co.uk
+ * is verified in Resend. User-facing support contact is separate — see getAdminEmail.
+ */
 export function getResendFromEmail(): string {
   return (
     serverRead("RESEND_FROM_EMAIL") ||
-    "RithmGen <info@karoldigital.co.uk>"
+    "RithmGen <noreply@karoldigital.co.uk>"
   );
 }
 
+/** Admin alerts + user-facing support contact (reply-to, help page, email footers). */
 export function getAdminEmail(): string {
-  return serverRead("ADMIN_EMAIL") || "info@karoldigital.co.uk";
+  return serverRead("ADMIN_EMAIL") || DEFAULT_SUPPORT_EMAIL;
+}
+
+export function getSupportEmail(): string {
+  return getAdminEmail();
 }
 
 function getBrandAssets() {
@@ -28,7 +38,7 @@ function getBrandAssets() {
   return {
     appUrl: publicBase,
     logoUrl: `${publicBase}/logo/logo80b.jpg`,
-    supportEmail: getAdminEmail(),
+    supportEmail: getSupportEmail(),
     siteLabel: "www.rithmgen.co.uk",
   };
 }
@@ -89,7 +99,7 @@ function emailShell(options: {
                   <a href="mailto:${supportEmail}" style="color:#0891b2;text-decoration:none;">${supportEmail}</a>
                 </p>
                 <p style="margin:0;font-size:12px;line-height:1.5;color:#71717a;">
-                  Karol Digital Ltd · Support: ${supportEmail}<br />
+                  Support: ${supportEmail}<br />
                   © ${year} RithmGen. All rights reserved.<br />
                   You received this email because an account was created with this address.
                 </p>
@@ -103,8 +113,12 @@ function emailShell(options: {
 </html>`;
 }
 
-export function buildSignupConfirmEmail(email: string, actionLink: string) {
-  const safeEmail = escapeHtml(email);
+export function buildSignupConfirmEmail(
+  email: string,
+  actionLink: string,
+  fullName?: string | null,
+) {
+  const greetingName = escapeHtml(fullName?.trim() || email);
   const bodyHtml = `
     <p style="margin:0 0 8px;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:#a21caf;font-weight:700;">
       Account confirmation
@@ -113,7 +127,7 @@ export function buildSignupConfirmEmail(email: string, actionLink: string) {
       Confirm your email address
     </h1>
     <p style="margin:0 0 18px;font-size:15px;line-height:1.7;color:#3f3f46;">
-      Hello ${safeEmail},
+      Hello ${greetingName},
     </p>
     <p style="margin:0 0 18px;font-size:15px;line-height:1.7;color:#3f3f46;">
       Please confirm your email to finish creating your RithmGen account and
@@ -143,7 +157,7 @@ export function buildSignupConfirmEmail(email: string, actionLink: string) {
   const text = [
     "Confirm your RithmGen email address",
     "",
-    `Hello ${email},`,
+    `Hello ${fullName?.trim() || email},`,
     "",
     "Please confirm your email to finish creating your RithmGen account and start your 14-day free trial.",
     "",
@@ -151,7 +165,7 @@ export function buildSignupConfirmEmail(email: string, actionLink: string) {
     "",
     "If you did not create a RithmGen account, you can ignore this message.",
     "",
-    `Support: ${getAdminEmail()}`,
+    `Support: ${getSupportEmail()}`,
     "https://www.rithmgen.co.uk",
   ].join("\n");
 
@@ -166,9 +180,13 @@ export function buildSignupConfirmEmail(email: string, actionLink: string) {
   };
 }
 
-export function buildAdminNewSignupEmail(userEmail: string) {
+export function buildAdminNewSignupEmail(
+  userEmail: string,
+  fullName?: string | null,
+) {
   const { appUrl } = getBrandAssets();
   const safeEmail = escapeHtml(userEmail);
+  const safeName = escapeHtml(fullName?.trim() || "—");
   const when = new Date().toUTCString();
   const bodyHtml = `
     <p style="margin:0 0 8px;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:#0891b2;font-weight:700;">
@@ -183,6 +201,12 @@ export function buildAdminNewSignupEmail(userEmail: string) {
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;background:#fafafa;border:1px solid #e4e4e7;border-radius:12px;">
       <tr>
         <td style="padding:14px 16px;font-size:14px;color:#27272a;">
+          <strong style="color:#52525b;">Name</strong><br />
+          ${safeName}
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:0 16px 14px;font-size:14px;color:#27272a;">
           <strong style="color:#52525b;">Email</strong><br />
           ${safeEmail}
         </td>
@@ -202,6 +226,7 @@ export function buildAdminNewSignupEmail(userEmail: string) {
   const text = [
     "New RithmGen signup",
     "",
+    `Name: ${fullName?.trim() || "—"}`,
     `Email: ${userEmail}`,
     `Time (UTC): ${when}`,
     "",
@@ -232,7 +257,7 @@ export async function sendResendEmail(options: {
   }
 
   const to = Array.isArray(options.to) ? options.to : [options.to];
-  const adminEmail = getAdminEmail();
+  const supportEmail = getSupportEmail();
   const response = await fetch(RESEND_API_URL, {
     method: "POST",
     headers: {
@@ -242,12 +267,12 @@ export async function sendResendEmail(options: {
     body: JSON.stringify({
       from: getResendFromEmail(),
       to,
-      reply_to: options.replyTo || adminEmail,
+      reply_to: options.replyTo || supportEmail,
       subject: options.subject,
       html: options.html,
       text: options.text,
       headers: {
-        "List-Unsubscribe": `<mailto:${adminEmail}?subject=unsubscribe>`,
+        "List-Unsubscribe": `<mailto:${supportEmail}?subject=unsubscribe>`,
       },
     }),
   });

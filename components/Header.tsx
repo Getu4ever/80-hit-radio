@@ -175,6 +175,14 @@ export default function Header({
             >
               Listener Lounge
             </Link>
+            <Link
+              href="/help"
+              role="menuitem"
+              onClick={() => setMenuOpen(false)}
+              className="block px-4 py-2.5 text-sm text-white/80 transition hover:bg-cyan-400/10 hover:text-cyan-300"
+            >
+              Help & support
+            </Link>
             {isAdmin && (
               <Link
                 href="/dashboard/admin"

@@ -9,6 +9,7 @@ import { isSupabaseConfigured, isLocalDevelopment } from "@/lib/env";
 import BrandLogo from "@/components/BrandLogo";
 
 export default function SignupPage() {
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -42,7 +43,7 @@ export default function SignupPage() {
       const response = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, fullName }),
       });
 
       const payload = await response.json();
@@ -69,7 +70,7 @@ export default function SignupPage() {
       }
 
       setInfo(
-        "A confirmation email has been sent. Check your inbox and click the activation link.",
+        "A confirmation email has been sent. Check your inbox and click the activation link. Need help? support@rithmgen.co.uk",
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sign up failed");
@@ -105,6 +106,20 @@ export default function SignupPage() {
         )}
 
         <form onSubmit={onSubmit} className="mt-8 space-y-4">
+          <label className="block text-sm text-white/70">
+            Full name
+            <input
+              type="text"
+              required
+              minLength={2}
+              maxLength={120}
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              className="mt-1.5 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none focus:border-fuchsia-400/50"
+              autoComplete="name"
+              placeholder="How you appear in the Listener Lounge"
+            />
+          </label>
           <label className="block text-sm text-white/70">
             Email
             <input

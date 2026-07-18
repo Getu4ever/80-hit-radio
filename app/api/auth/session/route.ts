@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentProfile } from "@/lib/auth/session";
 import { isSupabaseConfigured } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
+import { displayNameForProfile } from "@/lib/profile/identity";
 import {
   formatSubscriptionLabel,
   getTrialDaysRemaining,
@@ -19,6 +20,9 @@ function serializeProfile(
     createdAt: profile.created_at,
     trialDaysLeft: getTrialDaysRemaining(profile.created_at),
     subscriptionLabel: formatSubscriptionLabel(profile),
+    fullName: profile.full_name,
+    displayName: displayNameForProfile(profile),
+    avatarUrl: profile.avatar_url,
   };
 }
 
