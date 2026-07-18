@@ -29,7 +29,7 @@ export default function DashboardChrome({
   subtitle?: string;
 }) {
   const pathname = usePathname();
-  const { isAdmin, signOut, user } = useUserSession();
+  const { isAdmin, signOut } = useUserSession();
   const currentTrack = useAudioStore((s) => s.currentTrack);
   const isPlaying = useAudioStore((s) => s.isPlaying);
 
@@ -43,24 +43,24 @@ export default function DashboardChrome({
   ];
 
   return (
-    <header className="mb-10 animate-fade-up">
-      <div className="mb-5">
-        <BrandLogo size="lg" href="/" />
-      </div>
-      <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="text-xs uppercase tracking-[0.35em] text-cyan-400/70">
+    <header className="mb-6 animate-fade-up">
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
+        <div className="min-w-0">
+          <BrandLogo size="sm" href="/" />
+          <p className="mt-3 text-xs uppercase tracking-[0.35em] text-cyan-400/70">
             {eyebrow}
           </p>
-          <h1 className="mt-2 font-[family-name:var(--font-display)] text-3xl font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-400 to-cyan-300 sm:text-4xl">
+          <h1 className="mt-1.5 font-[family-name:var(--font-display)] text-3xl font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-400 to-cyan-300 sm:text-[2.35rem] sm:leading-tight">
             {title}
           </h1>
           {subtitle && (
-            <p className="mt-2 max-w-xl text-sm text-white/50">{subtitle}</p>
+            <p className="mt-1.5 max-w-xl text-sm leading-relaxed text-white/50">
+              {subtitle}
+            </p>
           )}
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 sm:pt-1">
           {links.map((link) => {
             const active = pathname === link.href;
             return (
@@ -87,9 +87,9 @@ export default function DashboardChrome({
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 backdrop-blur-sm">
+      <div className="flex flex-wrap items-center gap-2.5 rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2.5 backdrop-blur-sm">
         <LiveDot active={Boolean(currentTrack && isPlaying)} />
-        <p className="text-sm text-white/70">
+        <p className="min-w-0 text-sm text-white/70">
           {currentTrack ? (
             <>
               <span className="text-white/40">Broadcast continues · </span>
@@ -99,18 +99,11 @@ export default function DashboardChrome({
             </>
           ) : (
             <span className="text-white/45">
-              No track on air — start radio from the home deck, it will keep
-              playing here until you sign out.
+              No track on air — tune in from the home deck; it keeps playing
+              here until you sign out.
             </span>
           )}
         </p>
-        {user && (
-          <p className="ml-auto truncate text-xs text-white/35">
-            {user.displayName}
-            <span className="text-white/20"> · </span>
-            {user.email}
-          </p>
-        )}
       </div>
     </header>
   );

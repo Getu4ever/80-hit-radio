@@ -14,11 +14,9 @@ type Props = {
   fullName: string | null;
   avatarUrl: string | null;
   displayName: string;
-  role: string;
   memberSince: string;
   stripeStatus: StripeSubscriptionStatus;
   hasStripeCustomer: boolean;
-  subscriptionLabel: string;
   trialDays: number;
   trialProgress: number;
   isPremium: boolean;
@@ -44,11 +42,9 @@ export default function ProfileMembershipPanel({
   fullName,
   avatarUrl: initialAvatarUrl,
   displayName: initialDisplayName,
-  role,
   memberSince,
   stripeStatus,
   hasStripeCustomer,
-  subscriptionLabel,
   trialDays,
   trialProgress,
   isPremium,
@@ -61,6 +57,14 @@ export default function ProfileMembershipPanel({
       ? "Past due"
       : isOnTrial
         ? "Free Trial Access"
+        : "No active plan";
+  // Short status for welcome — trial countdown lives only in Membership badge
+  const welcomeStatus = isPremium
+    ? "Member"
+    : isPastDue
+      ? "Past due"
+      : isOnTrial
+        ? "Free trial"
         : "No active plan";
   const router = useRouter();
   const { signOut, isAdmin } = useUserSession();
@@ -179,27 +183,27 @@ export default function ProfileMembershipPanel({
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <SyncSubscriptionBanner
         currentStatus={stripeStatus}
         hasStripeCustomer={hasStripeCustomer}
       />
 
-      <section className="animate-fade-up border-b border-white/10 pb-8">
-        <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+      <section className="animate-fade-up border-b border-white/10 pb-5">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="min-w-0">
             <p className="text-xs uppercase tracking-[0.3em] text-white/40">
               On the dial
             </p>
-            <h2 className="mt-1 truncate font-[family-name:var(--font-display)] text-3xl font-semibold text-white">
+            <h2 className="mt-1 truncate font-[family-name:var(--font-display)] text-2xl font-semibold text-white sm:text-3xl">
               Welcome, {displayName.split(" ")[0] || displayName}
             </h2>
-            <p className="mt-2 max-w-lg text-sm leading-relaxed text-white/50">
+            <p className="mt-1.5 max-w-lg text-sm leading-relaxed text-white/50">
               You&apos;re part of the RithmGen listener community — continuous
               classic hits, the way radio used to feel.
             </p>
-            <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-white/45">
-              <span className="text-cyan-200/90">{subscriptionLabel}</span>
+            <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-white/45">
+              <span className="text-cyan-200/90">{welcomeStatus}</span>
               <span aria-hidden>·</span>
               <span>Member since {memberSince}</span>
               <span aria-hidden>·</span>
@@ -216,7 +220,7 @@ export default function ProfileMembershipPanel({
               }}
               className="rounded-xl bg-gradient-to-r from-fuchsia-600 to-cyan-500 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_0_18px_rgba(217,70,239,0.35)] transition hover:brightness-110"
             >
-              {isPlaying ? "Back to On Air" : "Tune in now"}
+              {isPlaying ? "Back to On Air" : "Tune in"}
             </button>
             {isAdmin && (
               <Link
@@ -230,13 +234,13 @@ export default function ProfileMembershipPanel({
         </div>
       </section>
 
-      <section className="grid gap-10 lg:grid-cols-[1.15fr_0.85fr]">
-        <div className="animate-fade-up space-y-6" style={{ animationDelay: "80ms" }}>
+      <section className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr]">
+        <div className="animate-fade-up space-y-5" style={{ animationDelay: "80ms" }}>
           <div>
             <p className="text-xs uppercase tracking-[0.3em] text-white/40">
               Your listener profile
             </p>
-            <h3 className="mt-2 font-[family-name:var(--font-display)] text-xl font-semibold text-white">
+            <h3 className="mt-1.5 font-[family-name:var(--font-display)] text-xl font-semibold text-white">
               Name & photo
             </h3>
             <p className="mt-1 text-sm text-white/45">
@@ -320,9 +324,6 @@ export default function ProfileMembershipPanel({
               >
                 {busy === "profile" ? "Saving…" : "Save profile"}
               </button>
-              <span className="rounded-md border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] uppercase tracking-wider text-white/50">
-                {role}
-              </span>
             </div>
             {profileInfo && (
               <p className="text-sm text-cyan-200/90">{profileInfo}</p>
@@ -374,7 +375,7 @@ export default function ProfileMembershipPanel({
               continuous 80s broadcast unlocked.
             </p>
           ) : isOnTrial ? (
-            <div className="mt-5">
+            <div className="mt-4">
               <div className="mb-2 flex justify-between text-xs text-white/40">
                 <span>Free trial progress</span>
                 <span>{Math.round(trialProgress)}%</span>
@@ -397,9 +398,7 @@ export default function ProfileMembershipPanel({
             </p>
           )}
 
-          <p className="mt-4 text-xs text-white/40">{subscriptionLabel}</p>
-
-          <div className="mt-6 flex flex-col gap-3">
+          <div className="mt-5 flex flex-col gap-3">
             {isPremium ? (
               <>
                 <button
@@ -459,7 +458,7 @@ export default function ProfileMembershipPanel({
         </div>
       </section>
 
-      <section className="animate-fade-up border-t border-white/10 pt-6" style={{ animationDelay: "200ms" }}>
+      <section className="animate-fade-up border-t border-white/10 pt-5" style={{ animationDelay: "200ms" }}>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h3 className="font-[family-name:var(--font-display)] text-lg font-semibold text-white">
@@ -484,12 +483,6 @@ export default function ProfileMembershipPanel({
             >
               Sign out & stop radio
             </button>
-            <Link
-              href="/"
-              className="rounded-xl border border-white/10 bg-white/5 px-5 py-2.5 text-sm text-white/70 transition hover:bg-white/10"
-            >
-              Return to On Air
-            </Link>
           </div>
         </div>
       </section>

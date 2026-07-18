@@ -1,11 +1,7 @@
 import { redirect } from "next/navigation";
 import { getCurrentProfile } from "@/lib/auth/session";
 import { displayNameForProfile } from "@/lib/profile/identity";
-import {
-  formatSubscriptionLabel,
-  getTrialDaysRemaining,
-  TRIAL_DAYS,
-} from "@/lib/subscription";
+import { getTrialDaysRemaining, TRIAL_DAYS } from "@/lib/subscription";
 import DashboardChrome from "@/components/DashboardChrome";
 import ProfileMembershipPanel from "@/components/ProfileMembershipPanel";
 
@@ -18,7 +14,6 @@ export default async function ProfileDashboardPage() {
   }
 
   const trialDays = getTrialDaysRemaining(profile.created_at);
-  const label = formatSubscriptionLabel(profile);
   const isPremium = profile.stripe_subscription_status === "active";
   const created = new Date(profile.created_at).toLocaleDateString("en-US", {
     year: "numeric",
@@ -32,7 +27,7 @@ export default async function ProfileDashboardPage() {
   const displayName = displayNameForProfile(profile);
 
   return (
-    <div className="min-h-screen bg-[#07040f] px-4 py-10 pb-32 text-white sm:px-8">
+    <div className="min-h-screen bg-[#07040f] px-4 py-6 pb-28 text-white sm:px-8 sm:py-8">
       <div
         className="pointer-events-none fixed inset-0 opacity-40"
         aria-hidden
@@ -53,11 +48,9 @@ export default async function ProfileDashboardPage() {
           fullName={profile.full_name}
           avatarUrl={profile.avatar_url}
           displayName={displayName}
-          role={profile.role}
           memberSince={created}
           stripeStatus={profile.stripe_subscription_status}
           hasStripeCustomer={Boolean(profile.stripe_customer_id)}
-          subscriptionLabel={label}
           trialDays={trialDays}
           trialProgress={trialProgress}
           isPremium={isPremium}
