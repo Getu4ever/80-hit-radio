@@ -55,7 +55,7 @@ export default function PricingPage() {
   return (
     <div className="relative flex min-h-screen flex-col overflow-hidden bg-[#07040f] px-4 py-10 pb-24 text-white sm:px-8">
       <div
-        className="pointer-events-none fixed inset-0 opacity-40"
+        className="pointer-events-none fixed inset-0 overflow-hidden opacity-40"
         aria-hidden
       >
         <div className="absolute -left-24 top-0 h-80 w-80 rounded-full bg-fuchsia-600/25 blur-[110px]" />

@@ -205,7 +205,7 @@ export default function RadioDashboard() {
   };
 
   return (
-    <div className="flex min-h-screen bg-[#07040f] text-white">
+    <div className="flex min-h-screen overflow-x-clip bg-[#07040f] text-white">
       <Sidebar
         filter={filter}
         onFilterChange={handleFilterChange}

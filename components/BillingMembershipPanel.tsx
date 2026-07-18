@@ -134,9 +134,13 @@ export default function BillingMembershipPanel({
           {currentPeriodEnd && (
             <div>
               <dt className="text-white/40">
-                {cancelAtPeriodEnd ? "Access until" : "Next billing date"}
+                {cancelAtPeriodEnd ? "Access until" : "Renewal"}
               </dt>
-              <dd className="mt-1 text-white/85">{currentPeriodEnd}</dd>
+              <dd className="mt-1 text-white/85">
+                {cancelAtPeriodEnd
+                  ? currentPeriodEnd
+                  : `Renews on ${currentPeriodEnd}`}
+              </dd>
             </div>
           )}
           <div>

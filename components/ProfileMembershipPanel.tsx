@@ -21,6 +21,8 @@ type Props = {
   trialDays: number;
   trialProgress: number;
   isPremium: boolean;
+  currentPeriodEnd?: string | null;
+  cancelAtPeriodEnd?: boolean;
 };
 
 async function openStripe(endpoint: "/api/stripe/portal" | "/api/stripe/checkout") {
@@ -55,6 +57,8 @@ export default function ProfileMembershipPanel({
   trialDays,
   trialProgress,
   isPremium,
+  currentPeriodEnd = null,
+  cancelAtPeriodEnd = false,
 }: Props) {
   const isPastDue = stripeStatus === "past_due";
   const isOnTrial = !isPremium && !isPastDue && trialDays > 0;
@@ -372,10 +376,19 @@ export default function ProfileMembershipPanel({
           </div>
 
           {isPremium ? (
-            <p className="mt-4 text-sm leading-relaxed text-white/55">
-              Unlimited continuous streaming. Manage your card, receipts, or
-              cancel from your branded billing page — music keeps playing.
-            </p>
+            <div className="mt-4 space-y-2">
+              {currentPeriodEnd && (
+                <p className="text-sm font-medium text-cyan-200/90">
+                  {cancelAtPeriodEnd
+                    ? `Access until ${currentPeriodEnd}`
+                    : `Renews on ${currentPeriodEnd}`}
+                </p>
+              )}
+              <p className="text-sm leading-relaxed text-white/55">
+                Unlimited continuous streaming. Manage your card, receipts, or
+                cancel from your branded billing page — music keeps playing.
+              </p>
+            </div>
           ) : isPastDue ? (
             <p className="mt-4 text-sm leading-relaxed text-white/55">
               We couldn&apos;t renew your membership. Update billing to keep the

@@ -43,7 +43,7 @@ export default function PaywallOverlay() {
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6"
+      className="fixed inset-0 z-[100] flex items-center justify-center overflow-x-clip p-4 sm:p-6"
       role="dialog"
       aria-modal="true"
       aria-labelledby="paywall-title"
@@ -53,7 +53,7 @@ export default function PaywallOverlay() {
         aria-hidden
       />
       <div
-        className="pointer-events-none absolute inset-0 opacity-70"
+        className="pointer-events-none absolute inset-0 overflow-hidden opacity-70"
         aria-hidden
       >
         <div className="absolute -left-24 top-1/4 h-72 w-72 rounded-full bg-fuchsia-600/30 blur-[100px]" />

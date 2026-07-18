@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { getCurrentProfile } from "@/lib/auth/session";
+import { isStripeConfigured } from "@/lib/env";
 import { displayNameForProfile } from "@/lib/profile/identity";
+import { getBillingSummaryForCustomer } from "@/lib/stripe/sync";
 import { getTrialDaysRemaining, TRIAL_DAYS } from "@/lib/subscription";
 import DashboardChrome from "@/components/DashboardChrome";
 import ProfileMembershipPanel from "@/components/ProfileMembershipPanel";
@@ -26,10 +28,15 @@ export default async function ProfileDashboardPage() {
   );
   const displayName = displayNameForProfile(profile);
 
+  const billingSummary =
+    isPremium && profile.stripe_customer_id && isStripeConfigured()
+      ? await getBillingSummaryForCustomer(profile.stripe_customer_id)
+      : null;
+
   return (
-    <div className="min-h-screen bg-[#07040f] px-4 py-6 pb-28 text-white sm:px-8 sm:py-8">
+    <div className="min-h-screen overflow-x-clip bg-[#07040f] px-4 py-6 pb-28 text-white sm:px-8 sm:py-8">
       <div
-        className="pointer-events-none fixed inset-0 opacity-40"
+        className="pointer-events-none fixed inset-0 overflow-hidden opacity-40"
         aria-hidden
       >
         <div className="absolute -left-24 top-0 h-72 w-72 rounded-full bg-fuchsia-600/20 blur-[100px]" />
@@ -54,6 +61,8 @@ export default async function ProfileDashboardPage() {
           trialDays={trialDays}
           trialProgress={trialProgress}
           isPremium={isPremium}
+          currentPeriodEnd={billingSummary?.currentPeriodEnd ?? null}
+          cancelAtPeriodEnd={billingSummary?.cancelAtPeriodEnd ?? false}
         />
       </div>
     </div>

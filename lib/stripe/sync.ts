@@ -192,7 +192,7 @@ export async function getBillingSummaryForCustomer(
     const periodEnd = periodEndUnix
       ? new Date(periodEndUnix * 1000).toLocaleDateString("en-GB", {
           day: "numeric",
-          month: "long",
+          month: "short",
           year: "numeric",
         })
       : null;

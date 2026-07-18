@@ -15,9 +15,16 @@
   --font-family-display: var(--font-display);
 }
 
+html {
+  overflow-x: clip;
+  overscroll-behavior-x: none;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
+  overflow-x: clip;
+  overscroll-behavior-x: none;
 }
 
 @keyframes viz-pulse {

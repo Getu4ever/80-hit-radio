@@ -68,7 +68,7 @@ export default function HelpPage() {
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#07040f] px-4 py-10 pb-32 text-white sm:px-8">
       <div
-        className="pointer-events-none fixed inset-0 opacity-40"
+        className="pointer-events-none fixed inset-0 overflow-hidden opacity-40"
         aria-hidden
       >
         <div className="absolute -left-24 top-0 h-72 w-72 rounded-full bg-fuchsia-600/20 blur-[100px]" />

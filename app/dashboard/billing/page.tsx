@@ -29,9 +29,9 @@ export default async function BillingDashboardPage() {
         };
 
   return (
-    <div className="min-h-screen bg-[#07040f] px-4 py-6 pb-28 text-white sm:px-8 sm:py-8">
+    <div className="min-h-screen overflow-x-clip bg-[#07040f] px-4 py-6 pb-28 text-white sm:px-8 sm:py-8">
       <div
-        className="pointer-events-none fixed inset-0 opacity-40"
+        className="pointer-events-none fixed inset-0 overflow-hidden opacity-40"
         aria-hidden
       >
         <div className="absolute -left-24 top-0 h-72 w-72 rounded-full bg-fuchsia-600/20 blur-[100px]" />
