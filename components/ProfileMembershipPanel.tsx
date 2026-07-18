@@ -34,7 +34,11 @@ async function openStripe(endpoint: "/api/stripe/portal" | "/api/stripe/checkout
   if (!res.ok || !data.url) {
     throw new Error(data.error ?? "Unable to open Stripe");
   }
-  window.location.href = data.url;
+  // Portal (and checkout from the lounge) open in a new tab so the player keeps playing.
+  const opened = window.open(data.url, "_blank", "noopener,noreferrer");
+  if (!opened) {
+    window.location.href = data.url;
+  }
 }
 
 export default function ProfileMembershipPanel({
@@ -112,6 +116,7 @@ export default function ProfileMembershipPanel({
       await openStripe(endpoint);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
       setBusy(null);
     }
   }

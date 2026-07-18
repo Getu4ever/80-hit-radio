@@ -40,7 +40,11 @@ export default function ManageSubscriptionButton({
         setError(data.error ?? "Unable to open Stripe");
         return;
       }
-      window.location.href = data.url;
+      // Keep the player running — open Stripe in a new tab.
+      const opened = window.open(data.url, "_blank", "noopener,noreferrer");
+      if (!opened) {
+        window.location.href = data.url;
+      }
     } catch {
       setError("Network error talking to Stripe");
     } finally {
