@@ -48,7 +48,21 @@ export function syncPlayerAudioState(
   playerEl: YoutubePlayerElement | null,
   { volume, muted }: { volume: number; muted: boolean },
 ): void {
-  const api = playerEl?.api;
+  if (!playerEl) return;
+
+  // Imperative element props — critical for unmute inside a user gesture before
+  // React re-renders `muted` / `volume` on the hidden embed.
+  try {
+    const media = playerEl as HTMLVideoElement;
+    if (typeof media.muted === "boolean") {
+      media.muted = muted;
+      media.volume = muted ? 0 : Math.min(1, Math.max(0, volume));
+    }
+  } catch {
+    // ignore element sync errors during handoff
+  }
+
+  const api = playerEl.api;
   if (!api) return;
 
   try {

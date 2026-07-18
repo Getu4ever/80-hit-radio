@@ -148,9 +148,11 @@ export const useAudioStore = create<AudioState>((set, get) => ({
   togglePlay: () => {
     const { currentTrack, isPlaying, startRadio } = get();
     if (!currentTrack) {
+      // No cue yet — startRadio loads + plays (may wait on catalog).
       startRadio();
       return;
     }
+    // Resume/pause only — never reshuffle a cued track (keeps warm buffer).
     const nextPlaying = !isPlaying;
     set({ isPlaying: nextPlaying });
     if (nextPlaying) mediaPlayNow();
