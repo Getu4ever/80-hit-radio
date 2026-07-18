@@ -4,7 +4,7 @@ export const GUEST_LISTEN_LIMIT_SECONDS = 60 * 60; // exactly 1 hour
 export const GUEST_LISTEN_STORAGE_KEY = "rithmgen-guest-listen-seconds";
 
 const GUEST_LIMIT_MESSAGE =
-  "Thank you for listening to RithmGen! You have reached the 1-hour free playback limit for guest listeners. To maintain an uninterrupted, premium listening experience and protect the high-fidelity broadcast stream, please take a brief moment to create a free account. By signing up today, you will instantly unlock a 14-day complimentary trial of RithmGen Premium, granting you full control over all 20 genres, unlimited track skipping, and zero background ads. Don't stop the rhythm—your music is just a click away.";
+  "You've used your 1-hour guest listen. Create a free account to unlock a 14-day Premium trial — all genres, unlimited skips, and no ads.";
 
 export function getGuestLimitMessage(): string {
   return GUEST_LIMIT_MESSAGE;
@@ -35,6 +35,16 @@ export function writeGuestListenSeconds(seconds: number): void {
     );
   } catch {
     // Private mode / quota — fail soft; in-memory enforcement still applies.
+  }
+}
+
+/** Clears guest listen budget (fresh guest session after sign-out / sign-in). */
+export function clearGuestListenSeconds(): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.removeItem(GUEST_LISTEN_STORAGE_KEY);
+  } catch {
+    // Private mode — ignore.
   }
 }
 

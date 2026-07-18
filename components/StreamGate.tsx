@@ -12,6 +12,7 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/env";
 import {
+  clearGuestListenSeconds,
   getGuestLimitMessage,
   hasGuestReachedListenLimit,
 } from "@/lib/guestListenLimit";
@@ -132,14 +133,19 @@ export default function StreamGate() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event) => {
-      if (
-        event === "SIGNED_IN" ||
-        event === "TOKEN_REFRESHED" ||
-        event === "INITIAL_SESSION"
-      ) {
+      if (event === "SIGNED_IN") {
+        // Drop any pre-account guest hour so sign-out later starts clean.
+        clearGuestListenSeconds();
+        void checkStatus();
+        return;
+      }
+      if (event === "TOKEN_REFRESHED" || event === "INITIAL_SESSION") {
         void checkStatus();
       }
       if (event === "SIGNED_OUT") {
+        // Prefer a clean guest session; signOut() already cleared storage.
+        // Re-clear here in case auth was torn down outside our signOut helper.
+        clearGuestListenSeconds();
         void checkStatus();
       }
     });

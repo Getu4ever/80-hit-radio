@@ -9,6 +9,7 @@ import { useAudioStore } from "@/store/useAudioStore";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/env";
 import {
+  clearGuestListenSeconds,
   getGuestLimitMessage,
   hasGuestReachedListenLimit,
 } from "@/lib/guestListenLimit";
@@ -177,8 +178,12 @@ export function useUserSession() {
     const supabase = createClient();
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(() => {
+    } = supabase.auth.onAuthStateChange((event) => {
       void (async () => {
+        // Members shouldn't carry a prior guest hour into a later guest session.
+        if (event === "SIGNED_IN") {
+          clearGuestListenSeconds();
+        }
         const sessionUser = await fetchSessionUser();
         setUser(sessionUser);
         await refreshStreamGate();
@@ -198,7 +203,17 @@ export function useUserSession() {
   const signOut = useCallback(async () => {
     setLoading(true);
     try {
+      // Stop audio and reset guest quota BEFORE auth teardown so SIGNED_OUT
+      // handlers don't re-apply a stale exhausted guest hour paywall.
       useAudioStore.getState().stopBroadcast();
+      clearGuestListenSeconds();
+      useStreamAccessStore.getState().setAccess({
+        allowed: true,
+        reason: "ok",
+        message: null,
+        trialDaysRemaining: null,
+      });
+
       if (isSupabaseConfigured()) {
         const supabase = createClient();
         await supabase.auth.signOut();

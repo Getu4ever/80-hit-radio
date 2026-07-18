@@ -81,7 +81,7 @@ export default function PaywallOverlay() {
 
         <p className="relative text-xs uppercase tracking-[0.35em] text-fuchsia-300/80">
           {isGuestLimit
-            ? "Start your free trial"
+            ? "Guest listen ended"
             : isAuth
               ? "Sign in required"
               : isError
@@ -93,7 +93,7 @@ export default function PaywallOverlay() {
           className="relative mt-3 font-[family-name:var(--font-display)] text-2xl font-bold tracking-wide text-white sm:text-3xl"
         >
           {isGuestLimit
-            ? "Continue with a 14-day free Premium trial"
+            ? "Start your free Premium trial"
             : isAuth
               ? "Welcome back"
               : isError

@@ -37,7 +37,8 @@ export default function GuestListenGate() {
 
   const lastTickRef = useRef<number | null>(null);
 
-  // On hydrate / sign-out: lock immediately if the free hour is already used.
+  // On hydrate: lock only if this browser already exhausted the guest hour.
+  // Sign-out clears guest storage first, so this must not fire from stale member sessions.
   useEffect(() => {
     if (!hydrated || user) return;
     if (hasGuestReachedListenLimit()) {
