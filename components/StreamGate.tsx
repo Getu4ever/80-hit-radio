@@ -15,6 +15,7 @@ import {
   clearGuestListenSeconds,
   getGuestLimitMessage,
   hasGuestReachedListenLimit,
+  writeGuestListenSeconds,
 } from "@/lib/guestListenLimit";
 
 type CheckStatusResponse = {
@@ -23,6 +24,8 @@ type CheckStatusResponse = {
   reason?: StreamDenialReason;
   trialDaysRemaining?: number;
   guest?: boolean;
+  guestSecondsListened?: number;
+  guestSecondsRemaining?: number;
 };
 
 function denyGuestLimit(
@@ -47,6 +50,10 @@ async function applyCheckResult(
   });
   const data = (await res.json()) as CheckStatusResponse;
 
+  if (typeof data.guestSecondsListened === "number") {
+    writeGuestListenSeconds(data.guestSecondsListened);
+  }
+
   if (res.status === 401 || res.status === 403 || data.eligible === false) {
     if (useAudioStore.getState().isPlaying) {
       useAudioStore.setState({ isPlaying: false });
@@ -61,15 +68,17 @@ async function applyCheckResult(
       reason,
       message:
         data.message ??
-        (reason === "unauthenticated"
-          ? "Sign in to start your free 14-day trial and stream classic 80s hits."
-          : "Your free trial has expired. Subscribe now to keep rocking the 80s!"),
+        (reason === "guest_limit"
+          ? getGuestLimitMessage()
+          : reason === "unauthenticated"
+            ? "Sign in to start your free 14-day trial and stream classic 80s hits."
+            : "Your free trial has expired. Subscribe now to keep rocking the 80s!"),
       trialDaysRemaining: 0,
     });
     return;
   }
 
-  // Anonymous listeners still capped at 1 cumulative hour client-side.
+  // Local cache as secondary lock if server fail-open but cache already exhausted.
   if (data.guest && hasGuestReachedListenLimit()) {
     denyGuestLimit(setAccess);
     return;
@@ -134,7 +143,7 @@ export default function StreamGate() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_IN") {
-        // Drop any pre-account guest hour so sign-out later starts clean.
+        // Drop guest UX cache — members use account entitlement, not guest hour.
         clearGuestListenSeconds();
         void checkStatus();
         return;
@@ -143,8 +152,8 @@ export default function StreamGate() {
         void checkStatus();
       }
       if (event === "SIGNED_OUT") {
-        // Prefer a clean guest session; signOut() already cleared storage.
-        // Re-clear here in case auth was torn down outside our signOut helper.
+        // Clear UX cache only. Server IP quota is NOT reset — checkStatus re-locks
+        // if this guest identity already used the free hour.
         clearGuestListenSeconds();
         void checkStatus();
       }

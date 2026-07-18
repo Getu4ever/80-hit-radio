@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAuthUser, getCurrentProfile } from "@/lib/auth/session";
 import { isSupabaseConfigured } from "@/lib/env";
+import { getGuestListenQuota } from "@/lib/guestListenServer";
 import {
   isStreamingEligible,
   getTrialDaysRemaining,
@@ -11,11 +12,10 @@ import {
 /**
  * GET /api/stream/check-status
  *
- * TEMP (local usability): guests can stream.
- * Signed-in users still get trial / subscription checks.
- * Re-tighten to require login once auth is stable.
+ * Guests: 1 free hour enforced server-side (IP hash + device cookie).
+ * Signed-in users: trial / subscription entitlement (bypass guest hour).
  */
-export async function GET() {
+export async function GET(request: Request) {
   if (!isSupabaseConfigured()) {
     return NextResponse.json({
       status: "ok",
@@ -27,13 +27,30 @@ export async function GET() {
 
   const user = await getAuthUser();
 
-  // Guests can use the radio (no full-screen lock).
   if (!user) {
+    const quota = await getGuestListenQuota(request);
+    if (quota.exhausted) {
+      return NextResponse.json(
+        {
+          status: "denied",
+          eligible: false,
+          reason: "guest_limit",
+          guest: true,
+          guestSecondsListened: quota.secondsListened,
+          guestSecondsRemaining: 0,
+          message: quota.message,
+        },
+        { status: 403 },
+      );
+    }
+
     return NextResponse.json({
       status: "ok",
       eligible: true,
       reason: "ok",
       guest: true,
+      guestSecondsListened: quota.secondsListened,
+      guestSecondsRemaining: quota.secondsRemaining,
       message: "Listening as guest. Sign in to save your free trial.",
     });
   }

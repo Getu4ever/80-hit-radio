@@ -143,6 +143,14 @@ where email = 'you@example.com';
 
 Also run `supabase/migrations/006_profile_identity.sql` (adds `full_name`, `avatar_url`, and the public `avatars` storage bucket). Required for signup name, Google profile photos, and Listener Lounge photo upload.
 
+### Guest listen quota (1 free hour, server-side)
+
+Also run `supabase/migrations/007_guest_listen.sql`. This creates `guest_listen` (`ip_hash`, optional `device_id`, `seconds_listened`). The app stores a **hash** of the client IP (not the raw IP) and a long-lived httpOnly device cookie.
+
+Until this migration is applied, guest hour enforcement fails open (streaming still works; quota is not persisted).
+
+**Known limitation:** A guest who changes IP (VPN, new network) **and** clears cookies can obtain another free hour. IP + device cookie is the practical lock without requiring an account. Sign-out / clearing localStorage does **not** reset the server quota.
+
 ### Auth settings (Supabase Dashboard)
 
 > **Critical:** If Google sign-in lands on `http://localhost:3000/?code=...`, Supabase
@@ -270,11 +278,14 @@ When Stripe fires those events, `/api/stripe/webhook` updates `profiles.stripe_c
 
 | Condition | HTTP | Result |
 |---|---|---|
-| No Supabase session | **401** | Paywall → Sign in / Start Free Month |
-| `account_age > 30 days` AND `stripe_subscription_status !== 'active'` | **403** | Paywall → Subscribe now |
-| Otherwise | **200** | Streaming allowed |
+| Guest with `guest_listen.seconds_listened >= 3600` (IP hash / device) | **403** | Paywall → guest limit / Start free trial |
+| Guest under 1 hour | **200** | Streaming allowed (`guest: true`) |
+| Signed-in, trial/subscription eligible | **200** | Streaming allowed (bypasses guest hour) |
+| Signed-in, `account_age > trial` AND not active/trialing sub | **403** | Paywall → Subscribe now |
 
-The free month is measured from `profiles.created_at`. Stripe status is updated only by the webhook (and admin overrides).
+Guest seconds accrue via `POST /api/guest/listen` (and optional heartbeat `deltaSeconds`) while playing. localStorage is a UX cache only — **server is source of truth**. Sign-out does not reset `guest_listen`.
+
+Trial length is measured from `profiles.created_at`. Stripe status is updated only by the webhook (and admin overrides).
 
 ---
 
@@ -286,6 +297,7 @@ The free month is measured from `profiles.created_at`. Stripe status is updated 
 4. In SQL, backdate a test user: `update profiles set created_at = now() - interval '45 days' where email = '...'` with status `none` → player locks + blur paywall
 5. Admin email promoted → `/dashboard/admin` shows metrics + user table
 6. “Manage Subscription” opens Stripe Customer Portal for active subscribers
+7. Guest hour: play as guest → `guest_listen.seconds_listened` increases; after 3600s (or set high in SQL) → paywall; clear localStorage / sign out → still locked on same IP
 
 ---
 

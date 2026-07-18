@@ -1,4 +1,8 @@
-/** Guest free listen budget — cumulative across sessions via localStorage. */
+/**
+ * Guest free listen budget — client UX cache only.
+ * Server (IP hash + device cookie via /api/guest/listen + check-status) is source of truth.
+ * Clearing localStorage / private windows must not unlock another hour.
+ */
 
 export const GUEST_LISTEN_LIMIT_SECONDS = 60 * 60; // exactly 1 hour
 export const GUEST_LISTEN_STORAGE_KEY = "rithmgen-guest-listen-seconds";
@@ -26,6 +30,7 @@ export function readGuestListenSeconds(): number {
   }
 }
 
+/** Sync UX cache from server totals (never treat as authoritative alone). */
 export function writeGuestListenSeconds(seconds: number): void {
   if (typeof window === "undefined") return;
   try {
@@ -34,11 +39,14 @@ export function writeGuestListenSeconds(seconds: number): void {
       String(clampSeconds(seconds)),
     );
   } catch {
-    // Private mode / quota — fail soft; in-memory enforcement still applies.
+    // Private mode / quota — fail soft; server enforcement still applies.
   }
 }
 
-/** Clears guest listen budget (fresh guest session after sign-out / sign-in). */
+/**
+ * Clears the local UX cache only. Does NOT reset server quota —
+ * sign-out / sign-in must not grant another free hour on the same IP.
+ */
 export function clearGuestListenSeconds(): void {
   if (typeof window === "undefined") return;
   try {
@@ -48,7 +56,7 @@ export function clearGuestListenSeconds(): void {
   }
 }
 
-/** Adds elapsed seconds and returns the new cumulative total. */
+/** Adds elapsed seconds to the local cache and returns the new cumulative total. */
 export function addGuestListenSeconds(deltaSeconds: number): number {
   const next = clampSeconds(readGuestListenSeconds() + Math.max(0, deltaSeconds));
   writeGuestListenSeconds(next);
@@ -59,4 +67,35 @@ export function hasGuestReachedListenLimit(
   seconds = readGuestListenSeconds(),
 ): boolean {
   return seconds >= GUEST_LISTEN_LIMIT_SECONDS;
+}
+
+type GuestListenSyncResponse = {
+  exhausted?: boolean;
+  secondsListened?: number;
+  secondsRemaining?: number;
+  message?: string;
+};
+
+/** Accrue listen time on the server; updates local cache from the response. */
+export async function syncGuestListenDelta(
+  deltaSeconds: number,
+): Promise<GuestListenSyncResponse | null> {
+  if (typeof window === "undefined") return null;
+  const delta = Math.max(0, Math.floor(deltaSeconds));
+  try {
+    const res = await fetch("/api/guest/listen", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ deltaSeconds: delta }),
+      keepalive: true,
+    });
+    const data = (await res.json()) as GuestListenSyncResponse;
+    if (typeof data.secondsListened === "number") {
+      writeGuestListenSeconds(data.secondsListened);
+    }
+    return data;
+  } catch {
+    return null;
+  }
 }

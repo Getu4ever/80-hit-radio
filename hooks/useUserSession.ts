@@ -12,6 +12,7 @@ import {
   clearGuestListenSeconds,
   getGuestLimitMessage,
   hasGuestReachedListenLimit,
+  writeGuestListenSeconds,
 } from "@/lib/guestListenLimit";
 
 export interface SessionUser {
@@ -95,15 +96,25 @@ async function refreshStreamGate() {
       reason?: "ok" | "unauthenticated" | "trial_expired" | "guest_limit" | "error";
       trialDaysRemaining?: number;
       guest?: boolean;
+      guestSecondsListened?: number;
     };
 
+    if (typeof data.guestSecondsListened === "number") {
+      writeGuestListenSeconds(data.guestSecondsListened);
+    }
+
     if (res.status === 401 || res.status === 403 || data.eligible === false) {
+      if (useAudioStore.getState().isPlaying) {
+        useAudioStore.setState({ isPlaying: false });
+      }
       useStreamAccessStore.getState().setAccess({
         allowed: false,
         reason:
           data.reason ??
           (res.status === 401 ? "unauthenticated" : "trial_expired"),
-        message: data.message ?? null,
+        message:
+          data.message ??
+          (data.reason === "guest_limit" ? getGuestLimitMessage() : null),
         trialDaysRemaining: 0,
       });
       return;
@@ -180,7 +191,8 @@ export function useUserSession() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event) => {
       void (async () => {
-        // Members shouldn't carry a prior guest hour into a later guest session.
+        // Clear guest UX cache on sign-in only — members use account entitlement.
+        // Server guest quota is never reset by auth changes.
         if (event === "SIGNED_IN") {
           clearGuestListenSeconds();
         }
@@ -203,16 +215,10 @@ export function useUserSession() {
   const signOut = useCallback(async () => {
     setLoading(true);
     try {
-      // Stop audio and reset guest quota BEFORE auth teardown so SIGNED_OUT
-      // handlers don't re-apply a stale exhausted guest hour paywall.
+      // Stop audio. Clear local guest cache only — do NOT unlock or reset
+      // server IP quota. refreshStreamGate re-applies guest_limit if exhausted.
       useAudioStore.getState().stopBroadcast();
       clearGuestListenSeconds();
-      useStreamAccessStore.getState().setAccess({
-        allowed: true,
-        reason: "ok",
-        message: null,
-        trialDaysRemaining: null,
-      });
 
       if (isSupabaseConfigured()) {
         const supabase = createClient();

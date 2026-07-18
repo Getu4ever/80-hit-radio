@@ -225,6 +225,30 @@ export type Database = {
         };
         Relationships: [];
       };
+      guest_listen: {
+        Row: {
+          ip_hash: string;
+          device_id: string | null;
+          seconds_listened: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          ip_hash: string;
+          device_id?: string | null;
+          seconds_listened?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          ip_hash?: string;
+          device_id?: string | null;
+          seconds_listened?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;
