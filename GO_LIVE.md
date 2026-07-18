@@ -145,11 +145,18 @@ Also run `supabase/migrations/006_profile_identity.sql` (adds `full_name`, `avat
 
 ### Auth settings (Supabase Dashboard)
 
-1. **Authentication → URL configuration**
-   - Site URL: `https://your-domain.com` (or `http://localhost:3000` for local)
-   - Redirect URLs (add every origin you use):
-     - `http://localhost:3000/auth/callback`
-     - `https://your-domain.com/auth/callback`
+> **Critical:** If Google sign-in lands on `http://localhost:3000/?code=...`, Supabase
+> **Site URL** is still set to localhost. The app’s `redirectTo` is ignored when that
+> URL (or `/auth/callback`) is missing from Redirect URLs — fix the Dashboard first.
+
+1. **Authentication → URL configuration** (production values)
+   - **Site URL:** `https://www.rithmgen.co.uk`  
+     (Do **not** leave this as `http://localhost:3000` for a live site.)
+   - **Redirect URLs** (allow list — add all of these):
+     - `https://www.rithmgen.co.uk/auth/callback`
+     - `https://www.rithmgen.co.uk/**`
+     - `https://rithmgen.co.uk/auth/callback`
+     - `http://localhost:3000/auth/callback` (local `npm run dev` only)
      - If you sometimes run on another port locally (e.g. `3001`), add that origin too.
 2. **Authentication → Providers → Email**
    - Enable Email provider
@@ -157,9 +164,10 @@ Also run `supabase/migrations/006_profile_identity.sql` (adds `full_name`, `avat
 3. **Authentication → Providers → Google**
    - Enable Google provider
    - Add your Google OAuth client ID and secret (Google Cloud Console → APIs & Services → Credentials)
-   - Authorized redirect URI in Google must include:
+   - **Google Cloud Console → Credentials → OAuth 2.0 Client → Authorized redirect URIs** must include:
      - `https://YOUR_PROJECT_REF.supabase.co/auth/v1/callback`
-   - In Supabase, the app callback is `/auth/callback` (handled server-side after Google returns to Supabase)
+     - (Google redirects to Supabase, not to your site. Your site callback is configured in Supabase Redirect URLs above.)
+   - In the app, OAuth `redirectTo` is `https://www.rithmgen.co.uk/auth/callback?next=/`
 
 ---
 

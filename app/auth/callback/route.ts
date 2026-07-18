@@ -4,7 +4,32 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 import { getCurrentProfile } from "@/lib/auth/session";
-import { getAppUrl, getSupabaseEnv } from "@/lib/env";
+import {
+  getAppUrl,
+  getSupabaseEnv,
+  isLocalhostUrl,
+  PRODUCTION_APP_URL,
+} from "@/lib/env";
+
+/**
+ * Prefer the host that received the OAuth/email callback so the session
+ * cookie is set on the same origin the browser is on. Never redirect to
+ * localhost from a production build.
+ */
+function resolveCallbackAppUrl(request: Request) {
+  try {
+    const origin = new URL(request.url).origin.replace(/\/$/, "");
+    if (process.env.NODE_ENV === "production" && isLocalhostUrl(origin)) {
+      return PRODUCTION_APP_URL;
+    }
+    if (!isLocalhostUrl(origin) || process.env.NODE_ENV !== "production") {
+      return origin;
+    }
+  } catch {
+    // fall through
+  }
+  return getAppUrl();
+}
 
 function loginRedirect(appUrl: string, message: string) {
   return NextResponse.redirect(
@@ -13,7 +38,7 @@ function loginRedirect(appUrl: string, message: string) {
 }
 
 export async function GET(request: Request) {
-  const appUrl = getAppUrl();
+  const appUrl = resolveCallbackAppUrl(request);
   const { searchParams } = new URL(request.url);
 
   const oauthError = searchParams.get("error_description") ?? searchParams.get("error");
