@@ -56,7 +56,7 @@ const SECTIONS = [
     id: "billing",
     title: "Billing basics",
     body: [
-      "Premium is a simple monthly membership. Manage it from Billing on rithmgen.co.uk (large logo, plan summary); card updates and cancel confirm in Stripe’s secure flows.",
+      "Premium is a simple monthly membership. Manage it from Billing on rithmgen.co.uk; card updates and cancel confirm in Stripe’s secure flows.",
       "Canceling ends access after the current billing period. Trial listeners can upgrade from Pricing or the Listener Lounge.",
     ],
   },
