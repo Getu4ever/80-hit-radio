@@ -55,9 +55,14 @@ function emailShell(options: {
   title: string;
   preheader: string;
   bodyHtml: string;
+  /** Extra footer line under the copyright (shown once; no separate Support: line). */
+  footerNote?: string;
 }): string {
   const { logoUrl, supportEmail, siteLabel, appUrl } = getBrandAssets();
   const year = new Date().getFullYear();
+  const footerNote = options.footerNote
+    ? `<br />\n                  ${escapeHtml(options.footerNote)}`
+    : "";
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -99,9 +104,7 @@ function emailShell(options: {
                   <a href="mailto:${supportEmail}" style="color:#0891b2;text-decoration:none;">${supportEmail}</a>
                 </p>
                 <p style="margin:0;font-size:12px;line-height:1.5;color:#71717a;">
-                  Support: ${supportEmail}<br />
-                  © ${year} RithmGen. All rights reserved.<br />
-                  You received this email because an account was created with this address.
+                  © ${year} RithmGen. All rights reserved.${footerNote}
                 </p>
               </td>
             </tr>
@@ -154,6 +157,7 @@ export function buildSignupConfirmEmail(
     </p>
   `;
 
+  const { supportEmail, siteLabel, appUrl } = getBrandAssets();
   const text = [
     "Confirm your RithmGen email address",
     "",
@@ -165,8 +169,9 @@ export function buildSignupConfirmEmail(
     "",
     "If you did not create a RithmGen account, you can ignore this message.",
     "",
-    `Support: ${getSupportEmail()}`,
-    "https://www.rithmgen.co.uk",
+    `RithmGen · Classic hit radio streaming`,
+    `${siteLabel} · ${supportEmail}`,
+    appUrl,
   ].join("\n");
 
   return {
@@ -175,6 +180,8 @@ export function buildSignupConfirmEmail(
       title: "Confirm your RithmGen email address",
       preheader: "Confirm your email to finish creating your RithmGen account.",
       bodyHtml,
+      footerNote:
+        "You received this email because an account was created with this address.",
     }),
     text,
   };
@@ -239,6 +246,7 @@ export function buildAdminNewSignupEmail(
       title: "New RithmGen signup",
       preheader: `New signup started for ${userEmail}`,
       bodyHtml,
+      footerNote: "Internal admin notification from RithmGen.",
     }),
     text,
   };
