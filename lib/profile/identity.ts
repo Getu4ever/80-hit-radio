@@ -19,6 +19,10 @@ export function nameFromUserMetadata(
   return null;
 }
 
+function isHttpAvatarUrl(value: string): boolean {
+  return value.startsWith("http://") || value.startsWith("https://");
+}
+
 /** Extract avatar URL from Supabase / Google user metadata. */
 export function avatarFromUserMetadata(
   metadata: User["user_metadata"] | null | undefined,
@@ -28,12 +32,27 @@ export function avatarFromUserMetadata(
   for (const value of candidates) {
     if (typeof value === "string") {
       const trimmed = value.trim();
-      if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+      if (isHttpAvatarUrl(trimmed)) {
         return trimmed.slice(0, 2048);
       }
     }
   }
   return null;
+}
+
+/**
+ * Display resolution: stored profile avatar → Google/OAuth metadata → null
+ * (UI shows initials when null). Never invents a second photo.
+ */
+export function resolveProfileAvatar(
+  profileAvatar: string | null | undefined,
+  metadata?: User["user_metadata"] | null,
+): string | null {
+  const stored = profileAvatar?.trim();
+  if (stored && isHttpAvatarUrl(stored)) {
+    return stored.slice(0, 2048);
+  }
+  return avatarFromUserMetadata(metadata);
 }
 
 export function displayNameForProfile(profile: {

@@ -187,47 +187,23 @@ export default function ProfileMembershipPanel({
 
       <section className="animate-fade-up border-b border-white/10 pb-8">
         <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
-          <div className="flex min-w-0 items-start gap-4">
-            <div className="relative shrink-0">
-              <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-fuchsia-500/80 to-cyan-400/80 font-[family-name:var(--font-display)] text-2xl font-bold text-[#07040f] shadow-[0_0_28px_rgba(34,211,238,0.35)] ring-2 ring-white/10">
-                {avatarUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={avatarUrl}
-                    alt=""
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  initialsForName(displayName)
-                )}
-              </div>
-              <span
-                className={`absolute bottom-1 right-1 h-3 w-3 rounded-full ring-2 ring-[#07040f] ${
-                  currentTrack && isPlaying
-                    ? "bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.9)] animate-viz-pulse"
-                    : "bg-white/30"
-                }`}
-                aria-hidden
-              />
-            </div>
-            <div className="min-w-0">
-              <p className="text-xs uppercase tracking-[0.3em] text-white/40">
-                On the dial
-              </p>
-              <h2 className="mt-1 truncate font-[family-name:var(--font-display)] text-3xl font-semibold text-white">
-                Welcome, {displayName.split(" ")[0] || displayName}
-              </h2>
-              <p className="mt-2 max-w-lg text-sm leading-relaxed text-white/50">
-                You&apos;re part of the RithmGen listener community — continuous
-                classic hits, the way radio used to feel.
-              </p>
-              <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-white/45">
-                <span className="text-cyan-200/90">{subscriptionLabel}</span>
-                <span aria-hidden>·</span>
-                <span>Member since {memberSince}</span>
-                <span aria-hidden>·</span>
-                <span>{streamLabel}</span>
-              </div>
+          <div className="min-w-0">
+            <p className="text-xs uppercase tracking-[0.3em] text-white/40">
+              On the dial
+            </p>
+            <h2 className="mt-1 truncate font-[family-name:var(--font-display)] text-3xl font-semibold text-white">
+              Welcome, {displayName.split(" ")[0] || displayName}
+            </h2>
+            <p className="mt-2 max-w-lg text-sm leading-relaxed text-white/50">
+              You&apos;re part of the RithmGen listener community — continuous
+              classic hits, the way radio used to feel.
+            </p>
+            <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-white/45">
+              <span className="text-cyan-200/90">{subscriptionLabel}</span>
+              <span aria-hidden>·</span>
+              <span>Member since {memberSince}</span>
+              <span aria-hidden>·</span>
+              <span>{streamLabel}</span>
             </div>
           </div>
 
@@ -271,7 +247,14 @@ export default function ProfileMembershipPanel({
 
           <form onSubmit={(e) => void saveProfile(e)} className="space-y-4">
             <div className="flex flex-wrap items-center gap-4">
-              <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-fuchsia-500/70 to-cyan-400/70 text-lg font-bold text-[#07040f]">
+              <div
+                className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-fuchsia-500/70 to-cyan-400/70 text-lg font-bold text-[#07040f]"
+                aria-label={
+                  avatarUrl
+                    ? `${displayName}'s profile picture`
+                    : `${displayName}'s initials`
+                }
+              >
                 {avatarUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img

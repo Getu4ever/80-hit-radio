@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import {
   avatarFromUserMetadata,
   nameFromUserMetadata,
+  resolveProfileAvatar,
 } from "@/lib/profile/identity";
 import { TRIAL_DAYS } from "@/lib/subscription";
 import type { User } from "@supabase/supabase-js";
@@ -40,27 +41,38 @@ async function syncIdentityFromAuth(
   profile: Profile,
 ): Promise<Profile> {
   const metaName = nameFromUserMetadata(user.user_metadata);
-  const metaAvatar = avatarFromUserMetadata(user.user_metadata);
+  // Prefer stored upload; only fill from Google/OAuth when avatar_url is empty.
+  const resolvedAvatar = resolveProfileAvatar(
+    profile.avatar_url,
+    user.user_metadata,
+  );
   const patch: ProfileUpdate = {};
 
   if (!profile.full_name?.trim() && metaName) {
     patch.full_name = metaName;
   }
-  if (!profile.avatar_url?.trim() && metaAvatar) {
-    patch.avatar_url = metaAvatar;
+  if (!profile.avatar_url?.trim() && resolvedAvatar) {
+    patch.avatar_url = resolvedAvatar;
   }
   if (user.email && user.email !== profile.email) {
     patch.email = user.email;
   }
 
-  if (Object.keys(patch).length === 0) return profile;
+  const withResolvedAvatar = (row: Profile): Profile => ({
+    ...row,
+    avatar_url: resolveProfileAvatar(row.avatar_url, user.user_metadata),
+  });
+
+  if (Object.keys(patch).length === 0) {
+    return withResolvedAvatar(profile);
+  }
 
   try {
     const updated = await updateProfileById(user.id, patch);
-    return updated ?? { ...profile, ...patch };
+    return withResolvedAvatar(updated ?? { ...profile, ...patch });
   } catch (err) {
     console.error("syncIdentityFromAuth:", err);
-    return profile;
+    return withResolvedAvatar({ ...profile, ...patch });
   }
 }
 
