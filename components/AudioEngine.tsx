@@ -16,6 +16,7 @@ import {
   YOUTUBE_PLAYER_CONFIG,
   type YoutubePlayerElement,
 } from "@/lib/broadcastAudio";
+import { registerMediaPlayNow } from "@/lib/mediaPlayback";
 import { useAudioStore } from "@/store/useAudioStore";
 
 const ReactPlayer = dynamic(() => import("react-player"), { ssr: false });
@@ -132,6 +133,8 @@ export default function AudioEngine({
   const slotReadyRef = useRef<Record<PlayerSlot, string | null>>({ a: null, b: null });
   const promoteCleanupRef = useRef<(() => void) | null>(null);
   const lastPromotedTrackRef = useRef<string | null>(null);
+  /** While true, keep the live slot playing muted so the first Play only unmutes. */
+  const allowMutedWarmRef = useRef(true);
 
   liveSlotRef.current = liveSlot;
 
@@ -152,9 +155,12 @@ export default function AudioEngine({
   const syncSlotAudio = useCallback(
     (slot: PlayerSlot) => {
       const isLive = slot === liveSlotRef.current;
+      // Only the live slot is audible, and only while isPlaying — keeps muted
+      // warm-up silent until Play runs inside a user gesture.
+      const audible = isLive && useAudioStore.getState().isPlaying;
       syncPlayerAudioState(playerEl(slot), {
-        volume: isLive ? volume : 0,
-        muted: !isLive,
+        volume: audible ? volume : 0,
+        muted: !audible,
       });
     },
     [playerEl, volume],
@@ -224,8 +230,13 @@ export default function AudioEngine({
       if (!media || slot !== liveSlotRef.current) return false;
       syncSlotAudio(slot);
       if (!media.paused) return true;
-      if (media.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
-        void media.play().catch(() => {});
+      // Always attempt play — gating on readyState missed gesture-safe resumes
+      // on mobile where the element is loaded but readyState is still low.
+      void media.play().catch(() => {});
+      try {
+        (media as YoutubePlayerElement).api?.playVideo?.();
+      } catch {
+        // Optional iframe API path.
       }
       return !media.paused;
     },
@@ -299,6 +310,76 @@ export default function AudioEngine({
     pauseSlot,
     syncAllSlotsAudio,
   };
+
+  /**
+   * Gesture-safe play: find the slot that already holds currentTrack (often the
+   * muted prefetch), promote it synchronously, then call play() in this stack.
+   * Next worked on mobile because prefetch was already playing muted; Play only
+   * flipped isPlaying and deferred play() into an effect (outside the gesture).
+   */
+  const playCurrentInGesture = useCallback(() => {
+    if (!streamingAllowed) return false;
+    const trackId = useAudioStore.getState().currentTrack?.id;
+    if (!trackId || !useAudioStore.getState().isPlaying) return false;
+
+    let target: PlayerSlot | null = null;
+    if (slotAIdRef.current === trackId) target = "a";
+    else if (slotBIdRef.current === trackId) target = "b";
+
+    // Never start the wrong slot — wait for the track effect to load a new src.
+    if (!target) return false;
+
+    if (target !== liveSlotRef.current) {
+      const demoted = otherSlot(target);
+      liveSlotRef.current = target;
+      setLiveSlot(target);
+      pauseSlot(demoted);
+
+      const upcomingId = useAudioStore.getState().upcomingTrack?.id ?? null;
+      if (demoted === "a") {
+        slotAIdRef.current = upcomingId;
+        setSlotAId(upcomingId);
+        if (upcomingId) slotReadyRef.current.a = null;
+      } else {
+        slotBIdRef.current = upcomingId;
+        setSlotBId(upcomingId);
+        if (upcomingId) slotReadyRef.current.b = null;
+      }
+      lastPromotedTrackRef.current = trackId;
+    }
+
+    const slot = target;
+    const media = slotRef(slot).current;
+    if (!media) return false;
+
+    syncAllSlotsAudio();
+    syncSlotAudio(slot);
+    void media.play().catch(() => {});
+    try {
+      (media as YoutubePlayerElement).api?.playVideo?.();
+    } catch {
+      // Optional iframe API path.
+    }
+    if (media.paused) {
+      awaitPromotedPlayback(slot);
+    } else {
+      emitPlayingBench(slot, true);
+    }
+    return true;
+  }, [
+    awaitPromotedPlayback,
+    emitPlayingBench,
+    pauseSlot,
+    slotRef,
+    streamingAllowed,
+    syncAllSlotsAudio,
+    syncSlotAudio,
+  ]);
+
+  useEffect(() => {
+    registerMediaPlayNow(() => playCurrentInGesture());
+    return () => registerMediaPlayNow(null);
+  }, [playCurrentInGesture]);
 
   useEffect(() => {
     return () => {
@@ -468,14 +549,66 @@ export default function AudioEngine({
     useAudioStore.getState().ensureUpcoming();
   }, [streamingAllowed, currentTrack?.id]);
 
+  const warmSlotMuted = useCallback(
+    (slot: PlayerSlot) => {
+      const media = slotRef(slot).current;
+      if (!media) return;
+      syncPlayerAudioState(playerEl(slot), { volume: 0, muted: true });
+      if (media.paused) {
+        void media.play().catch(() => {});
+        try {
+          (media as YoutubePlayerElement).api?.playVideo?.();
+        } catch {
+          // Optional iframe API path.
+        }
+      }
+    },
+    [playerEl, slotRef],
+  );
+
+  useEffect(() => {
+    if (!currentTrack) {
+      allowMutedWarmRef.current = true;
+      return;
+    }
+  }, [currentTrack?.id]);
+
   useEffect(() => {
     if (!isPlaying) {
+      if (
+        allowMutedWarmRef.current &&
+        streamingAllowed &&
+        currentTrack &&
+        useAudioStore.getState().playedSeconds < 1
+      ) {
+        // Pre-start muted (allowed without a user gesture) so Play can unmute
+        // inside the tap handler instead of waiting on a cold YouTube buffer.
+        warmSlotMuted(liveSlotRef.current);
+        warmSlotMuted(otherSlot(liveSlotRef.current));
+        return;
+      }
       pauseSlot("a");
       pauseSlot("b");
       return;
     }
+    allowMutedWarmRef.current = false;
+    if (!streamingAllowed) return;
     syncAllSlotsAudio();
-  }, [isPlaying, liveSlot, pauseSlot, syncAllSlotsAudio]);
+    const slot = liveSlotRef.current;
+    if (!tryPlaySlot(slot)) {
+      awaitPromotedPlayback(slot);
+    }
+  }, [
+    isPlaying,
+    streamingAllowed,
+    currentTrack,
+    liveSlot,
+    pauseSlot,
+    syncAllSlotsAudio,
+    tryPlaySlot,
+    awaitPromotedPlayback,
+    warmSlotMuted,
+  ]);
 
   useEffect(() => {
     syncAllSlotsAudio();
@@ -489,7 +622,8 @@ export default function AudioEngine({
   }, [broadcastEnhance, isPlaying, runSlotSync, liveSlot, currentTrack?.id]);
 
   useEffect(() => {
-    if (!upcomingTrack || !streamingAllowed || !isPlaying) return;
+    if (!upcomingTrack || !streamingAllowed) return;
+    if (!isPlaying && !allowMutedWarmRef.current) return;
     if (prefetchedIdRef.current === upcomingTrack.id) return;
     prefetchedIdRef.current = upcomingTrack.id;
 
@@ -602,13 +736,29 @@ export default function AudioEngine({
         slot,
       });
       const media = slotRef(slot).current;
-      syncSlotAudio(slot);
       if (media && streamingAllowed && isPlaying) {
+        syncSlotAudio(slot);
         void media.play().catch(() => {});
+      } else if (
+        media &&
+        streamingAllowed &&
+        allowMutedWarmRef.current &&
+        !isPlaying
+      ) {
+        warmSlotMuted(slot);
+      } else {
+        syncSlotAudio(slot);
       }
       queueMicrotask(() => scheduleSlotSync(slot));
     },
-    [scheduleSlotSync, slotRef, streamingAllowed, isPlaying, syncSlotAudio],
+    [
+      scheduleSlotSync,
+      slotRef,
+      streamingAllowed,
+      isPlaying,
+      syncSlotAudio,
+      warmSlotMuted,
+    ],
   );
 
   const handlePlaying = useCallback(
@@ -624,33 +774,55 @@ export default function AudioEngine({
     (slot: PlayerSlot, trackId: string | null) => {
       if (trackId) slotReadyRef.current[slot] = trackId;
       if (slot === liveSlotRef.current) {
-        tryPlaySlot(slot);
-        const media = slotRef(slot).current;
-        if (media && !media.paused) {
-          emitPlayingBench(slot, false);
+        if (isPlaying) {
+          tryPlaySlot(slot);
+          const media = slotRef(slot).current;
+          if (media && !media.paused) {
+            emitPlayingBench(slot, false);
+          }
+        } else if (streamingAllowed && allowMutedWarmRef.current) {
+          warmSlotMuted(slot);
         }
         return;
       }
       benchLog("prefetch:buffered", { trackId, slot });
-      syncSlotAudio(slot);
-      const media = slotRef(slot).current;
-      if (media && streamingAllowed && isPlaying) {
-        void media.play().catch(() => {});
+      if (streamingAllowed && isPlaying) {
+        syncSlotAudio(slot);
+        const media = slotRef(slot).current;
+        if (media) void media.play().catch(() => {});
+      } else if (streamingAllowed && allowMutedWarmRef.current) {
+        warmSlotMuted(slot);
+      } else {
+        syncSlotAudio(slot);
       }
     },
-    [emitPlayingBench, isPlaying, slotRef, streamingAllowed, syncSlotAudio, tryPlaySlot],
+    [
+      emitPlayingBench,
+      isPlaying,
+      slotRef,
+      streamingAllowed,
+      syncSlotAudio,
+      tryPlaySlot,
+      warmSlotMuted,
+    ],
   );
 
   const handlePause = useCallback(
     (slot: PlayerSlot) => {
-      if (slot === liveSlotRef.current) return;
-      syncSlotAudio(slot);
-      const media = slotRef(slot).current;
-      if (media && streamingAllowed && isPlaying) {
-        void media.play().catch(() => {});
+      if (!streamingAllowed) return;
+      if (isPlaying) {
+        // Prefetch must stay muted-playing for seamless next; ignore live pauses.
+        if (slot === liveSlotRef.current) return;
+        syncSlotAudio(slot);
+        const media = slotRef(slot).current;
+        if (media) void media.play().catch(() => {});
+        return;
+      }
+      if (allowMutedWarmRef.current) {
+        warmSlotMuted(slot);
       }
     },
-    [isPlaying, slotRef, streamingAllowed, syncSlotAudio],
+    [isPlaying, slotRef, streamingAllowed, syncSlotAudio, warmSlotMuted],
   );
 
   const handlePrefetchError = useCallback(
@@ -681,7 +853,12 @@ export default function AudioEngine({
 
     const isLive = slot === liveSlot;
     const ref = slot === "a" ? playerARef : playerBRef;
-    const shouldPlay = streamingAllowed && isPlaying;
+    // Muted warm while cued: keep playing=true so ReactPlayer doesn't pause our
+    // pre-buffer; live stays muted until isPlaying flips in a user gesture.
+    const warming = !isPlaying && allowMutedWarmRef.current;
+    const shouldPlay = streamingAllowed && (isPlaying || warming);
+    const slotMuted = !isLive || !isPlaying;
+    const slotVolume = isLive && isPlaying ? volume : 0;
 
     return (
       <ReactPlayer
@@ -689,8 +866,8 @@ export default function AudioEngine({
         key={`slot-${slot}`}
         src={youtubeSrc(track.youtubeId)}
         playing={shouldPlay}
-        volume={isLive ? volume : 0}
-        muted={!isLive}
+        volume={slotVolume}
+        muted={slotMuted}
         width={BROADCAST_PLAYER_WIDTH}
         height={BROADCAST_PLAYER_HEIGHT}
         controls={false}

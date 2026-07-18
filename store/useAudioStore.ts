@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { trackListenEvent } from "@/lib/analytics";
+import { mediaPlayNow } from "@/lib/mediaPlayback";
 import { useCatalogStore } from "@/store/useCatalogStore";
 import type { Track } from "@/data/tracks";
 
@@ -70,6 +71,8 @@ interface AudioState {
   nextTrack: () => void;
   previousTrack: () => void;
   setQueue: (tracks: Track[]) => void;
+  /** Load current/upcoming without playing — warms YouTube before first Play. */
+  cueRadio: (seed?: Track[]) => void;
   startRadio: (seed?: Track[]) => void;
   stopBroadcast: () => void;
   setVolume: (volume: number) => void;
@@ -139,6 +142,7 @@ export const useAudioStore = create<AudioState>((set, get) => ({
       ignorePlaybackErrorsUntil: Date.now() + TRACK_SWAP_GRACE_MS,
     });
     trackListenEvent("play_start", track.id);
+    mediaPlayNow();
   },
 
   togglePlay: () => {
@@ -147,7 +151,9 @@ export const useAudioStore = create<AudioState>((set, get) => ({
       startRadio();
       return;
     }
-    set({ isPlaying: !isPlaying });
+    const nextPlaying = !isPlaying;
+    set({ isPlaying: nextPlaying });
+    if (nextPlaying) mediaPlayNow();
   },
 
   nextTrack: () => {
@@ -204,6 +210,7 @@ export const useAudioStore = create<AudioState>((set, get) => ({
       ignorePlaybackErrorsUntil: Date.now() + TRACK_SWAP_GRACE_MS,
     });
     trackListenEvent("play_start", next.id);
+    mediaPlayNow();
   },
 
   previousTrack: () => {
@@ -252,12 +259,47 @@ export const useAudioStore = create<AudioState>((set, get) => ({
       duration: 0,
       ignorePlaybackErrorsUntil: Date.now() + TRACK_SWAP_GRACE_MS,
     });
+    mediaPlayNow();
   },
 
   setQueue: (nextQueue) => set({ queue: nextQueue }),
 
+  cueRadio: (seed) => {
+    if (get().currentTrack) return;
+
+    const { failedTrackIds } = get();
+    const pool =
+      seed && seed.length > 0
+        ? seed
+        : useCatalogStore.getState().getRadioTracks();
+    const shuffled = shuffleWithArtistGap(pool, undefined, failedTrackIds);
+    if (shuffled.length === 0) return;
+
+    const [first, second, ...rest] = shuffled;
+    set({
+      currentTrack: first,
+      upcomingTrack: second ?? null,
+      isPlaying: false,
+      queue: rest,
+      playbackHistory: [],
+      playedSeconds: 0,
+      duration: 0,
+      ignorePlaybackErrorsUntil: Date.now() + TRACK_SWAP_GRACE_MS,
+    });
+  },
+
   startRadio: (seed) => {
-    const { currentTrack, failedTrackIds } = get();
+    const { currentTrack, isPlaying, failedTrackIds } = get();
+
+    // Resume a warmed cue instead of reshuffling — keeps Play/Start on the
+    // already-buffered YouTube slot (critical for mobile gesture + less delay).
+    if (!seed && currentTrack && !isPlaying) {
+      set({ isPlaying: true });
+      trackListenEvent("play_start", currentTrack.id);
+      mediaPlayNow();
+      return;
+    }
+
     const pool =
       seed && seed.length > 0
         ? seed
@@ -284,6 +326,7 @@ export const useAudioStore = create<AudioState>((set, get) => ({
       ignorePlaybackErrorsUntil: Date.now() + TRACK_SWAP_GRACE_MS,
     });
     trackListenEvent("play_start", first.id);
+    mediaPlayNow();
   },
 
   stopBroadcast: () =>
