@@ -25,8 +25,8 @@ export default function AuthFrame({
   children,
 }: AuthFrameProps) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#07040f] px-4 text-white">
-      <div className="w-full max-w-md rounded-2xl border border-cyan-400/20 bg-[#0a0614]/90 p-8 shadow-[0_0_40px_rgba(34,211,238,0.12)]">
+    <div className="flex min-h-dvh items-center justify-center overflow-x-hidden overscroll-none bg-[#07040f] px-4 py-6 text-white scrollbar-none">
+      <div className="w-full max-w-md overflow-hidden rounded-2xl border border-cyan-400/20 bg-[#0a0614]/90 p-6 shadow-[0_0_24px_rgba(34,211,238,0.1)] sm:p-8 sm:shadow-[0_0_40px_rgba(34,211,238,0.12)]">
         <div className="mb-4 rounded-2xl border border-white/10 bg-black/40 px-3 py-3">
           <BrandLogo size="lg" href="/" />
           <p className="mt-1 text-xs uppercase tracking-[0.28em] text-cyan-300/90">

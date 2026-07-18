@@ -16,7 +16,7 @@ const BAR_PROFILE = [
 export default function SoundWave({ active, className = "" }: SoundWaveProps) {
   return (
     <div
-      className={`sound-wave ${active ? "sound-wave--active" : ""} ${className}`}
+      className={`sound-wave flex ${active ? "sound-wave--active" : ""} ${className}`}
       aria-hidden
     >
       {BAR_PROFILE.map((peak, index) => (

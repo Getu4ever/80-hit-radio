@@ -43,7 +43,7 @@ export default function PaywallOverlay() {
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center overflow-x-clip p-4 sm:p-6"
+      className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden overscroll-none p-4 sm:p-6 scrollbar-none"
       role="dialog"
       aria-modal="true"
       aria-labelledby="paywall-title"
@@ -56,16 +56,16 @@ export default function PaywallOverlay() {
         className="pointer-events-none absolute inset-0 overflow-hidden opacity-70"
         aria-hidden
       >
-        <div className="absolute -left-24 top-1/4 h-72 w-72 rounded-full bg-fuchsia-600/30 blur-[100px]" />
-        <div className="absolute -right-16 bottom-1/4 h-80 w-80 rounded-full bg-cyan-500/25 blur-[110px]" />
-        <div className="absolute left-1/2 top-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-violet-600/20 blur-[90px]" />
+        <div className="absolute -left-16 top-1/4 h-56 w-56 rounded-full bg-fuchsia-600/30 blur-[60px] sm:-left-24 sm:h-72 sm:w-72 sm:blur-[100px]" />
+        <div className="absolute -right-10 bottom-1/4 h-56 w-56 rounded-full bg-cyan-500/25 blur-[60px] sm:-right-16 sm:h-80 sm:w-80 sm:blur-[110px]" />
+        <div className="absolute left-1/2 top-1/2 h-48 w-48 -translate-x-1/2 -translate-y-1/2 rounded-full bg-violet-600/20 blur-[50px] sm:h-64 sm:w-64 sm:blur-[90px]" />
       </div>
 
       <div
-        className={`relative w-full overflow-hidden rounded-2xl border bg-[#0a0614]/95 shadow-[0_0_50px_rgba(217,70,239,0.35),0_0_80px_rgba(34,211,238,0.18)] ${
+        className={`relative max-h-[min(100dvh-2rem,100%)] w-full max-w-full overflow-y-auto overflow-x-hidden overscroll-contain rounded-2xl border bg-[#0a0614]/95 shadow-[0_0_24px_rgba(217,70,239,0.25)] sm:shadow-[0_0_50px_rgba(217,70,239,0.35),0_0_80px_rgba(34,211,238,0.18)] scrollbar-none ${
           isGuestLimit
-            ? "max-w-2xl border-cyan-400/35 p-7 sm:p-10"
-            : "max-w-lg border-fuchsia-500/40 p-6 sm:p-8"
+            ? "max-w-2xl border-cyan-400/35 p-6 sm:p-10"
+            : "max-w-lg border-fuchsia-500/40 p-5 sm:p-8"
         }`}
       >
         <div
@@ -112,7 +112,7 @@ export default function PaywallOverlay() {
             <div className="flex w-full flex-col items-center gap-4">
               <Link
                 href="/auth/signup"
-                className="inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-fuchsia-600 to-cyan-500 px-6 py-3.5 text-sm font-semibold tracking-wide text-white shadow-[0_0_28px_rgba(217,70,239,0.5),0_0_40px_rgba(34,211,238,0.25)] transition hover:brightness-110"
+                className="inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-fuchsia-600 to-cyan-500 px-6 py-3.5 text-sm font-semibold tracking-wide text-white shadow-[0_0_16px_rgba(217,70,239,0.35)] transition hover:brightness-110 sm:shadow-[0_0_28px_rgba(217,70,239,0.5),0_0_40px_rgba(34,211,238,0.25)]"
               >
                 Start free trial
               </Link>
@@ -130,7 +130,7 @@ export default function PaywallOverlay() {
             <>
               <Link
                 href="/auth/login"
-                className="inline-flex flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-fuchsia-600 to-cyan-500 px-5 py-3 text-sm font-semibold text-white shadow-[0_0_24px_rgba(217,70,239,0.45)] transition hover:brightness-110"
+                className="inline-flex flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-fuchsia-600 to-cyan-500 px-5 py-3 text-sm font-semibold text-white shadow-[0_0_12px_rgba(217,70,239,0.3)] transition hover:brightness-110 sm:shadow-[0_0_24px_rgba(217,70,239,0.45)]"
               >
                 Sign in now
               </Link>
@@ -145,7 +145,7 @@ export default function PaywallOverlay() {
             <button
               type="button"
               onClick={() => window.location.reload()}
-              className="inline-flex flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-fuchsia-600 to-cyan-500 px-5 py-3 text-sm font-semibold text-white shadow-[0_0_24px_rgba(217,70,239,0.45)] transition hover:brightness-110"
+              className="inline-flex flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-fuchsia-600 to-cyan-500 px-5 py-3 text-sm font-semibold text-white shadow-[0_0_12px_rgba(217,70,239,0.3)] transition hover:brightness-110 sm:shadow-[0_0_24px_rgba(217,70,239,0.45)]"
             >
               Retry
             </button>
@@ -153,7 +153,7 @@ export default function PaywallOverlay() {
             <>
               <Link
                 href="/pricing"
-                className="inline-flex flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-fuchsia-600 to-cyan-500 px-5 py-3 text-sm font-semibold text-white shadow-[0_0_24px_rgba(217,70,239,0.45)] transition hover:brightness-110"
+                className="inline-flex flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-fuchsia-600 to-cyan-500 px-5 py-3 text-sm font-semibold text-white shadow-[0_0_12px_rgba(217,70,239,0.3)] transition hover:brightness-110 sm:shadow-[0_0_24px_rgba(217,70,239,0.45)]"
               >
                 Subscribe now
               </Link>

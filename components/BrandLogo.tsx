@@ -24,7 +24,7 @@ const SIZES = {
   lg: {
     width: 720,
     height: 480,
-    className: "h-32 w-auto max-w-[min(100%,420px)] sm:h-40 sm:max-w-[520px]",
+    className: "h-24 w-auto max-w-full sm:h-40 sm:max-w-[520px]",
   },
   /** Billing / branded dashboard hero mark */
   xl: {

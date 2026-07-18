@@ -979,18 +979,28 @@ export default function AudioEngine({
     );
   };
 
+  // Keep iframe props at 1920×1080 for YouTube adaptive quality, but NEVER size
+  // this shell to 1920px — a fixed 1920-wide box makes iOS Safari rubber-band
+  // horizontally (paywall/auth appear shifted left with a dead gap on the right).
   return (
     <div
       aria-hidden
-      className="pointer-events-none fixed left-0 top-0 -z-10 overflow-hidden opacity-0"
+      className="pointer-events-none fixed left-0 top-0 -z-10 h-px w-px overflow-hidden opacity-0"
       style={{
-        width: BROADCAST_PLAYER_WIDTH,
-        height: BROADCAST_PLAYER_HEIGHT,
-        clipPath: "inset(100%)",
+        clipPath: "inset(50%)",
+        contain: "strict",
       }}
     >
-      {renderSlot("a")}
-      {renderSlot("b")}
+      <div
+        className="absolute left-0 top-0"
+        style={{
+          width: BROADCAST_PLAYER_WIDTH,
+          height: BROADCAST_PLAYER_HEIGHT,
+        }}
+      >
+        {renderSlot("a")}
+        {renderSlot("b")}
+      </div>
     </div>
   );
 }
