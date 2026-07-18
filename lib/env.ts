@@ -71,11 +71,21 @@ export function getStripeWebhookSecret() {
   return serverRead("STRIPE_WEBHOOK_SECRET") || "whsec_placeholder";
 }
 
+/** Canonical production origin — never use localhost here. */
+export const PRODUCTION_APP_URL = "https://www.rithmgen.co.uk";
+
+function isLocalhostUrl(value: string) {
+  return /localhost|127\.0\.0\.1/i.test(value);
+}
+
 /**
  * Absolute public site origin used for auth redirects and email assets.
- * Never returns localhost in Vercel production.
+ * On Vercel production/preview, never returns localhost (even if env is wrong).
  */
 export function getAppUrl() {
+  const onVercel = Boolean(process.env.VERCEL);
+  const isProd = process.env.VERCEL_ENV === "production";
+
   const candidates = [
     serverRead("APP_URL"),
     (process.env.NEXT_PUBLIC_APP_URL ?? "").trim(),
@@ -84,17 +94,17 @@ export function getAppUrl() {
   for (const candidate of candidates) {
     if (!candidate) continue;
     const normalized = candidate.replace(/\/$/, "");
-    if (
-      process.env.VERCEL_ENV === "production" &&
-      /localhost|127\.0\.0\.1/i.test(normalized)
-    ) {
+    if ((onVercel || isProd) && isLocalhostUrl(normalized)) {
       continue;
     }
     return normalized;
   }
 
-  if (process.env.VERCEL_ENV === "production") {
-    return "https://www.rithmgen.co.uk";
+  if (isProd || (onVercel && process.env.VERCEL_ENV !== "development")) {
+    if (isProd) return PRODUCTION_APP_URL;
+    // Preview: prefer production domain for auth emails over *.vercel.app
+    // so confirmation links stay on the real site when Site URL is mis-set.
+    if (process.env.VERCEL_ENV === "preview") return PRODUCTION_APP_URL;
   }
 
   if (process.env.VERCEL_URL) {

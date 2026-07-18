@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getAuthCallbackUrl } from "@/lib/auth/urls";
+import { getAuthCallbackUrl, getEmailConfirmUrl } from "@/lib/auth/urls";
 import {
   buildAdminNewSignupEmail,
   buildSignupConfirmEmail,
@@ -45,15 +45,33 @@ export async function POST(request: Request) {
       );
     }
 
-    const actionLink = data.properties?.action_link;
-    if (!actionLink) {
+    const hashedToken = data.properties?.hashed_token;
+    const verificationType =
+      data.properties?.verification_type || "signup";
+
+    // Prefer our own callback URL with token_hash. Supabase's action_link
+    // embeds redirect_to from Auth Site URL, which is often still localhost.
+    const confirmUrl = hashedToken
+      ? getEmailConfirmUrl({
+          hashedToken,
+          type: verificationType,
+          next: "/",
+        })
+      : null;
+
+    if (!confirmUrl) {
       return NextResponse.json(
         { error: "Unable to generate confirmation link." },
         { status: 500 },
       );
     }
 
-    const userEmail = buildSignupConfirmEmail(email, actionLink);
+    console.info(
+      "POST /api/auth/signup confirmUrl host=",
+      new URL(confirmUrl).host,
+    );
+
+    const userEmail = buildSignupConfirmEmail(email, confirmUrl);
     await sendResendEmail({
       to: email,
       subject: userEmail.subject,

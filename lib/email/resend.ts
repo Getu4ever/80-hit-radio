@@ -1,7 +1,7 @@
-import { getAppUrl } from "@/lib/env";
+import { getAppUrl, PRODUCTION_APP_URL } from "@/lib/env";
 
 const RESEND_API_URL = "https://api.resend.com/emails";
-const PRODUCTION_SITE = "https://www.rithmgen.co.uk";
+const PRODUCTION_SITE = PRODUCTION_APP_URL;
 
 function serverRead(name: string): string {
   return (process.env[name] ?? "").trim();
