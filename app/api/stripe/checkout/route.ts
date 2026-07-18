@@ -1,15 +1,19 @@
 import { NextResponse } from "next/server";
 import { getCurrentProfile, updateProfileById } from "@/lib/auth/session";
+import { detectCountryFromHeaders } from "@/lib/geo/country";
 import {
   getAppUrl,
-  getStripePriceId,
   isStripeConfigured,
   isSupabaseConfigured,
 } from "@/lib/env";
 import { getStripe } from "@/lib/stripe";
+import {
+  currencyForCountry,
+  getStripePriceIdForCurrency,
+} from "@/lib/stripe/pricing";
 
-/** POST — create a Stripe Checkout session for Premium. */
-export async function POST() {
+/** POST — create a Stripe Checkout session for Premium (local currency Price). */
+export async function POST(request: Request) {
   if (!isSupabaseConfigured() || !isStripeConfigured()) {
     return NextResponse.json(
       {
@@ -25,8 +29,11 @@ export async function POST() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const country = detectCountryFromHeaders(request.headers);
+  const currency = currencyForCountry(country);
+  const priceId = getStripePriceIdForCurrency(currency);
+
   const stripe = getStripe();
-  const priceId = getStripePriceId();
   const appUrl = getAppUrl();
 
   let customerId = profile.stripe_customer_id;
@@ -46,7 +53,11 @@ export async function POST() {
     success_url: `${appUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${appUrl}/pricing?checkout=canceled`,
     client_reference_id: profile.id,
-    metadata: { supabase_user_id: profile.id },
+    metadata: {
+      supabase_user_id: profile.id,
+      presentment_country: country,
+      presentment_currency: currency,
+    },
     subscription_data: {
       metadata: { supabase_user_id: profile.id },
     },

@@ -7,6 +7,11 @@ function serverRead(name: string): string {
   return (process.env[name] ?? "").trim();
 }
 
+/** Server-only env read (shared by Stripe pricing helpers). */
+export function serverEnv(name: string): string {
+  return serverRead(name);
+}
+
 const isLocalDev = process.env.NODE_ENV !== "production";
 
 /** True when real-looking Supabase public credentials are present. */
@@ -63,6 +68,7 @@ export function getStripeSecretKey() {
   return serverRead("STRIPE_SECRET_KEY") || "sk_test_placeholder";
 }
 
+/** Default / GBP Stripe Price ID. Prefer getStripePriceIdForCurrency() for checkout. */
 export function getStripePriceId() {
   return serverRead("STRIPE_PRICE_ID") || "price_placeholder";
 }

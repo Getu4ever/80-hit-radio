@@ -3,10 +3,13 @@
 import Link from "next/link";
 import { useState } from "react";
 import BrandLogo from "@/components/BrandLogo";
+import { useLocalizedPrice } from "@/hooks/useLocalizedPrice";
 import { useUserSession } from "@/hooks/useUserSession";
 
 export default function PricingPage() {
   const { isLoggedIn } = useUserSession();
+  const { amountLabel, perMonthLabel, loading: priceLoading } =
+    useLocalizedPrice();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -42,6 +45,12 @@ export default function PricingPage() {
       setLoading(false);
     }
   }
+
+  const ctaLabel = loading
+    ? "Opening secure checkout…"
+    : amountLabel
+      ? `Subscribe — ${perMonthLabel}`
+      : "Subscribe";
 
   return (
     <div className="relative flex min-h-screen flex-col overflow-hidden bg-[#07040f] px-4 py-10 pb-24 text-white sm:px-8">
@@ -99,8 +108,25 @@ export default function PricingPage() {
               </span>
             </div>
             <p className="mt-4 font-[family-name:var(--font-display)] text-5xl font-bold">
-              $9.99
-              <span className="text-base font-normal text-white/40"> / month</span>
+              {priceLoading ? (
+                <span className="inline-block h-12 w-36 animate-pulse rounded-lg bg-white/10" />
+              ) : amountLabel ? (
+                <>
+                  {amountLabel}
+                  <span className="text-base font-normal text-white/40">
+                    {" "}
+                    / month
+                  </span>
+                </>
+              ) : (
+                <>
+                  Premium
+                  <span className="text-base font-normal text-white/40">
+                    {" "}
+                    / month
+                  </span>
+                </>
+              )}
             </p>
             <ul className="mt-6 space-y-3 text-sm text-white/65">
               <li className="flex gap-2">
@@ -126,13 +152,13 @@ export default function PricingPage() {
               disabled={loading}
               className="mt-8 w-full rounded-xl bg-gradient-to-r from-fuchsia-600 to-cyan-500 py-3.5 text-sm font-semibold text-white shadow-[0_0_24px_rgba(34,211,238,0.35)] transition hover:brightness-110 disabled:opacity-60"
             >
-              {loading ? "Opening secure checkout…" : "Subscribe — $9.99/mo"}
+              {ctaLabel}
             </button>
             {error && (
               <p className="mt-3 text-center text-xs text-fuchsia-300">{error}</p>
             )}
             <p className="mt-4 text-center text-[11px] text-white/35">
-              Secured by Stripe · Test or live mode depending on your keys
+              Secured by Stripe · Charged in your local currency when available
             </p>
           </div>
 

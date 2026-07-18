@@ -4,12 +4,14 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import { useLocalizedPrice } from "@/hooks/useLocalizedPrice";
 
 type SyncState = "syncing" | "premium" | "pending" | "error";
 
 function SuccessContent() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session_id");
+  const { amountLabel } = useLocalizedPrice();
   const [state, setState] = useState<SyncState>("syncing");
   const [message, setMessage] = useState("Confirming your payment with Stripe…");
 
@@ -92,7 +94,9 @@ function SuccessContent() {
 
         {state === "premium" && (
           <p className="mt-3 text-sm text-cyan-300/90">
-            $9.99/month · Cancel anytime from your profile
+            {amountLabel
+              ? `${amountLabel}/month · Cancel anytime from your profile`
+              : "Cancel anytime from your profile"}
           </p>
         )}
 

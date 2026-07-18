@@ -14,7 +14,10 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
 SUPABASE_SERVICE_ROLE_KEY=eyJ...
 
 STRIPE_SECRET_KEY=sk_live_...   # or sk_test_... while developing
-STRIPE_PRICE_ID=price_...
+STRIPE_PRICE_ID=price_...          # required default (prefer GBP for UK)
+STRIPE_PRICE_ID_GBP=price_...      # optional; falls back to STRIPE_PRICE_ID
+STRIPE_PRICE_ID_USD=price_...      # optional USD monthly Price
+STRIPE_PRICE_ID_EUR=price_...      # optional EUR monthly Price
 STRIPE_WEBHOOK_SECRET=whsec_...
 
 NEXT_PUBLIC_APP_URL=https://your-domain.com
@@ -31,7 +34,10 @@ ADMIN_EMAIL=support@rithmgen.co.uk
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase → Project Settings → API → `anon` `public` key |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Project Settings → API → `service_role` (server only) |
 | `STRIPE_SECRET_KEY` | Stripe → Developers → API keys |
-| `STRIPE_PRICE_ID` | Stripe → Products → your Premium price → Price ID |
+| `STRIPE_PRICE_ID` | Stripe → Products → default Premium monthly Price ID (GBP recommended) |
+| `STRIPE_PRICE_ID_GBP` | Optional GBP Price (same product). Falls back to `STRIPE_PRICE_ID` |
+| `STRIPE_PRICE_ID_USD` | Optional USD Price for US visitors |
+| `STRIPE_PRICE_ID_EUR` | Optional EUR Price for eurozone visitors |
 | `STRIPE_WEBHOOK_SECRET` | Stripe → Developers → Webhooks → endpoint signing secret |
 | `NEXT_PUBLIC_APP_URL` | Your production origin (no trailing slash) |
 | `RESEND_FROM_EMAIL` | Resend verified sender (keep karoldigital until rithmgen.co.uk is verified) |
@@ -159,13 +165,33 @@ Also run `supabase/migrations/006_profile_identity.sql` (adds `full_name`, `avat
 
 ## 3. Stripe dashboard configuration
 
-### A. Create the Premium product
+### A. Create the Premium product (multi-currency Prices)
+
+The app picks a Stripe Price from the visitor’s country (Vercel `x-vercel-ip-country`, else Accept-Language, else GB). Amounts are loaded from Stripe — do **not** invent FX rates in the app.
+
+**Country → currency**
+
+| Markets | Currency | Env var |
+|---|---|---|
+| GB, Crown Dependencies | GBP (default) | `STRIPE_PRICE_ID` / `STRIPE_PRICE_ID_GBP` |
+| US + US territories | USD | `STRIPE_PRICE_ID_USD` |
+| Eurozone (+ AD, MC, SM, VA, XK, ME) | EUR | `STRIPE_PRICE_ID_EUR` |
+| Everywhere else | GBP default | `STRIPE_PRICE_ID` |
 
 1. Open [Stripe Dashboard](https://dashboard.stripe.com) → toggle **Test mode** ON (sandbox)
 2. **Products** → **Add product**
-3. Name: `80s Hit Radio Premium`
-4. Pricing: recurring **monthly** (e.g. `$9.99 / month`)
-5. Copy the **Price ID** (`price_...`) into `STRIPE_PRICE_ID` in `.env.local`
+3. Name: `80s Hit Radio Premium` (or RithmGen Premium)
+4. Create a recurring **monthly** Price in **GBP** (recommended default for rithmgen.co.uk) — set the GBP amount you want to charge
+5. Copy that **Price ID** (`price_...`) into `STRIPE_PRICE_ID` (and optionally `STRIPE_PRICE_ID_GBP`)
+6. On the **same product**, add additional monthly Prices:
+   - **USD** → `STRIPE_PRICE_ID_USD`
+   - **EUR** → `STRIPE_PRICE_ID_EUR`
+7. Set each Price to the amount you want in that currency (Stripe Dashboard / your pricing policy — not converted in code)
+8. Mirror the same Price IDs in Vercel env for Production (and Preview if you test there)
+
+If a market Price env is missing, checkout and the pricing page fall back to `STRIPE_PRICE_ID`.
+
+**Optional — Adaptive Pricing:** In Stripe → Settings → Adaptive Pricing, you can enable automatic conversion for Checkout. That helps currencies beyond GBP/USD/EUR. This app still uses explicit Price IDs for GB/US/EU so the pricing page and Checkout charge the same Stripe Price. Adaptive Pricing is optional and does not replace the env Price IDs above.
 
 ### B. Customer portal
 
@@ -262,7 +288,8 @@ The free month is measured from `profiles.created_at`. Stripe status is updated 
 | `/auth/signup`, `/auth/login` | Supabase email/password auth |
 | `/auth/callback` | OAuth / magic-link code exchange |
 | `/api/stream/check-status` | Subscription gate |
-| `/api/stripe/checkout` | Create Checkout Session |
+| `/api/stripe/pricing` | Localized Premium amount (country → Stripe Price) |
+| `/api/stripe/checkout` | Create Checkout Session (matching Price) |
 | `/api/stripe/portal` | Customer Portal session |
 | `/api/stripe/webhook` | Sync subscription status → Postgres |
 | `/dashboard/profile` | Listener Lounge — profile, trial, billing |
