@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Outfit, Space_Grotesk } from "next/font/google";
 import BroadcastShell from "@/components/BroadcastShell";
+import { PRODUCTION_APP_URL } from "@/lib/env";
 import "./globals.css";
 
 const outfit = Outfit({
@@ -14,10 +15,43 @@ const spaceGrotesk = Space_Grotesk({
   weight: ["500", "600", "700"],
 });
 
+const siteTitle = "RithmGen — 80s Hit Radio";
+const siteDescription =
+  "Non-stop classic hits and the RithmGen listener community. Stream Pop, Rock, Hip-Hop, R&B, Electronic, and more.";
+
 export const metadata: Metadata = {
-  title: "80s Hit Radio — Non-Stop Classic Hits",
-  description:
-    "Stream classic hits and modern favorites across Pop, Rock, Hip-Hop, R&B, Electronic, and more.",
+  metadataBase: new URL(PRODUCTION_APP_URL),
+  title: {
+    default: siteTitle,
+    template: "%s · RithmGen",
+  },
+  description: siteDescription,
+  applicationName: "RithmGen",
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_GB",
+    url: PRODUCTION_APP_URL,
+    siteName: "RithmGen",
+    title: siteTitle,
+    description: siteDescription,
+    images: [
+      {
+        url: "/logo/logo80b.jpg",
+        width: 1248,
+        height: 832,
+        alt: "RithmGen",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: siteTitle,
+    description: siteDescription,
+    images: ["/logo/logo80b.jpg"],
+  },
 };
 
 export const viewport: Viewport = {

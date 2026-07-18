@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { formatStreamQualityLabel } from "@/lib/broadcastAudio";
 import SoundWave from "@/components/SoundWave";
+import ShareStation from "@/components/ShareStation";
 import { useAudioStore } from "@/store/useAudioStore";
 import { useStreamAccessStore } from "@/store/useStreamAccessStore";
 
@@ -315,6 +316,16 @@ export default function PlayerFooter() {
           >
             <IconNext className="h-5 w-5" />
           </button>
+          <ShareStation
+            compact
+            variant="on-air"
+            track={
+              currentTrack
+                ? { artist: currentTrack.artist, title: currentTrack.title }
+                : null
+            }
+            className="sm:hidden"
+          />
           <SoundWave
             active={isPlaying && streamingAllowed}
             className="ml-0.5 hidden sm:flex"
@@ -322,6 +333,15 @@ export default function PlayerFooter() {
         </div>
 
         <div className="hidden min-w-[9rem] flex-1 items-center justify-end gap-3 sm:flex">
+          <ShareStation
+            compact
+            variant="on-air"
+            track={
+              currentTrack
+                ? { artist: currentTrack.artist, title: currentTrack.title }
+                : null
+            }
+          />
           <button
             type="button"
             onClick={() => setBroadcastEnhance(!broadcastEnhance)}

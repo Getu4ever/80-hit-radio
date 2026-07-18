@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useUserSession } from "@/hooks/useUserSession";
 import { useAudioStore } from "@/store/useAudioStore";
 import BrandLogo from "@/components/BrandLogo";
+import ShareStation from "@/components/ShareStation";
 
 function LiveDot({ active }: { active: boolean }) {
   return (
@@ -100,23 +101,26 @@ export default function DashboardChrome({
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2.5 rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2.5 backdrop-blur-sm">
-        <LiveDot active={Boolean(currentTrack && isPlaying)} />
-        <p className="min-w-0 text-sm text-white/70">
-          {currentTrack ? (
-            <>
-              <span className="text-white/40">Broadcast continues · </span>
-              <span className="text-cyan-200">
-                {currentTrack.artist} — {currentTrack.title}
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2.5 backdrop-blur-sm">
+        <div className="flex min-w-0 flex-1 items-center gap-2.5">
+          <LiveDot active={Boolean(currentTrack && isPlaying)} />
+          <p className="min-w-0 text-sm text-white/70">
+            {currentTrack ? (
+              <>
+                <span className="text-white/40">Broadcast continues · </span>
+                <span className="text-cyan-200">
+                  {currentTrack.artist} — {currentTrack.title}
+                </span>
+              </>
+            ) : (
+              <span className="text-white/45">
+                No track on air — tune in from the home deck; it keeps playing
+                here until you sign out.
               </span>
-            </>
-          ) : (
-            <span className="text-white/45">
-              No track on air — tune in from the home deck; it keeps playing
-              here until you sign out.
-            </span>
-          )}
-        </p>
+            )}
+          </p>
+        </div>
+        <ShareStation variant="lounge" className="shrink-0" />
       </div>
     </header>
   );

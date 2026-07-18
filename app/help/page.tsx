@@ -4,9 +4,19 @@ import BrandLogo from "@/components/BrandLogo";
 import { getSupportEmail } from "@/lib/email/resend";
 
 export const metadata: Metadata = {
-  title: "Help & Support — RithmGen 80s Hit Radio",
+  title: "Help & Support",
   description:
     "How RithmGen works: free trial, listening, accounts, billing, and confirmation email. Contact support@rithmgen.co.uk.",
+  openGraph: {
+    title: "Help & Support · RithmGen",
+    description:
+      "How RithmGen works: free trial, listening, accounts, billing, and confirmation email.",
+  },
+  twitter: {
+    title: "Help & Support · RithmGen",
+    description:
+      "How RithmGen works: free trial, listening, accounts, billing, and confirmation email.",
+  },
 };
 
 const SECTIONS = [
