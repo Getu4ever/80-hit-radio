@@ -23,10 +23,12 @@ export default function DashboardChrome({
   title,
   eyebrow,
   subtitle,
+  logoSize = "sm",
 }: {
   title: string;
   eyebrow: string;
   subtitle?: string;
+  logoSize?: "sm" | "md" | "lg";
 }) {
   const pathname = usePathname();
   const { isAdmin, signOut } = useUserSession();
@@ -36,6 +38,7 @@ export default function DashboardChrome({
   const links = [
     { href: "/", label: "On Air" },
     { href: "/dashboard/profile", label: "Listener Lounge" },
+    { href: "/dashboard/billing", label: "Billing" },
     { href: "/help", label: "Help" },
     ...(isAdmin
       ? [{ href: "/dashboard/admin", label: "Studio Control" }]
@@ -46,7 +49,7 @@ export default function DashboardChrome({
     <header className="mb-6 animate-fade-up">
       <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
-          <BrandLogo size="sm" href="/" />
+          <BrandLogo size={logoSize} href="/" />
           <p className="mt-3 text-xs uppercase tracking-[0.35em] text-cyan-400/70">
             {eyebrow}
           </p>

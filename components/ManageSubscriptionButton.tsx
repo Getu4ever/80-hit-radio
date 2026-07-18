@@ -18,21 +18,16 @@ export default function ManageSubscriptionButton({
 
   const isActive = user?.stripeSubscriptionStatus === "active";
 
-  async function handleClick() {
+  async function handleCheckout() {
     setLoading(true);
     setError(null);
     try {
-      if (!isActive) {
-        await fetch("/api/stripe/sync", {
-          method: "POST",
-          credentials: "include",
-        });
-      }
+      await fetch("/api/stripe/sync", {
+        method: "POST",
+        credentials: "include",
+      });
 
-      const endpoint = isActive
-        ? "/api/stripe/portal"
-        : "/api/stripe/checkout";
-      const res = await fetch(endpoint, {
+      const res = await fetch("/api/stripe/checkout", {
         method: "POST",
         credentials: "include",
       });
@@ -41,7 +36,6 @@ export default function ManageSubscriptionButton({
         setError(data.error ?? "Unable to open Stripe");
         return;
       }
-      // Keep the player running — open Stripe in a new tab.
       openExternalUrl(data.url);
     } catch {
       setError("Network error talking to Stripe");
@@ -52,14 +46,23 @@ export default function ManageSubscriptionButton({
 
   return (
     <div className="flex flex-col gap-2">
-      <button
-        type="button"
-        onClick={handleClick}
-        disabled={loading}
-        className="rounded-xl bg-gradient-to-r from-fuchsia-600 to-cyan-500 px-5 py-3 text-sm font-semibold text-white shadow-[0_0_20px_rgba(217,70,239,0.35)] transition hover:brightness-110 disabled:opacity-60"
-      >
-        {loading ? "Working…" : isActive ? "Manage billing" : label}
-      </button>
+      {isActive ? (
+        <Link
+          href="/dashboard/billing"
+          className="rounded-xl bg-gradient-to-r from-fuchsia-600 to-cyan-500 px-5 py-3 text-center text-sm font-semibold text-white shadow-[0_0_20px_rgba(217,70,239,0.35)] transition hover:brightness-110"
+        >
+          Manage billing
+        </Link>
+      ) : (
+        <button
+          type="button"
+          onClick={() => void handleCheckout()}
+          disabled={loading}
+          className="rounded-xl bg-gradient-to-r from-fuchsia-600 to-cyan-500 px-5 py-3 text-sm font-semibold text-white shadow-[0_0_20px_rgba(217,70,239,0.35)] transition hover:brightness-110 disabled:opacity-60"
+        >
+          {loading ? "Working…" : label}
+        </button>
+      )}
       {error && <p className="text-xs text-fuchsia-300/90">{error}</p>}
       {!isActive && (
         <Link

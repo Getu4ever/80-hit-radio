@@ -30,6 +30,11 @@ async function openStripe(endpoint: "/api/stripe/portal" | "/api/stripe/checkout
   const res = await fetch(endpoint, {
     method: "POST",
     credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body:
+      endpoint === "/api/stripe/portal"
+        ? JSON.stringify({ flow: "cancel" })
+        : undefined,
   });
   const data = (await res.json()) as { url?: string; error?: string };
   if (!res.ok || !data.url) {
@@ -369,8 +374,7 @@ export default function ProfileMembershipPanel({
           {isPremium ? (
             <p className="mt-4 text-sm leading-relaxed text-white/55">
               Unlimited continuous streaming. Manage your card, receipts, or
-              cancel from Stripe&apos;s secure portal — clear controls, no dark
-              patterns.
+              cancel from your branded billing page — music keeps playing.
             </p>
           ) : isPastDue ? (
             <p className="mt-4 text-sm leading-relaxed text-white/55">
@@ -404,14 +408,12 @@ export default function ProfileMembershipPanel({
           <div className="mt-5 flex flex-col gap-3">
             {isPremium ? (
               <>
-                <button
-                  type="button"
-                  disabled={busy !== null}
-                  onClick={() => void run("portal", "/api/stripe/portal")}
-                  className="rounded-xl bg-gradient-to-r from-fuchsia-600 to-cyan-500 px-5 py-3 text-sm font-semibold text-white shadow-[0_0_20px_rgba(217,70,239,0.35)] transition hover:brightness-110 disabled:opacity-60"
+                <Link
+                  href="/dashboard/billing"
+                  className="rounded-xl bg-gradient-to-r from-fuchsia-600 to-cyan-500 px-5 py-3 text-center text-sm font-semibold text-white shadow-[0_0_20px_rgba(217,70,239,0.35)] transition hover:brightness-110"
                 >
-                  {busy === "portal" ? "Opening portal…" : "Manage billing"}
-                </button>
+                  Manage billing
+                </Link>
                 <button
                   type="button"
                   disabled={busy !== null}
@@ -423,14 +425,12 @@ export default function ProfileMembershipPanel({
               </>
             ) : isPastDue && hasStripeCustomer ? (
               <>
-                <button
-                  type="button"
-                  disabled={busy !== null}
-                  onClick={() => void run("portal", "/api/stripe/portal")}
-                  className="rounded-xl bg-gradient-to-r from-fuchsia-600 to-cyan-500 px-5 py-3 text-sm font-semibold text-white shadow-[0_0_20px_rgba(217,70,239,0.35)] transition hover:brightness-110 disabled:opacity-60"
+                <Link
+                  href="/dashboard/billing"
+                  className="rounded-xl bg-gradient-to-r from-fuchsia-600 to-cyan-500 px-5 py-3 text-center text-sm font-semibold text-white shadow-[0_0_20px_rgba(217,70,239,0.35)] transition hover:brightness-110"
                 >
-                  {busy === "portal" ? "Opening portal…" : "Update billing"}
-                </button>
+                  Update billing
+                </Link>
                 <Link
                   href="/pricing"
                   className="text-center text-xs text-cyan-300/70 underline-offset-2 hover:underline"
@@ -509,8 +509,8 @@ export default function ProfileMembershipPanel({
             </h3>
             <p className="mt-3 text-sm leading-relaxed text-white/55">
               You&apos;ll lose uninterrupted access to the continuous 80s
-              broadcast after your current billing period. Receipts, card
-              updates, and final cancellation happen in Stripe&apos;s portal.
+              broadcast after your current billing period. Final cancellation
+              opens Stripe in a new tab so the music keeps playing here.
             </p>
             <ul className="mt-4 space-y-2 text-sm text-white/70">
               <li className="flex gap-2">
