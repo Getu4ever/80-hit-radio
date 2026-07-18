@@ -8,6 +8,7 @@ import { initialsForName } from "@/lib/profile/identity";
 import { useUserSession, useUserSessionStore } from "@/hooks/useUserSession";
 import { useAudioStore } from "@/store/useAudioStore";
 import SyncSubscriptionBanner from "@/components/SyncSubscriptionBanner";
+import { openExternalUrl } from "@/lib/openExternalUrl";
 
 type Props = {
   email: string;
@@ -35,10 +36,7 @@ async function openStripe(endpoint: "/api/stripe/portal" | "/api/stripe/checkout
     throw new Error(data.error ?? "Unable to open Stripe");
   }
   // Portal (and checkout from the lounge) open in a new tab so the player keeps playing.
-  const opened = window.open(data.url, "_blank", "noopener,noreferrer");
-  if (!opened) {
-    window.location.href = data.url;
-  }
+  openExternalUrl(data.url);
 }
 
 export default function ProfileMembershipPanel({

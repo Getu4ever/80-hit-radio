@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useUserSession } from "@/hooks/useUserSession";
+import { openExternalUrl } from "@/lib/openExternalUrl";
 
 interface ManageSubscriptionButtonProps {
   label?: string;
@@ -41,10 +42,7 @@ export default function ManageSubscriptionButton({
         return;
       }
       // Keep the player running — open Stripe in a new tab.
-      const opened = window.open(data.url, "_blank", "noopener,noreferrer");
-      if (!opened) {
-        window.location.href = data.url;
-      }
+      openExternalUrl(data.url);
     } catch {
       setError("Network error talking to Stripe");
     } finally {
