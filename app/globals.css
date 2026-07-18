@@ -137,3 +137,13 @@ body {
   box-shadow: 0 0 8px rgba(34, 211, 238, 0.8);
   cursor: pointer;
 }
+
+/* Hide scrollbars while preserving scroll (genre nav, etc.) */
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
