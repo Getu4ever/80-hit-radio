@@ -109,12 +109,23 @@ export default function PaywallOverlay() {
 
         <div className="relative mt-8 flex flex-col gap-3 sm:flex-row">
           {isGuestLimit ? (
-            <Link
-              href="/auth/signup"
-              className="inline-flex flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-fuchsia-600 to-cyan-500 px-6 py-3.5 text-sm font-semibold tracking-wide text-white shadow-[0_0_28px_rgba(217,70,239,0.5),0_0_40px_rgba(34,211,238,0.25)] transition hover:brightness-110"
-            >
-              Start free trial
-            </Link>
+            <div className="flex w-full flex-col items-center gap-4">
+              <Link
+                href="/auth/signup"
+                className="inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-fuchsia-600 to-cyan-500 px-6 py-3.5 text-sm font-semibold tracking-wide text-white shadow-[0_0_28px_rgba(217,70,239,0.5),0_0_40px_rgba(34,211,238,0.25)] transition hover:brightness-110"
+              >
+                Start free trial
+              </Link>
+              <p className="text-center text-sm text-white/60">
+                Already a member?{" "}
+                <Link
+                  href="/auth/login"
+                  className="font-semibold text-cyan-300/90 underline decoration-cyan-400/40 underline-offset-4 transition hover:text-cyan-200 hover:decoration-cyan-300/70"
+                >
+                  Sign in
+                </Link>
+              </p>
+            </div>
           ) : isAuth ? (
             <>
               <Link
