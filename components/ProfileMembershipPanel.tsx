@@ -17,6 +17,7 @@ type Props = {
   role: string;
   memberSince: string;
   stripeStatus: StripeSubscriptionStatus;
+  hasStripeCustomer: boolean;
   subscriptionLabel: string;
   trialDays: number;
   trialProgress: number;
@@ -46,11 +47,21 @@ export default function ProfileMembershipPanel({
   role,
   memberSince,
   stripeStatus,
+  hasStripeCustomer,
   subscriptionLabel,
   trialDays,
   trialProgress,
   isPremium,
 }: Props) {
+  const isPastDue = stripeStatus === "past_due";
+  const isOnTrial = !isPremium && !isPastDue && trialDays > 0;
+  const membershipTitle = isPremium
+    ? "Premium Member"
+    : isPastDue
+      ? "Past due"
+      : isOnTrial
+        ? "Free Trial Access"
+        : "No active plan";
   const router = useRouter();
   const { signOut, isAdmin } = useUserSession();
   const setUser = useUserSessionStore((s) => s.setUser);
@@ -169,7 +180,10 @@ export default function ProfileMembershipPanel({
 
   return (
     <div className="space-y-8">
-      <SyncSubscriptionBanner currentStatus={stripeStatus} />
+      <SyncSubscriptionBanner
+        currentStatus={stripeStatus}
+        hasStripeCustomer={hasStripeCustomer}
+      />
 
       <section className="animate-fade-up border-b border-white/10 pb-8">
         <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
@@ -344,19 +358,23 @@ export default function ProfileMembershipPanel({
           </p>
           <div className="mt-2 flex flex-wrap items-start justify-between gap-3">
             <h3 className="font-[family-name:var(--font-display)] text-xl font-semibold text-white">
-              {isPremium ? "Premium Member" : "Free Trial Access"}
+              {membershipTitle}
             </h3>
             {isPremium ? (
               <span className="rounded-md border border-cyan-400/40 bg-cyan-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-cyan-300">
-                Premium
+                Member
               </span>
-            ) : trialDays > 0 ? (
+            ) : isPastDue ? (
+              <span className="rounded-md border border-amber-400/40 bg-amber-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-amber-200">
+                Past due
+              </span>
+            ) : isOnTrial ? (
               <span className="rounded-md border border-fuchsia-400/40 bg-fuchsia-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-fuchsia-300">
                 {trialDays} days left
               </span>
             ) : (
               <span className="rounded-md border border-fuchsia-500/50 bg-fuchsia-500/15 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-fuchsia-300">
-                Trial expired
+                No active plan
               </span>
             )}
           </div>
@@ -367,7 +385,12 @@ export default function ProfileMembershipPanel({
               cancel from Stripe&apos;s secure portal — clear controls, no dark
               patterns.
             </p>
-          ) : (
+          ) : isPastDue ? (
+            <p className="mt-4 text-sm leading-relaxed text-white/55">
+              We couldn&apos;t renew your membership. Update billing to keep the
+              continuous 80s broadcast unlocked.
+            </p>
+          ) : isOnTrial ? (
             <div className="mt-5">
               <div className="mb-2 flex justify-between text-xs text-white/40">
                 <span>Free trial progress</span>
@@ -384,11 +407,14 @@ export default function ProfileMembershipPanel({
                 interruption.
               </p>
             </div>
+          ) : (
+            <p className="mt-4 text-sm leading-relaxed text-white/55">
+              Start a membership anytime for uninterrupted classic hits — cancel
+              whenever you like from billing.
+            </p>
           )}
 
-          <p className="mt-4 text-xs text-white/35">
-            Status on file: {stripeStatus}
-          </p>
+          <p className="mt-4 text-xs text-white/40">{subscriptionLabel}</p>
 
           <div className="mt-6 flex flex-col gap-3">
             {isPremium ? (
@@ -410,6 +436,23 @@ export default function ProfileMembershipPanel({
                   Cancel membership
                 </button>
               </>
+            ) : isPastDue && hasStripeCustomer ? (
+              <>
+                <button
+                  type="button"
+                  disabled={busy !== null}
+                  onClick={() => void run("portal", "/api/stripe/portal")}
+                  className="rounded-xl bg-gradient-to-r from-fuchsia-600 to-cyan-500 px-5 py-3 text-sm font-semibold text-white shadow-[0_0_20px_rgba(217,70,239,0.35)] transition hover:brightness-110 disabled:opacity-60"
+                >
+                  {busy === "portal" ? "Opening portal…" : "Update billing"}
+                </button>
+                <Link
+                  href="/pricing"
+                  className="text-center text-xs text-cyan-300/70 underline-offset-2 hover:underline"
+                >
+                  View plans
+                </Link>
+              </>
             ) : (
               <>
                 <button
@@ -418,7 +461,7 @@ export default function ProfileMembershipPanel({
                   onClick={() => void run("upgrade", "/api/stripe/checkout")}
                   className="rounded-xl bg-gradient-to-r from-fuchsia-600 to-cyan-500 px-5 py-3 text-sm font-semibold text-white shadow-[0_0_20px_rgba(217,70,239,0.35)] transition hover:brightness-110 disabled:opacity-60"
                 >
-                  {busy === "upgrade" ? "Opening checkout…" : "Upgrade to Premium"}
+                  {busy === "upgrade" ? "Opening checkout…" : "Start membership"}
                 </button>
                 <Link
                   href="/pricing"

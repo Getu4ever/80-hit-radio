@@ -51,17 +51,25 @@ export function isPaidStatus(status: StripeSubscriptionStatus): boolean {
 export function formatSubscriptionLabel(
   profile: Pick<Profile, "created_at" | "stripe_subscription_status">,
 ): string {
-  if (profile.stripe_subscription_status === "active") {
-    return "Premium Member";
+  const status = profile.stripe_subscription_status;
+
+  if (status === "active") {
+    return "Member";
   }
-  if (profile.stripe_subscription_status === "trialing") {
-    return "Stripe Trialling";
+  if (status === "past_due") {
+    return "Past due";
+  }
+  if (status === "canceled") {
+    return "No active plan";
+  }
+  if (status === "trialing") {
+    return "Free trial";
   }
 
   const remaining = getTrialDaysRemaining(profile.created_at);
   if (remaining > 0) {
-    return `Trial: ${remaining} day${remaining === 1 ? "" : "s"} left`;
+    return `Free trial · ${remaining} day${remaining === 1 ? "" : "s"} left`;
   }
 
-  return "Trial expired";
+  return "No active plan";
 }

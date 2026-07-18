@@ -56,6 +56,7 @@ export default async function ProfileDashboardPage() {
           role={profile.role}
           memberSince={created}
           stripeStatus={profile.stripe_subscription_status}
+          hasStripeCustomer={Boolean(profile.stripe_customer_id)}
           subscriptionLabel={label}
           trialDays={trialDays}
           trialProgress={trialProgress}
