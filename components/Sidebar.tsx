@@ -15,6 +15,13 @@ export type NavFilter = "All" | Subgenre;
 
 const MORE_GENRES_STORAGE_KEY = "sidebar_more_genres";
 
+/**
+ * Survives React Strict Mode remounts within the same page load.
+ * Never read localStorage in useState — that causes SSR/client mismatches.
+ * null = not restored yet → UI stays collapsed for the first paint.
+ */
+let rememberedExpanded: boolean | null = null;
+
 interface SidebarProps {
   filter: NavFilter;
   onFilterChange: (filter: NavFilter) => void;
@@ -53,9 +60,9 @@ function ChevronIcon({
 }) {
   return (
     <svg
-      className={`${className ?? ""} transition-transform duration-300 ease-in-out ${
+      className={`${className ?? ""} ${
         expanded ? "rotate-180" : "rotate-0"
-      }`}
+      } transition-transform duration-300 ease-in-out`}
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -94,7 +101,23 @@ function GenreButton({
   );
 }
 
+function readStoredExpanded(fallbackFilter: NavFilter): boolean {
+  if (rememberedExpanded !== null) return rememberedExpanded;
+  try {
+    const stored = localStorage.getItem(MORE_GENRES_STORAGE_KEY);
+    if (stored === "true") rememberedExpanded = true;
+    else if (stored === "false") rememberedExpanded = false;
+    else {
+      rememberedExpanded = MORE_GENRES.includes(fallbackFilter as Subgenre);
+    }
+  } catch {
+    rememberedExpanded = MORE_GENRES.includes(fallbackFilter as Subgenre);
+  }
+  return rememberedExpanded;
+}
+
 function persistExpanded(next: boolean) {
+  rememberedExpanded = next;
   try {
     localStorage.setItem(MORE_GENRES_STORAGE_KEY, next ? "true" : "false");
   } catch {
@@ -109,37 +132,34 @@ export default function Sidebar({
   const { isAdmin, subscriptionLabel } = useUserSession();
   const streamingAllowed = useStreamAccessStore((s) => s.allowed);
   const controlsDisabled = !streamingAllowed;
-
-  // SSR + first client paint always collapsed (max-h-0) — no hydration mismatch.
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [hydrateDone, setHydrateDone] = useState(false);
   const initialFilterRef = useRef(filter);
 
+  // First paint / SSR: always collapsed. After restore, module cache keeps
+  // Strict Mode remounts from snapping closed (the open→collapse flash).
+  const [isExpanded, setIsExpanded] = useState(
+    () => rememberedExpanded ?? false,
+  );
+  /** Transitions off until restore settles — avoids animating open on refresh. */
+  const [motionReady, setMotionReady] = useState(false);
+
   useEffect(() => {
-    let next = false;
-    try {
-      const stored = localStorage.getItem(MORE_GENRES_STORAGE_KEY);
-      if (stored === "true") next = true;
-      else if (stored === "false") next = false;
-      else if (MORE_GENRES.includes(initialFilterRef.current as Subgenre)) {
-        next = true;
-      }
-    } catch {
-      next = MORE_GENRES.includes(initialFilterRef.current as Subgenre);
-    }
+    const next = readStoredExpanded(initialFilterRef.current);
     setIsExpanded(next);
-    setHydrateDone(true);
+    const id = window.requestAnimationFrame(() => {
+      setMotionReady(true);
+    });
+    return () => window.cancelAnimationFrame(id);
   }, []);
 
   useEffect(() => {
-    if (!hydrateDone) return;
+    if (!motionReady) return;
     if (!MORE_GENRES.includes(filter as Subgenre)) return;
     setIsExpanded((prev) => {
       if (prev) return prev;
       persistExpanded(true);
       return true;
     });
-  }, [filter, hydrateDone]);
+  }, [filter, motionReady]);
 
   const toggleMore = () => {
     setIsExpanded((prev) => {
@@ -196,10 +216,11 @@ export default function Sidebar({
             <ChevronIcon className="h-3.5 w-3.5" expanded={isExpanded} />
           </button>
 
+          {/* Always mounted — CSS collapse only. No {isExpanded && …} remount flash. */}
           <div
-            className={`transition-all duration-300 ease-in-out overflow-hidden ${
-              isExpanded ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
-            }`}
+            className={`overflow-hidden ${
+              motionReady ? "transition-all duration-300 ease-in-out" : ""
+            } ${isExpanded ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"}`}
             aria-hidden={!isExpanded}
           >
             <div
