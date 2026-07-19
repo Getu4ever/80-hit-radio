@@ -222,6 +222,14 @@ body {
   }
 }
 
+/* Collapsed by default — belt-and-suspenders before client state applies. */
+.sidebar-more-panel:not([data-expanded="true"]) {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
 /* Ultra-thin hot-pink sidebar genre scroller — visible when More genres is open. */
 .scrollbar-sidebar {
   scrollbar-width: thin;

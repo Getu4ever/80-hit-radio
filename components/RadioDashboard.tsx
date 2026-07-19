@@ -166,6 +166,7 @@ function TrackCard({ track }: { track: Track }) {
 export default function RadioDashboard() {
   const [filter, setFilter] = useState<NavFilter>("All");
   const [searchQuery, setSearchQuery] = useState("");
+  const [clientReady, setClientReady] = useState(false);
   const [showMoreGenres, setShowMoreGenres] = useState(false);
   const [visibleCount, setVisibleCount] = useState(48);
   const startRadio = useAudioStore((s) => s.startRadio);
@@ -206,18 +207,21 @@ export default function RadioDashboard() {
     [visibleTracks, visibleCount],
   );
 
-  // Only expand from explicit toggle (or after mount when filter is a more-genre).
-  // Do not OR with MORE_GENRES.includes(filter) during render — that caused refresh flash.
   useEffect(() => {
+    setClientReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!clientReady) return;
     if (MORE_GENRES.includes(filter as Subgenre)) {
       setShowMoreGenres(true);
     }
-  }, [filter]);
+  }, [clientReady, filter]);
 
   const mobileNavItems: NavFilter[] = [
     "All",
     ...POPULAR_GENRES,
-    ...(showMoreGenres ? MORE_GENRES : []),
+    ...(clientReady && showMoreGenres ? MORE_GENRES : []),
   ];
 
   const handleFilterChange = (next: NavFilter) => {
