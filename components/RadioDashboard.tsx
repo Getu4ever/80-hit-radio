@@ -241,9 +241,6 @@ export default function RadioDashboard() {
       <Sidebar
         filter={filter}
         onFilterChange={handleFilterChange}
-        visibleTracks={visibleTracks}
-        isPlaying={isPlaying}
-        onStartRadio={handleStartRadio}
       />
 
       <main className="relative min-h-screen h-auto w-full min-w-0 flex-1 overflow-x-hidden overflow-y-auto scroll-smooth pb-[calc(7.5rem+env(safe-area-inset-bottom,0px))]">
@@ -330,14 +327,30 @@ export default function RadioDashboard() {
             </div>
           </header>
 
-          {currentTrack && (
-            <p className="mb-6 animate-fade-up text-sm text-white/40 [animation-delay:80ms]">
-              Now on air:{" "}
-              <span className="text-cyan-300/90">
-                {currentTrack.artist} — {currentTrack.title}
-              </span>
+          <div className="mb-6 flex w-full animate-fade-up flex-col gap-3 [animation-delay:80ms] sm:flex-row sm:items-center sm:justify-between">
+            <p className="min-w-0 flex-1 text-sm text-white/40">
+              {currentTrack ? (
+                <>
+                  Now on air:{" "}
+                  <span className="text-cyan-300/90">
+                    {currentTrack.artist} — {currentTrack.title}
+                  </span>
+                </>
+              ) : (
+                <span className="text-white/35">
+                  Pick a track or start the live radio broadcast
+                </span>
+              )}
             </p>
-          )}
+            <button
+              type="button"
+              onClick={() => handleStartRadio(visibleTracks)}
+              disabled={controlsDisabled}
+              className="hidden shrink-0 rounded-xl border border-fuchsia-500/40 bg-fuchsia-500/10 px-4 py-2.5 text-xs font-semibold uppercase tracking-widest text-fuchsia-300 transition hover:bg-fuchsia-500/20 hover:shadow-[0_0_20px_rgba(217,70,239,0.25)] disabled:cursor-not-allowed disabled:opacity-40 lg:inline-flex"
+            >
+              {isPlaying ? "Reshuffle Radio" : "Start Radio"}
+            </button>
+          </div>
 
           <p className="mb-4 min-h-[1.25rem] truncate text-xs text-white/35">
             {catalogLoading && !catalogLoaded

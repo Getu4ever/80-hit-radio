@@ -6,7 +6,6 @@ import {
   MORE_GENRES,
   POPULAR_GENRES,
   type Subgenre,
-  type Track,
 } from "@/data/tracks";
 import { useUserSession } from "@/hooks/useUserSession";
 import { useStreamAccessStore } from "@/store/useStreamAccessStore";
@@ -17,9 +16,6 @@ export type NavFilter = "All" | Subgenre;
 interface SidebarProps {
   filter: NavFilter;
   onFilterChange: (filter: NavFilter) => void;
-  visibleTracks: Track[];
-  isPlaying: boolean;
-  onStartRadio: (tracks: Track[]) => void;
 }
 
 function ShieldIcon({ className }: { className?: string }) {
@@ -99,9 +95,6 @@ function GenreButton({
 export default function Sidebar({
   filter,
   onFilterChange,
-  visibleTracks,
-  isPlaying,
-  onStartRadio,
 }: SidebarProps) {
   const { isAdmin, subscriptionLabel } = useUserSession();
   const streamingAllowed = useStreamAccessStore((s) => s.allowed);
@@ -113,8 +106,8 @@ export default function Sidebar({
     showMore || MORE_GENRES.includes(filter as Subgenre);
 
   return (
-    <aside className="sticky top-0 hidden h-dvh w-80 shrink-0 flex-col justify-between self-start overflow-hidden border-r border-white/10 bg-[#0a0614]/80 px-4 pb-[calc(7.5rem+env(safe-area-inset-bottom,0px))] pt-8 backdrop-blur-md lg:flex">
-      <div className="flex h-full min-h-0 w-full flex-col justify-between">
+    <aside className="sticky top-0 hidden h-dvh w-80 shrink-0 flex-col self-start overflow-hidden border-r border-white/10 bg-[#0a0614]/80 px-4 pb-[calc(7.5rem+env(safe-area-inset-bottom,0px))] pt-8 backdrop-blur-md lg:flex">
+      <div className="flex h-full min-h-0 w-full flex-col">
         <div className="mb-6 w-full shrink-0">
           <BrandLogo size="lg" priority />
           {subscriptionLabel && (
@@ -125,7 +118,7 @@ export default function Sidebar({
         </div>
 
         <nav
-          className="flex min-h-0 flex-1 flex-col gap-1 pb-40"
+          className="flex min-h-0 flex-1 flex-col gap-1 pb-32"
           aria-label="Genres"
         >
           <GenreButton
@@ -170,17 +163,8 @@ export default function Sidebar({
             ))}
         </nav>
 
-        <div className="flex shrink-0 flex-col gap-3 px-2 pt-4">
-          <button
-            type="button"
-            onClick={() => onStartRadio(visibleTracks)}
-            disabled={!streamingAllowed}
-            className="w-full rounded-xl border border-fuchsia-500/40 bg-fuchsia-500/10 py-2.5 text-xs font-semibold uppercase tracking-widest text-fuchsia-300 transition hover:bg-fuchsia-500/20 hover:shadow-[0_0_20px_rgba(217,70,239,0.25)] disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            {isPlaying ? "Reshuffle Radio" : "Start Radio"}
-          </button>
-
-          {isAdmin && (
+        {isAdmin && (
+          <div className="mt-auto shrink-0 px-2 pt-4">
             <Link
               href="/dashboard/admin"
               className="flex items-center justify-center gap-2 rounded-xl border border-cyan-400/30 bg-cyan-400/5 py-2.5 text-xs font-semibold uppercase tracking-widest text-cyan-300 transition hover:border-cyan-400/50 hover:bg-cyan-400/10 hover:shadow-[0_0_16px_rgba(34,211,238,0.2)]"
@@ -188,8 +172,8 @@ export default function Sidebar({
               <ShieldIcon className="h-3.5 w-3.5" />
               Admin Studio
             </Link>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </aside>
   );
