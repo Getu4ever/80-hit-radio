@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   MORE_GENRES,
@@ -12,6 +12,8 @@ import { useStreamAccessStore } from "@/store/useStreamAccessStore";
 import BrandLogo from "@/components/BrandLogo";
 
 export type NavFilter = "All" | Subgenre;
+
+const MORE_GENRES_STORAGE_KEY = "sidebar_more_genres";
 
 interface SidebarProps {
   filter: NavFilter;
@@ -51,8 +53,8 @@ function ChevronIcon({
 }) {
   return (
     <svg
-      className={`${className ?? ""} transition-transform duration-200 ${
-        expanded ? "rotate-180" : ""
+      className={`${className ?? ""} transition-transform duration-300 ease-out will-change-transform ${
+        expanded ? "rotate-180" : "rotate-0"
       }`}
       viewBox="0 0 24 24"
       fill="none"
@@ -92,6 +94,14 @@ function GenreButton({
   );
 }
 
+function persistExpanded(next: boolean) {
+  try {
+    localStorage.setItem(MORE_GENRES_STORAGE_KEY, next ? "true" : "false");
+  } catch {
+    // Private mode / blocked storage — ignore.
+  }
+}
+
 export default function Sidebar({
   filter,
   onFilterChange,
@@ -99,11 +109,46 @@ export default function Sidebar({
   const { isAdmin, subscriptionLabel } = useUserSession();
   const streamingAllowed = useStreamAccessStore((s) => s.allowed);
   const controlsDisabled = !streamingAllowed;
-  const [showMore, setShowMore] = useState(
-    () => MORE_GENRES.includes(filter as Subgenre),
-  );
-  const moreExpanded =
-    showMore || MORE_GENRES.includes(filter as Subgenre);
+
+  // Always mount collapsed — prevents cold-refresh flash of the extra genres.
+  const [moreExpanded, setMoreExpanded] = useState(false);
+  const [hydrateDone, setHydrateDone] = useState(false);
+  const initialFilterRef = useRef(filter);
+
+  useEffect(() => {
+    let next = false;
+    try {
+      const stored = localStorage.getItem(MORE_GENRES_STORAGE_KEY);
+      if (stored === "true") next = true;
+      else if (stored === "false") next = false;
+      else if (MORE_GENRES.includes(initialFilterRef.current as Subgenre)) {
+        next = true;
+      }
+    } catch {
+      next = MORE_GENRES.includes(initialFilterRef.current as Subgenre);
+    }
+    setMoreExpanded(next);
+    setHydrateDone(true);
+  }, []);
+
+  // If the active filter is a "more" genre, keep the section open after hydrate.
+  useEffect(() => {
+    if (!hydrateDone) return;
+    if (!MORE_GENRES.includes(filter as Subgenre)) return;
+    setMoreExpanded((prev) => {
+      if (prev) return prev;
+      persistExpanded(true);
+      return true;
+    });
+  }, [filter, hydrateDone]);
+
+  const toggleMore = () => {
+    setMoreExpanded((prev) => {
+      const next = !prev;
+      persistExpanded(next);
+      return next;
+    });
+  };
 
   return (
     <aside className="sticky top-0 hidden h-dvh w-80 shrink-0 flex-col self-start overflow-hidden border-r border-white/10 bg-[#0a0614]/80 px-4 pb-[calc(7.5rem+env(safe-area-inset-bottom,0px))] pt-8 backdrop-blur-md lg:flex">
@@ -143,7 +188,7 @@ export default function Sidebar({
 
           <button
             type="button"
-            onClick={() => setShowMore((v) => !v)}
+            onClick={toggleMore}
             aria-expanded={moreExpanded}
             disabled={controlsDisabled}
             className="mt-1 flex items-center justify-between rounded-lg px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-widest text-white/40 transition hover:bg-white/5 hover:text-white/70 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-white/40"
@@ -152,19 +197,39 @@ export default function Sidebar({
             <ChevronIcon className="h-3.5 w-3.5" expanded={moreExpanded} />
           </button>
 
-          {moreExpanded &&
-            MORE_GENRES.map((item) => (
-              <GenreButton
-                key={item}
-                item={item}
-                active={filter === item}
-                onSelect={(next) => {
-                  setShowMore(true);
-                  onFilterChange(next);
-                }}
-                disabled={controlsDisabled}
-              />
-            ))}
+          {/* Grid 0fr/1fr keeps height off the logo row; content stays mounted for smooth opacity. */}
+          <div
+            className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out ${
+              moreExpanded
+                ? "grid-rows-[1fr] opacity-100"
+                : "grid-rows-[0fr] opacity-0"
+            }`}
+          >
+            <div className="min-h-0 overflow-hidden">
+              <div
+                className={`flex flex-col gap-1 will-change-[opacity,transform] transition-transform duration-300 ease-out ${
+                  moreExpanded
+                    ? "translate-y-0"
+                    : "-translate-y-1 pointer-events-none"
+                }`}
+                aria-hidden={!moreExpanded}
+              >
+                {MORE_GENRES.map((item) => (
+                  <GenreButton
+                    key={item}
+                    item={item}
+                    active={filter === item}
+                    onSelect={(next) => {
+                      setMoreExpanded(true);
+                      persistExpanded(true);
+                      onFilterChange(next);
+                    }}
+                    disabled={controlsDisabled}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
         </nav>
 
         {isAdmin && (
