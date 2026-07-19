@@ -204,3 +204,44 @@ body {
   border: 2px solid transparent;
   background-clip: padding-box;
 }
+
+/* Ultra-thin neon sidebar genre scroller — thumb fades in on hover/scroll. */
+.scrollbar-sidebar {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+.scrollbar-sidebar:hover,
+.scrollbar-sidebar:focus-within,
+.scrollbar-sidebar:active {
+  scrollbar-color: rgba(217, 70, 239, 0.4) rgba(255, 255, 255, 0.04);
+}
+
+.scrollbar-sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-sidebar::-webkit-scrollbar-thumb {
+  border-radius: 9999px;
+  background: transparent;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+}
+
+.scrollbar-sidebar:hover::-webkit-scrollbar-thumb,
+.scrollbar-sidebar:focus-within::-webkit-scrollbar-thumb,
+.scrollbar-sidebar:active::-webkit-scrollbar-thumb {
+  background: rgba(217, 70, 239, 0.35);
+  border: 1px solid transparent;
+  background-clip: padding-box;
+  box-shadow: 0 0 8px rgba(217, 70, 239, 0.25);
+}
+
+.scrollbar-sidebar:hover::-webkit-scrollbar-track,
+.scrollbar-sidebar:focus-within::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+}
