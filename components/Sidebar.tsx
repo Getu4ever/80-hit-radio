@@ -53,7 +53,7 @@ function ChevronIcon({
 }) {
   return (
     <svg
-      className={`${className ?? ""} transition-transform duration-300 ease-out will-change-transform ${
+      className={`${className ?? ""} transition-transform duration-300 ease-in-out ${
         expanded ? "rotate-180" : "rotate-0"
       }`}
       viewBox="0 0 24 24"
@@ -110,8 +110,8 @@ export default function Sidebar({
   const streamingAllowed = useStreamAccessStore((s) => s.allowed);
   const controlsDisabled = !streamingAllowed;
 
-  // Always mount collapsed — prevents cold-refresh flash of the extra genres.
-  const [moreExpanded, setMoreExpanded] = useState(false);
+  // SSR + first client paint always collapsed (max-h-0) — no hydration mismatch.
+  const [isExpanded, setIsExpanded] = useState(false);
   const [hydrateDone, setHydrateDone] = useState(false);
   const initialFilterRef = useRef(filter);
 
@@ -127,15 +127,14 @@ export default function Sidebar({
     } catch {
       next = MORE_GENRES.includes(initialFilterRef.current as Subgenre);
     }
-    setMoreExpanded(next);
+    setIsExpanded(next);
     setHydrateDone(true);
   }, []);
 
-  // If the active filter is a "more" genre, keep the section open after hydrate.
   useEffect(() => {
     if (!hydrateDone) return;
     if (!MORE_GENRES.includes(filter as Subgenre)) return;
-    setMoreExpanded((prev) => {
+    setIsExpanded((prev) => {
       if (prev) return prev;
       persistExpanded(true);
       return true;
@@ -143,7 +142,7 @@ export default function Sidebar({
   }, [filter, hydrateDone]);
 
   const toggleMore = () => {
-    setMoreExpanded((prev) => {
+    setIsExpanded((prev) => {
       const next = !prev;
       persistExpanded(next);
       return next;
@@ -164,7 +163,7 @@ export default function Sidebar({
 
         <nav
           className={`flex min-h-0 flex-1 flex-col gap-1 pb-24 ${
-            moreExpanded
+            isExpanded
               ? "overflow-y-auto overflow-x-hidden overscroll-contain scrollbar-sidebar"
               : "overflow-hidden"
           }`}
@@ -189,45 +188,38 @@ export default function Sidebar({
           <button
             type="button"
             onClick={toggleMore}
-            aria-expanded={moreExpanded}
+            aria-expanded={isExpanded}
             disabled={controlsDisabled}
             className="mt-1 flex items-center justify-between rounded-lg px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-widest text-white/40 transition hover:bg-white/5 hover:text-white/70 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-white/40"
           >
             More genres
-            <ChevronIcon className="h-3.5 w-3.5" expanded={moreExpanded} />
+            <ChevronIcon className="h-3.5 w-3.5" expanded={isExpanded} />
           </button>
 
-          {/* Grid 0fr/1fr keeps height off the logo row; content stays mounted for smooth opacity. */}
           <div
-            className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out ${
-              moreExpanded
-                ? "grid-rows-[1fr] opacity-100"
-                : "grid-rows-[0fr] opacity-0"
+            className={`transition-all duration-300 ease-in-out overflow-hidden ${
+              isExpanded ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
             }`}
+            aria-hidden={!isExpanded}
           >
-            <div className="min-h-0 overflow-hidden">
-              <div
-                className={`flex flex-col gap-1 will-change-[opacity,transform] transition-transform duration-300 ease-out ${
-                  moreExpanded
-                    ? "translate-y-0"
-                    : "-translate-y-1 pointer-events-none"
-                }`}
-                aria-hidden={!moreExpanded}
-              >
-                {MORE_GENRES.map((item) => (
-                  <GenreButton
-                    key={item}
-                    item={item}
-                    active={filter === item}
-                    onSelect={(next) => {
-                      setMoreExpanded(true);
-                      persistExpanded(true);
-                      onFilterChange(next);
-                    }}
-                    disabled={controlsDisabled}
-                  />
-                ))}
-              </div>
+            <div
+              className={`flex flex-col gap-1 ${
+                isExpanded ? "" : "pointer-events-none"
+              }`}
+            >
+              {MORE_GENRES.map((item) => (
+                <GenreButton
+                  key={item}
+                  item={item}
+                  active={filter === item}
+                  onSelect={(next) => {
+                    setIsExpanded(true);
+                    persistExpanded(true);
+                    onFilterChange(next);
+                  }}
+                  disabled={controlsDisabled}
+                />
+              ))}
             </div>
           </div>
         </nav>
