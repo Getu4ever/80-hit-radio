@@ -306,9 +306,9 @@ export default function Header({
   ) : null;
 
   return (
-    <div className="relative z-[80] mb-5 animate-fade-up sm:mb-8">
-      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-3 lg:flex lg:gap-4">
-        <div className="min-w-0 lg:hidden">
+    <div className="relative z-[80] mb-5 overflow-x-hidden animate-fade-up sm:mb-8">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-3 [contain:layout] lg:flex lg:gap-4">
+        <div className="min-w-0 shrink-0 lg:hidden">
           <BrandLogo size="header" priority />
         </div>
 

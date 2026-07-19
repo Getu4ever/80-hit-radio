@@ -9,7 +9,8 @@ const SIZES = {
   header: {
     width: 420,
     height: 280,
-    className: "h-14 w-auto max-w-[200px] sm:h-16 sm:max-w-[240px]",
+    className:
+      "h-16 w-32 max-w-[220px] min-[400px]:w-40 sm:h-[4.5rem] sm:w-44 sm:max-w-[280px] md:h-20 md:w-48 md:max-w-[320px]",
   },
   sm: {
     width: 420,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState, type TouchEvent } from "react";
 import Image from "next/image";
 import {
   MORE_GENRES,
@@ -8,6 +8,7 @@ import {
   type Subgenre,
   type Track,
 } from "@/data/tracks";
+import { unlockMediaGesture } from "@/lib/mediaPlayback";
 import { useAudioStore } from "@/store/useAudioStore";
 import { useCatalogStore } from "@/store/useCatalogStore";
 import { useStreamAccessStore } from "@/store/useStreamAccessStore";
@@ -38,6 +39,7 @@ function TrackCard({ track }: { track: Track }) {
   const streamingAllowed = useStreamAccessStore((s) => s.allowed);
   const [artFailed, setArtFailed] = useState(false);
   const artSrc = track.imageUrl;
+  const touchArmedRef = useRef(false);
 
   // Reset failure state when the track (or its art URL) changes
   const artKey = `${track.id}:${track.imageUrl}`;
@@ -50,8 +52,10 @@ function TrackCard({ track }: { track: Track }) {
   const isActive = currentTrack?.id === track.id;
   const isThisPlaying = isActive && isPlaying && streamingAllowed;
 
-  const handlePlay = () => {
+  const dispatchPlay = () => {
     if (!streamingAllowed) return;
+    // Unlock media policy on the same user-gesture stack before store play.
+    unlockMediaGesture();
     if (isActive) {
       togglePlay();
     } else {
@@ -59,13 +63,33 @@ function TrackCard({ track }: { track: Track }) {
     }
   };
 
+  const handlePlayClick = () => {
+    // Desktop / synthesized click path — skip if touchend already handled play.
+    if (touchArmedRef.current) {
+      touchArmedRef.current = false;
+      return;
+    }
+    dispatchPlay();
+  };
+
+  const handleTouchEnd = (event: TouchEvent) => {
+    if (!streamingAllowed) return;
+    // Prefer touchend on mobile so play runs inside the gesture token before
+    // a delayed click (300ms) loses autoplay permission.
+    event.preventDefault();
+    touchArmedRef.current = true;
+    dispatchPlay();
+  };
+
   return (
     <article
-      className={`group relative overflow-hidden rounded-2xl border bg-white/[0.03] p-4 transition duration-300 hover:bg-white/[0.06] ${
+      className={`group relative flex h-full min-h-[22rem] flex-col overflow-hidden rounded-2xl border bg-white/[0.03] p-4 transition duration-300 [contain:layout_paint] hover:bg-white/[0.06] ${
         isActive
           ? "border-cyan-400/50 shadow-[0_0_24px_rgba(34,211,238,0.15)]"
           : "border-white/10 hover:border-fuchsia-400/30"
-      }`}
+      } ${streamingAllowed ? "cursor-pointer" : "cursor-not-allowed"}`}
+      onClick={handlePlayClick}
+      onTouchEnd={handleTouchEnd}
     >
       <div
         className={`relative mb-4 aspect-square overflow-hidden rounded-xl bg-gradient-to-br from-fuchsia-950/80 via-[#1a0a2e] to-cyan-950/60 ${
@@ -80,6 +104,7 @@ function TrackCard({ track }: { track: Track }) {
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
             className="object-cover transition duration-500 group-hover:scale-105"
             priority={track.id === "1"}
+            loading={track.id === "1" ? "eager" : "lazy"}
             unoptimized
             onError={() => setArtFailed(true)}
           />
@@ -101,7 +126,7 @@ function TrackCard({ track }: { track: Track }) {
         )}
       </div>
 
-      <div className="mb-3 min-w-0">
+      <div className="mb-3 min-h-[4.25rem] min-w-0 flex-1">
         <h3 className="truncate font-[family-name:var(--font-display)] text-base font-semibold tracking-wide text-white">
           {track.title}
         </h3>
@@ -113,9 +138,16 @@ function TrackCard({ track }: { track: Track }) {
 
       <button
         type="button"
-        onClick={handlePlay}
+        onClick={(event) => {
+          event.stopPropagation();
+          handlePlayClick();
+        }}
+        onTouchEnd={(event) => {
+          event.stopPropagation();
+          handleTouchEnd(event);
+        }}
         disabled={!streamingAllowed}
-        className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-fuchsia-600/90 to-cyan-500/90 py-2.5 text-sm font-semibold text-white shadow-[0_0_16px_rgba(217,70,239,0.25)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
+        className="mt-auto flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-fuchsia-600/90 to-cyan-500/90 py-2.5 text-sm font-semibold text-white shadow-[0_0_16px_rgba(217,70,239,0.25)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
         aria-label={
           isThisPlaying ? `Pause ${track.title}` : `Play ${track.title}`
         }
@@ -307,7 +339,7 @@ export default function RadioDashboard() {
             </p>
           )}
 
-          <p className="mb-4 text-xs text-white/35">
+          <p className="mb-4 min-h-[1.25rem] truncate text-xs text-white/35">
             {catalogLoading && !catalogLoaded
               ? "Loading catalog…"
               : searchQuery.trim()
@@ -321,10 +353,12 @@ export default function RadioDashboard() {
                   }`}
           </p>
 
-          <div className="grid grid-cols-1 gap-4 animate-fade-up sm:grid-cols-2 sm:gap-5 md:grid-cols-3 xl:grid-cols-4 [animation-delay:120ms]">
-            {shownTracks.map((track) => (
-              <TrackCard key={track.id} track={track} />
-            ))}
+          <div className="relative w-full min-w-0 overflow-x-hidden [contain:layout] [transform:translateZ(0)]">
+            <div className="grid min-h-[28rem] auto-rows-[minmax(0,1fr)] grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 md:grid-cols-3 xl:grid-cols-4">
+              {shownTracks.map((track) => (
+                <TrackCard key={track.id} track={track} />
+              ))}
+            </div>
           </div>
 
           {shownTracks.length < visibleTracks.length && (

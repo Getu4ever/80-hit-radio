@@ -16,7 +16,10 @@ import {
   YOUTUBE_PLAYER_CONFIG,
   type YoutubePlayerElement,
 } from "@/lib/broadcastAudio";
-import { registerMediaPlayNow } from "@/lib/mediaPlayback";
+import {
+  flushPendingMediaPlay,
+  registerMediaPlayNow,
+} from "@/lib/mediaPlayback";
 import { useAudioStore } from "@/store/useAudioStore";
 
 const ReactPlayer = dynamic(() => import("react-player"), { ssr: false });
@@ -28,6 +31,8 @@ interface AudioEngineProps {
 type PlayerSlot = "a" | "b";
 
 const PREFETCH_WINDOW_SEC = 30;
+/** Start warming the next media pipeline once the live track is nearly done. */
+const GAPLESS_PREFETCH_RATIO = 0.95;
 const EARLY_HANDOFF_SEC = 0.25;
 const PROMOTED_PLAY_POLL_MS = 40;
 const PROMOTED_PLAY_MAX_WAIT_MS = 8_000;
@@ -419,6 +424,59 @@ export default function AudioEngine({
     };
   }, []);
 
+  const warmSlotMuted = useCallback(
+    (slot: PlayerSlot) => {
+      if (!allowMutedWarmRef.current) return;
+      const media = slotRef(slot).current;
+      if (!media) return;
+      syncPlayerAudioState(playerEl(slot), { volume: 0, muted: true });
+      if (media.paused) {
+        void media.play().catch(() => {});
+        try {
+          (media as YoutubePlayerElement).api?.playVideo?.();
+        } catch {
+          // Optional iframe API path.
+        }
+      }
+    },
+    [playerEl, slotRef],
+  );
+
+  /**
+   * Rewind the cued live slot to 0 while staying muted-playing.
+   * Pausing here used to force a cold play() on the next tap (multi-second delay).
+   */
+  const parkMutedWarmAtStart = useCallback(
+    (slot: PlayerSlot = liveSlotRef.current) => {
+      if (!allowMutedWarmRef.current) return;
+      const media = slotRef(slot).current;
+      if (!media) return;
+
+      try {
+        media.currentTime = 0;
+      } catch {
+        // Some embeds reject seeks until buffered.
+      }
+      try {
+        (media as YoutubePlayerElement).api?.seekTo?.(0, true);
+      } catch {
+        // Optional YouTube iframe API path.
+      }
+
+      syncPlayerAudioState(playerEl(slot), { volume: 0, muted: true });
+      if (media.paused) {
+        void media.play().catch(() => {});
+        try {
+          (media as YoutubePlayerElement).api?.playVideo?.();
+        } catch {
+          // Optional iframe API path.
+        }
+      }
+      useAudioStore.getState().setPlayedSeconds(0);
+    },
+    [playerEl, slotRef],
+  );
+
   useEffect(() => {
     if (!currentTrack) {
       slotAIdRef.current = null;
@@ -525,12 +583,31 @@ export default function AudioEngine({
 
     if (liveTrackChanged) {
       pauseSlot(otherSlot(live));
+      // Inject + activate immediately — no dependency on a manual skip.
+      // Flush any pending tap so mobile cold-starts unmute in the gesture window.
       queueMicrotask(() => {
         promoteHandlersRef.current.syncAllSlotsAudio();
-        promoteHandlersRef.current.awaitPromotedPlayback(live);
+        if (useAudioStore.getState().isPlaying) {
+          if (!flushPendingMediaPlay()) {
+            promoteHandlersRef.current.awaitPromotedPlayback(live);
+          }
+        } else if (allowMutedWarmRef.current) {
+          warmSlotMuted(live);
+          warmSlotMuted(otherSlot(live));
+        }
+      });
+      requestAnimationFrame(() => {
+        if (useAudioStore.getState().isPlaying) {
+          flushPendingMediaPlay();
+        }
+      });
+    } else if (useAudioStore.getState().isPlaying) {
+      // Same live id but engine just mounted / recovered — force buffer activation.
+      queueMicrotask(() => {
+        flushPendingMediaPlay();
       });
     }
-  }, [currentTrack?.id, upcomingTrack?.id, pauseSlot]);
+  }, [currentTrack?.id, upcomingTrack?.id, pauseSlot, warmSlotMuted]);
 
   useEffect(() => {
     if (!currentTrack) return;
@@ -580,59 +657,6 @@ export default function AudioEngine({
     if (!streamingAllowed || !currentTrack) return;
     useAudioStore.getState().ensureUpcoming();
   }, [streamingAllowed, currentTrack?.id]);
-
-  const warmSlotMuted = useCallback(
-    (slot: PlayerSlot) => {
-      if (!allowMutedWarmRef.current) return;
-      const media = slotRef(slot).current;
-      if (!media) return;
-      syncPlayerAudioState(playerEl(slot), { volume: 0, muted: true });
-      if (media.paused) {
-        void media.play().catch(() => {});
-        try {
-          (media as YoutubePlayerElement).api?.playVideo?.();
-        } catch {
-          // Optional iframe API path.
-        }
-      }
-    },
-    [playerEl, slotRef],
-  );
-
-  /**
-   * Rewind the cued live slot to 0 while staying muted-playing.
-   * Pausing here used to force a cold play() on the next tap (multi-second delay).
-   */
-  const parkMutedWarmAtStart = useCallback(
-    (slot: PlayerSlot = liveSlotRef.current) => {
-      if (!allowMutedWarmRef.current) return;
-      const media = slotRef(slot).current;
-      if (!media) return;
-
-      try {
-        media.currentTime = 0;
-      } catch {
-        // Some embeds reject seeks until buffered.
-      }
-      try {
-        (media as YoutubePlayerElement).api?.seekTo?.(0, true);
-      } catch {
-        // Optional YouTube iframe API path.
-      }
-
-      syncPlayerAudioState(playerEl(slot), { volume: 0, muted: true });
-      if (media.paused) {
-        void media.play().catch(() => {});
-        try {
-          (media as YoutubePlayerElement).api?.playVideo?.();
-        } catch {
-          // Optional iframe API path.
-        }
-      }
-      useAudioStore.getState().setPlayedSeconds(0);
-    },
-    [playerEl, slotRef],
-  );
 
   useEffect(() => {
     if (!currentTrack) {
@@ -732,6 +756,9 @@ export default function AudioEngine({
 
   const handleEnded = useCallback(() => {
     if (!streamingAllowed) return;
+    // Force the succeeding track into the engine immediately — never stall
+    // waiting for another user action after natural track termination.
+    useAudioStore.getState().ensureUpcoming();
     advanceNow();
   }, [advanceNow, streamingAllowed]);
 
@@ -781,9 +808,40 @@ export default function AudioEngine({
 
       const dur = durationRef.current;
       const remaining = dur > 0 ? dur - t : Infinity;
+      const progressRatio = dur > 0 ? t / dur : 0;
 
-      if (remaining <= PREFETCH_WINDOW_SEC + 1) {
+      // Gapless: ensure the next track is selected and the prefetch slot is
+      // warming well before end — at 95% completion and again in the final 30s.
+      if (
+        progressRatio >= GAPLESS_PREFETCH_RATIO ||
+        remaining <= PREFETCH_WINDOW_SEC + 1
+      ) {
         useAudioStore.getState().ensureUpcoming();
+        const prefetch = otherSlot(liveSlotRef.current);
+        const prefetchId =
+          prefetch === "a" ? slotAIdRef.current : slotBIdRef.current;
+        const upcomingId = useAudioStore.getState().upcomingTrack?.id ?? null;
+        if (upcomingId && prefetchId === upcomingId) {
+          // Keep the standby slot muted-playing so promote is instant.
+          const prefetchMedia = slotRef(prefetch).current;
+          if (prefetchMedia) {
+            syncPlayerAudioState(playerEl(prefetch), {
+              volume: 0,
+              muted: true,
+            });
+            if (prefetchMedia.paused) {
+              void prefetchMedia.play().catch(() => {});
+              try {
+                (prefetchMedia as YoutubePlayerElement).api?.playVideo?.();
+              } catch {
+                // Optional iframe API path.
+              }
+            }
+          }
+        } else if (upcomingId && prefetchId !== upcomingId) {
+          // Upcoming changed — let the track effect rebind the prefetch src.
+          prefetchedIdRef.current = null;
+        }
       }
 
       if (
@@ -801,7 +859,7 @@ export default function AudioEngine({
         useAudioStore.getState().setPlayedSeconds(t);
       }
     },
-    [advanceNow, parkMutedWarmAtStart],
+    [advanceNow, parkMutedWarmAtStart, playerEl, slotRef],
   );
 
   const handleDurationChange = useCallback(

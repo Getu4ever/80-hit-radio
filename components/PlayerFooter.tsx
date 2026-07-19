@@ -316,6 +316,21 @@ export default function PlayerFooter() {
           >
             <IconNext className="h-5 w-5" />
           </button>
+          <button
+            type="button"
+            onClick={() => setBroadcastEnhance(!broadcastEnhance)}
+            disabled={controlsDisabled}
+            aria-pressed={broadcastEnhance}
+            aria-label="AI Enhance"
+            className={`max-w-[4.5rem] truncate rounded-full border px-2 py-1 text-[9px] font-semibold uppercase tracking-wider transition disabled:cursor-not-allowed disabled:opacity-40 sm:hidden ${
+              broadcastEnhance
+                ? "border-fuchsia-400/40 bg-fuchsia-500/15 text-fuchsia-200"
+                : "border-white/10 bg-white/5 text-white/40"
+            }`}
+            title="AI-assisted HD stream optimization"
+          >
+            Enhance
+          </button>
           <ShareStation
             compact
             variant="on-air"

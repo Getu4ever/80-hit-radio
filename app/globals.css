@@ -165,3 +165,32 @@ body::-webkit-scrollbar {
 .scrollbar-none::-webkit-scrollbar {
   display: none;
 }
+
+/* Visible thin scrollbar for auth shells (global html/body hide bars). */
+.scrollbar-auth {
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(34, 211, 238, 0.45) rgba(255, 255, 255, 0.06);
+}
+
+.scrollbar-auth::-webkit-scrollbar {
+  display: block;
+  width: 10px;
+}
+
+.scrollbar-auth::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.scrollbar-auth::-webkit-scrollbar-thumb {
+  border-radius: 9999px;
+  background: rgba(34, 211, 238, 0.4);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.scrollbar-auth::-webkit-scrollbar-thumb:hover {
+  background: rgba(34, 211, 238, 0.65);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}

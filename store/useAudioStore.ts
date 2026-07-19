@@ -122,7 +122,16 @@ export const useAudioStore = create<AudioState>((set, get) => ({
         ? [...playbackHistory, currentTrack]
         : playbackHistory;
 
-    const remaining = queue.filter((t) => t.id !== track.id);
+    // Seed from catalog when the live queue is empty so the dual-slot
+    // engine can prefetch the next source immediately after this pick.
+    let remaining = queue.filter((t) => t.id !== track.id);
+    if (remaining.length === 0) {
+      remaining = shuffleWithArtistGap(
+        useCatalogStore.getState().getRadioTracks(),
+        track.artist,
+        failedTrackIds,
+      ).filter((t) => t.id !== track.id);
+    }
     const upcoming = pickRandomTrack(
       remaining,
       track.artist,
@@ -165,7 +174,6 @@ export const useAudioStore = create<AudioState>((set, get) => ({
       playbackHistory,
       queue,
       failedTrackIds,
-      startRadio,
     } = get();
 
     let next =
@@ -174,7 +182,16 @@ export const useAudioStore = create<AudioState>((set, get) => ({
         : null;
     let rest = queue.filter((t) => !failedTrackIds.has(t.id));
 
+    // Force-advance: if the queue drained mid-stream, refill from catalog
+    // instead of a full reshuffle so handoff stays continuous.
     if (!next) {
+      if (rest.length === 0) {
+        rest = shuffleWithArtistGap(
+          useCatalogStore.getState().getRadioTracks(),
+          currentTrack?.artist,
+          failedTrackIds,
+        );
+      }
       next = pickRandomTrack(rest, currentTrack?.artist, failedTrackIds);
       if (next) {
         rest = rest.filter((t) => t.id !== next!.id);
@@ -184,7 +201,8 @@ export const useAudioStore = create<AudioState>((set, get) => ({
     }
 
     if (!next) {
-      startRadio();
+      // Absolute last resort — catalog empty / all failed.
+      get().startRadio();
       return;
     }
 
@@ -196,6 +214,14 @@ export const useAudioStore = create<AudioState>((set, get) => ({
       currentTrack && currentTrack.id !== next.id
         ? [...playbackHistory, currentTrack]
         : playbackHistory;
+
+    if (rest.length === 0) {
+      rest = shuffleWithArtistGap(
+        useCatalogStore.getState().getRadioTracks(),
+        next.artist,
+        failedTrackIds,
+      ).filter((t) => t.id !== next!.id);
+    }
 
     const upcoming = pickRandomTrack(rest, next.artist, failedTrackIds);
 
@@ -369,11 +395,30 @@ export const useAudioStore = create<AudioState>((set, get) => ({
   ensureUpcoming: () => {
     const { upcomingTrack, queue, currentTrack, failedTrackIds } = get();
     if (upcomingTrack && !failedTrackIds.has(upcomingTrack.id)) return;
-    const next = pickRandomTrack(queue, currentTrack?.artist, failedTrackIds);
+
+    // Prefer the live queue; when drained, refill from the catalog so the
+    // dual-slot engine always has a warm next source (gapless handoff).
+    let pool = queue.filter((t) => !failedTrackIds.has(t.id));
+    let fromCatalog = false;
+    if (pool.length === 0) {
+      pool = useCatalogStore.getState().getRadioTracks();
+      fromCatalog = true;
+    }
+
+    const next = pickRandomTrack(pool, currentTrack?.artist, failedTrackIds);
     if (!next) return;
+
+    const rest = fromCatalog
+      ? shuffleWithArtistGap(
+          pool.filter((t) => t.id !== next.id),
+          next.artist,
+          failedTrackIds,
+        )
+      : queue.filter((t) => t.id !== next.id);
+
     set({
       upcomingTrack: next,
-      queue: queue.filter((t) => t.id !== next.id),
+      queue: rest,
     });
   },
 }));

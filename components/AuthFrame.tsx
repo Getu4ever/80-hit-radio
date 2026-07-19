@@ -25,10 +25,11 @@ export default function AuthFrame({
   children,
 }: AuthFrameProps) {
   return (
-    <div className="flex min-h-dvh items-center justify-center overflow-x-hidden overscroll-none bg-[#07040f] px-4 py-6 text-white scrollbar-none">
-      <div className="w-full max-w-md overflow-hidden rounded-2xl border border-cyan-400/20 bg-[#0a0614]/90 p-6 shadow-[0_0_24px_rgba(34,211,238,0.1)] sm:p-8 sm:shadow-[0_0_40px_rgba(34,211,238,0.12)]">
-        <div className="mb-4 rounded-2xl border border-white/10 bg-black/40 px-3 py-3">
-          <BrandLogo size="lg" href="/" />
+    <div className="h-dvh overflow-y-auto overflow-x-hidden overscroll-y-contain bg-[#07040f] px-4 py-6 text-white sm:py-10 scrollbar-auth">
+      <div className="mx-auto flex min-h-full w-full max-w-md flex-col justify-center">
+      <div className="w-full max-w-md rounded-2xl border border-cyan-400/20 bg-[#0a0614]/90 p-5 shadow-[0_0_24px_rgba(34,211,238,0.1)] sm:p-7 sm:shadow-[0_0_40px_rgba(34,211,238,0.12)]">
+        <div className="mb-3 rounded-2xl border border-white/10 bg-black/40 px-3 py-2.5">
+          <BrandLogo size="md" href="/" />
           <p className="mt-1 text-xs uppercase tracking-[0.28em] text-cyan-300/90">
             80s Hit Radio
           </p>
@@ -63,6 +64,7 @@ export default function AuthFrame({
         <div className="mt-8">{children}</div>
 
         {footer ? <div className="mt-6 border-t border-white/10 pt-4">{footer}</div> : null}
+      </div>
       </div>
     </div>
   );
