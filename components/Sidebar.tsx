@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   MORE_GENRES,
@@ -99,12 +99,23 @@ export default function Sidebar({
   const { isAdmin, subscriptionLabel } = useUserSession();
   const streamingAllowed = useStreamAccessStore((s) => s.allowed);
   const controlsDisabled = !streamingAllowed;
+
+  /**
+   * showMore is the only gate for rendering extra genres + the pink scrollbar.
+   * Do NOT derive open state as `showMore || MORE_GENRES.includes(filter)` during
+   * render — that re-introduced the refresh flash. If the active filter is a
+   * more-genre, open after mount via effect instead.
+   */
   const [showMore, setShowMore] = useState(false);
-  const moreOpen =
-    showMore || MORE_GENRES.includes(filter as Subgenre);
+
+  useEffect(() => {
+    if (MORE_GENRES.includes(filter as Subgenre)) {
+      setShowMore(true);
+    }
+  }, [filter]);
 
   return (
-    <aside className="sticky top-0 hidden h-dvh w-80 shrink-0 flex-col self-start overflow-hidden border-r border-white/10 bg-[#0a0614]/80 px-4 pb-[calc(7.5rem+env(safe-area-inset-bottom,0px))] pt-8 backdrop-blur-md lg:flex">
+    <aside className="desktop-sidebar sticky top-0 hidden h-dvh w-80 shrink-0 flex-col self-start overflow-hidden border-r border-white/10 bg-[#0a0614]/80 px-4 pb-[calc(7.5rem+env(safe-area-inset-bottom,0px))] pt-8 backdrop-blur-md lg:flex">
       <div className="flex h-full min-h-0 w-full flex-col">
         <div className="mb-6 w-full shrink-0">
           <BrandLogo size="lg" priority />
@@ -117,7 +128,7 @@ export default function Sidebar({
 
         <nav
           className={`flex h-[calc(100vh-220px)] flex-col gap-1 overscroll-contain pb-16 ${
-            moreOpen
+            showMore
               ? "scrollbar-sidebar overflow-y-scroll"
               : "overflow-hidden"
           }`}
@@ -142,27 +153,28 @@ export default function Sidebar({
           <button
             type="button"
             onClick={() => setShowMore((v) => !v)}
-            aria-expanded={moreOpen}
+            aria-expanded={showMore}
             disabled={controlsDisabled}
             className="mt-1 flex items-center justify-between rounded-lg px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-widest text-white/40 transition hover:bg-white/5 hover:text-white/70 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-white/40"
           >
             More genres
-            <ChevronIcon className="h-3.5 w-3.5" expanded={moreOpen} />
+            <ChevronIcon className="h-3.5 w-3.5" expanded={showMore} />
           </button>
 
-          {moreOpen &&
-            MORE_GENRES.map((item) => (
-              <GenreButton
-                key={item}
-                item={item}
-                active={filter === item}
-                onSelect={(next) => {
-                  setShowMore(true);
-                  onFilterChange(next);
-                }}
-                disabled={controlsDisabled}
-              />
-            ))}
+          {showMore
+            ? MORE_GENRES.map((item) => (
+                <GenreButton
+                  key={item}
+                  item={item}
+                  active={filter === item}
+                  onSelect={(next) => {
+                    setShowMore(true);
+                    onFilterChange(next);
+                  }}
+                  disabled={controlsDisabled}
+                />
+              ))
+            : null}
         </nav>
 
         {isAdmin && (

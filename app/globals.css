@@ -205,7 +205,24 @@ body {
   background-clip: padding-box;
 }
 
-/* Ultra-thin hot-pink sidebar genre scroller — always visible. */
+/* Hide mobile-only chrome on desktop even before Tailwind utilities hydrate. */
+@media (min-width: 1024px) {
+  .mobile-only-nav {
+    display: none !important;
+  }
+
+  .desktop-sidebar {
+    display: flex !important;
+  }
+}
+
+@media (max-width: 1023px) {
+  .desktop-sidebar {
+    display: none !important;
+  }
+}
+
+/* Ultra-thin hot-pink sidebar genre scroller — visible when More genres is open. */
 .scrollbar-sidebar {
   scrollbar-width: thin;
   scrollbar-color: rgba(236, 72, 153, 0.35) transparent;

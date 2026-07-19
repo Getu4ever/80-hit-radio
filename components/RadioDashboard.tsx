@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState, type TouchEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type TouchEvent } from "react";
 import Image from "next/image";
 import {
   MORE_GENRES,
@@ -206,13 +206,18 @@ export default function RadioDashboard() {
     [visibleTracks, visibleCount],
   );
 
-  const moreExpanded =
-    showMoreGenres || MORE_GENRES.includes(filter as Subgenre);
+  // Only expand from explicit toggle (or after mount when filter is a more-genre).
+  // Do not OR with MORE_GENRES.includes(filter) during render — that caused refresh flash.
+  useEffect(() => {
+    if (MORE_GENRES.includes(filter as Subgenre)) {
+      setShowMoreGenres(true);
+    }
+  }, [filter]);
 
   const mobileNavItems: NavFilter[] = [
     "All",
     ...POPULAR_GENRES,
-    ...(moreExpanded ? MORE_GENRES : []),
+    ...(showMoreGenres ? MORE_GENRES : []),
   ];
 
   const handleFilterChange = (next: NavFilter) => {
@@ -273,7 +278,7 @@ export default function RadioDashboard() {
               radio shuffle the decade for you.
             </p>
 
-            <div className="mt-6 flex flex-wrap items-center gap-3 lg:hidden">
+            <div className="mobile-only-nav mt-6 flex flex-wrap items-center gap-3 lg:hidden">
               <button
                 type="button"
                 onClick={() => handleStartRadio(visibleTracks)}
@@ -294,7 +299,7 @@ export default function RadioDashboard() {
                 Browse all hits
               </button>
             </div>
-            <div className="mt-4 flex flex-wrap gap-2 lg:hidden">
+            <div className="mobile-only-nav mt-4 flex flex-wrap gap-2 lg:hidden">
               {mobileNavItems.map((item) => (
                 <button
                   key={item}
@@ -318,11 +323,11 @@ export default function RadioDashboard() {
               <button
                 type="button"
                 onClick={() => setShowMoreGenres((v) => !v)}
-                aria-expanded={moreExpanded}
+                aria-expanded={showMoreGenres}
                 disabled={controlsDisabled}
                 className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs text-white/50 transition hover:border-cyan-400/30 hover:text-cyan-300/80 disabled:cursor-not-allowed disabled:opacity-40"
               >
-                {moreExpanded ? "Less genres" : "More genres"}
+                {showMoreGenres ? "Less genres" : "More genres"}
               </button>
             </div>
           </header>
