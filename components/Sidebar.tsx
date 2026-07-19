@@ -116,7 +116,11 @@ export default function Sidebar({
         </div>
 
         <nav
-          className="scrollbar-sidebar flex h-[calc(100vh-220px)] flex-col gap-1 overflow-y-scroll overscroll-contain pb-16"
+          className={`flex h-[calc(100vh-220px)] flex-col gap-1 overscroll-contain pb-16 ${
+            moreOpen
+              ? "scrollbar-sidebar overflow-y-scroll"
+              : "overflow-hidden"
+          }`}
           aria-label="Genres"
         >
           <GenreButton
