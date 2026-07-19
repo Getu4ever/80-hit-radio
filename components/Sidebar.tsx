@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   MORE_GENRES,
@@ -14,13 +14,6 @@ import BrandLogo from "@/components/BrandLogo";
 export type NavFilter = "All" | Subgenre;
 
 const MORE_GENRES_STORAGE_KEY = "sidebar_more_genres";
-
-/**
- * Survives React Strict Mode remounts within the same page load.
- * Never read localStorage in useState — that causes SSR/client mismatches.
- * null = not restored yet → UI stays collapsed for the first paint.
- */
-let rememberedExpanded: boolean | null = null;
 
 interface SidebarProps {
   filter: NavFilter;
@@ -101,23 +94,7 @@ function GenreButton({
   );
 }
 
-function readStoredExpanded(fallbackFilter: NavFilter): boolean {
-  if (rememberedExpanded !== null) return rememberedExpanded;
-  try {
-    const stored = localStorage.getItem(MORE_GENRES_STORAGE_KEY);
-    if (stored === "true") rememberedExpanded = true;
-    else if (stored === "false") rememberedExpanded = false;
-    else {
-      rememberedExpanded = MORE_GENRES.includes(fallbackFilter as Subgenre);
-    }
-  } catch {
-    rememberedExpanded = MORE_GENRES.includes(fallbackFilter as Subgenre);
-  }
-  return rememberedExpanded;
-}
-
 function persistExpanded(next: boolean) {
-  rememberedExpanded = next;
   try {
     localStorage.setItem(MORE_GENRES_STORAGE_KEY, next ? "true" : "false");
   } catch {
@@ -132,34 +109,41 @@ export default function Sidebar({
   const { isAdmin, subscriptionLabel } = useUserSession();
   const streamingAllowed = useStreamAccessStore((s) => s.allowed);
   const controlsDisabled = !streamingAllowed;
-  const initialFilterRef = useRef(filter);
 
-  // First paint / SSR: always collapsed. After restore, module cache keeps
-  // Strict Mode remounts from snapping closed (the open→collapse flash).
-  const [isExpanded, setIsExpanded] = useState(
-    () => rememberedExpanded ?? false,
-  );
-  /** Transitions off until restore settles — avoids animating open on refresh. */
-  const [motionReady, setMotionReady] = useState(false);
+  /**
+   * Root cause of the refresh flash:
+   * Production SSR HTML included every MORE_GENRES button (Jazz, Reggae, …)
+   * inside a Tailwind-only max-h-0 wrapper. Before CSS applied — or when
+   * localStorage restored isExpanded=true on mount — those labels painted
+   * for a frame and then collapsed.
+   *
+   * Fix: never emit MORE_GENRES into SSR HTML. Mount the panel only on the
+   * client, always start collapsed, and never auto-open from localStorage
+   * on cold load (preference is still saved when the user toggles).
+   */
+  const [clientReady, setClientReady] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   useEffect(() => {
-    const next = readStoredExpanded(initialFilterRef.current);
-    setIsExpanded(next);
-    const id = window.requestAnimationFrame(() => {
-      setMotionReady(true);
-    });
-    return () => window.cancelAnimationFrame(id);
+    setClientReady(true);
+    // Clear stale "force open on load" preference from earlier iterations.
+    // User toggles will rewrite this key going forward.
+    try {
+      if (localStorage.getItem(MORE_GENRES_STORAGE_KEY) === "true") {
+        localStorage.setItem(MORE_GENRES_STORAGE_KEY, "false");
+      }
+    } catch {
+      // ignore
+    }
   }, []);
 
+  // If the active filter is a more-genre (e.g. deep link / restore), open once
+  // the client panel exists — after first paint, so it cannot FOUC.
   useEffect(() => {
-    if (!motionReady) return;
+    if (!clientReady) return;
     if (!MORE_GENRES.includes(filter as Subgenre)) return;
-    setIsExpanded((prev) => {
-      if (prev) return prev;
-      persistExpanded(true);
-      return true;
-    });
-  }, [filter, motionReady]);
+    setIsExpanded(true);
+  }, [clientReady, filter]);
 
   const toggleMore = () => {
     setIsExpanded((prev) => {
@@ -216,33 +200,37 @@ export default function Sidebar({
             <ChevronIcon className="h-3.5 w-3.5" expanded={isExpanded} />
           </button>
 
-          {/* Always mounted — CSS collapse only. No {isExpanded && …} remount flash. */}
-          <div
-            className={`overflow-hidden ${
-              motionReady ? "transition-all duration-300 ease-in-out" : ""
-            } ${isExpanded ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"}`}
-            aria-hidden={!isExpanded}
-          >
+          {/* Client-only panel: absent from SSR HTML so labels cannot FOUC. */}
+          {clientReady ? (
             <div
-              className={`flex flex-col gap-1 ${
-                isExpanded ? "" : "pointer-events-none"
-              }`}
+              className="overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out"
+              style={{
+                maxHeight: isExpanded ? 500 : 0,
+                opacity: isExpanded ? 1 : 0,
+              }}
+              aria-hidden={!isExpanded}
             >
-              {MORE_GENRES.map((item) => (
-                <GenreButton
-                  key={item}
-                  item={item}
-                  active={filter === item}
-                  onSelect={(next) => {
-                    setIsExpanded(true);
-                    persistExpanded(true);
-                    onFilterChange(next);
-                  }}
-                  disabled={controlsDisabled}
-                />
-              ))}
+              <div
+                className={`flex flex-col gap-1 ${
+                  isExpanded ? "" : "pointer-events-none"
+                }`}
+              >
+                {MORE_GENRES.map((item) => (
+                  <GenreButton
+                    key={item}
+                    item={item}
+                    active={filter === item}
+                    onSelect={(next) => {
+                      setIsExpanded(true);
+                      persistExpanded(true);
+                      onFilterChange(next);
+                    }}
+                    disabled={controlsDisabled}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
+          ) : null}
         </nav>
 
         {isAdmin && (
