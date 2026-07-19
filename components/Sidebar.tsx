@@ -13,8 +13,6 @@ import BrandLogo from "@/components/BrandLogo";
 
 export type NavFilter = "All" | Subgenre;
 
-const MORE_GENRES_STORAGE_KEY = "sidebar_more_genres";
-
 interface SidebarProps {
   filter: NavFilter;
   onFilterChange: (filter: NavFilter) => void;
@@ -94,14 +92,6 @@ function GenreButton({
   );
 }
 
-function persistExpanded(next: boolean) {
-  try {
-    localStorage.setItem(MORE_GENRES_STORAGE_KEY, next ? "true" : "false");
-  } catch {
-    // Private mode / blocked storage — ignore.
-  }
-}
-
 export default function Sidebar({
   filter,
   onFilterChange,
@@ -109,46 +99,13 @@ export default function Sidebar({
   const { isAdmin, subscriptionLabel } = useUserSession();
   const streamingAllowed = useStreamAccessStore((s) => s.allowed);
   const controlsDisabled = !streamingAllowed;
-
-  /**
-   * Flash-free More genres:
-   * - Never emit MORE_GENRES in SSR HTML (clientReady gate).
-   * - Always mount collapsed; never auto-open from localStorage on cold load.
-   * - Enable height/opacity transitions only after the first paint settles.
-   */
-  const [clientReady, setClientReady] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
-  const [motionReady, setMotionReady] = useState(false);
 
   useEffect(() => {
-    setClientReady(true);
-    // Drop stale "force open on refresh" flags from earlier builds.
-    try {
-      if (localStorage.getItem(MORE_GENRES_STORAGE_KEY) === "true") {
-        localStorage.setItem(MORE_GENRES_STORAGE_KEY, "false");
-      }
-    } catch {
-      // ignore
+    if (MORE_GENRES.includes(filter as Subgenre)) {
+      setIsExpanded(true);
     }
-    const id = window.requestAnimationFrame(() => {
-      setMotionReady(true);
-    });
-    return () => window.cancelAnimationFrame(id);
-  }, []);
-
-  useEffect(() => {
-    if (!clientReady) return;
-    if (!MORE_GENRES.includes(filter as Subgenre)) return;
-    setIsExpanded(true);
-  }, [clientReady, filter]);
-
-  const toggleMore = () => {
-    setIsExpanded((prev) => {
-      const next = !prev;
-      persistExpanded(next);
-      return next;
-    });
-  };
+  }, [filter]);
 
   return (
     <aside className="desktop-sidebar sticky top-0 hidden h-dvh w-80 shrink-0 flex-col self-start overflow-hidden border-r border-white/10 bg-[#0a0614]/80 px-4 pb-[calc(7.5rem+env(safe-area-inset-bottom,0px))] pt-8 backdrop-blur-md lg:flex">
@@ -184,7 +141,7 @@ export default function Sidebar({
 
           <button
             type="button"
-            onClick={toggleMore}
+            onClick={() => setIsExpanded((v) => !v)}
             aria-expanded={isExpanded}
             disabled={controlsDisabled}
             className="mt-1 flex items-center justify-between rounded-lg px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-widest text-white/40 transition hover:bg-white/5 hover:text-white/70 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-white/40"
@@ -193,41 +150,20 @@ export default function Sidebar({
             <ChevronIcon className="h-3.5 w-3.5" expanded={isExpanded} />
           </button>
 
-          {clientReady ? (
-            <div
-              className={`sidebar-more-panel flex flex-col gap-1 overflow-hidden ${
-                motionReady
-                  ? "transition-[max-height,opacity] duration-300 ease-in-out"
-                  : ""
-              }`}
-              data-expanded={isExpanded ? "true" : "false"}
-              style={{
-                maxHeight: isExpanded ? 500 : 0,
-                opacity: isExpanded ? 1 : 0,
-              }}
-              aria-hidden={!isExpanded}
-            >
-              <div
-                className={`flex flex-col gap-1 ${
-                  isExpanded ? "" : "pointer-events-none"
-                }`}
-              >
-                {MORE_GENRES.map((item) => (
-                  <GenreButton
-                    key={item}
-                    item={item}
-                    active={filter === item}
-                    onSelect={(next) => {
-                      setIsExpanded(true);
-                      persistExpanded(true);
-                      onFilterChange(next);
-                    }}
-                    disabled={controlsDisabled}
-                  />
-                ))}
-              </div>
-            </div>
-          ) : null}
+          {isExpanded
+            ? MORE_GENRES.map((item) => (
+                <GenreButton
+                  key={item}
+                  item={item}
+                  active={filter === item}
+                  onSelect={(next) => {
+                    setIsExpanded(true);
+                    onFilterChange(next);
+                  }}
+                  disabled={controlsDisabled}
+                />
+              ))
+            : null}
         </nav>
 
         {isAdmin && (

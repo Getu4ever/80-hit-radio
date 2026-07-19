@@ -222,15 +222,7 @@ body {
   }
 }
 
-/* Collapsed by default — belt-and-suspenders before client state applies. */
-.sidebar-more-panel:not([data-expanded="true"]) {
-  max-height: 0;
-  opacity: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-/* Ultra-thin hot-pink sidebar genre scroller — visible when More genres is open. */
+/* Ultra-thin hot-pink sidebar genre scroller — always visible on the genre nav. */
 .scrollbar-sidebar {
   scrollbar-width: thin;
   scrollbar-color: rgba(236, 72, 153, 0.35) transparent;
