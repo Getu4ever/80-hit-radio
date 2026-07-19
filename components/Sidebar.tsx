@@ -113,81 +113,83 @@ export default function Sidebar({
     showMore || MORE_GENRES.includes(filter as Subgenre);
 
   return (
-    <aside className="sticky top-0 hidden max-h-dvh w-80 shrink-0 flex-col self-start overflow-y-auto border-r border-white/10 bg-[#0a0614]/80 px-4 py-8 backdrop-blur-md lg:flex">
-      <div className="mb-8 w-full">
-        <BrandLogo size="lg" priority />
-        {subscriptionLabel && (
-          <p className="mt-3 inline-flex rounded-md border border-cyan-400/25 bg-cyan-400/10 px-2 py-1 text-[10px] font-medium tracking-wide text-cyan-300/90 shadow-[0_0_12px_rgba(34,211,238,0.15)]">
-            {subscriptionLabel}
-          </p>
-        )}
-      </div>
+    <aside className="sticky top-0 hidden h-dvh w-80 shrink-0 flex-col justify-between self-start overflow-hidden border-r border-white/10 bg-[#0a0614]/80 px-4 pb-[calc(7.5rem+env(safe-area-inset-bottom,0px))] pt-8 backdrop-blur-md lg:flex">
+      <div className="flex h-full min-h-0 w-full flex-col justify-between">
+        <div className="mb-6 w-full shrink-0">
+          <BrandLogo size="lg" priority />
+          {subscriptionLabel && (
+            <p className="mt-3 inline-flex rounded-md border border-cyan-400/25 bg-cyan-400/10 px-2 py-1 text-[10px] font-medium tracking-wide text-cyan-300/90 shadow-[0_0_12px_rgba(34,211,238,0.15)]">
+              {subscriptionLabel}
+            </p>
+          )}
+        </div>
 
-      <nav
-        className="scrollbar-none flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto"
-        aria-label="Genres"
-      >
-        <GenreButton
-          item="All"
-          active={filter === "All"}
-          onSelect={onFilterChange}
-          disabled={controlsDisabled}
-        />
-        {POPULAR_GENRES.map((item) => (
+        <nav
+          className="flex min-h-0 flex-1 flex-col gap-1 pb-40"
+          aria-label="Genres"
+        >
           <GenreButton
-            key={item}
-            item={item}
-            active={filter === item}
+            item="All"
+            active={filter === "All"}
             onSelect={onFilterChange}
             disabled={controlsDisabled}
           />
-        ))}
-
-        <button
-          type="button"
-          onClick={() => setShowMore((v) => !v)}
-          aria-expanded={moreExpanded}
-          disabled={controlsDisabled}
-          className="mt-1 flex items-center justify-between rounded-lg px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-widest text-white/40 transition hover:bg-white/5 hover:text-white/70 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-white/40"
-        >
-          More genres
-          <ChevronIcon className="h-3.5 w-3.5" expanded={moreExpanded} />
-        </button>
-
-        {moreExpanded &&
-          MORE_GENRES.map((item) => (
+          {POPULAR_GENRES.map((item) => (
             <GenreButton
               key={item}
               item={item}
               active={filter === item}
-              onSelect={(next) => {
-                setShowMore(true);
-                onFilterChange(next);
-              }}
+              onSelect={onFilterChange}
               disabled={controlsDisabled}
             />
           ))}
-      </nav>
 
-      <div className="mt-auto flex flex-col gap-3 px-2 pt-8">
-        <button
-          type="button"
-          onClick={() => onStartRadio(visibleTracks)}
-          disabled={!streamingAllowed}
-          className="w-full rounded-xl border border-fuchsia-500/40 bg-fuchsia-500/10 py-2.5 text-xs font-semibold uppercase tracking-widest text-fuchsia-300 transition hover:bg-fuchsia-500/20 hover:shadow-[0_0_20px_rgba(217,70,239,0.25)] disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          {isPlaying ? "Reshuffle Radio" : "Start Radio"}
-        </button>
-
-        {isAdmin && (
-          <Link
-            href="/dashboard/admin"
-            className="flex items-center justify-center gap-2 rounded-xl border border-cyan-400/30 bg-cyan-400/5 py-2.5 text-xs font-semibold uppercase tracking-widest text-cyan-300 transition hover:border-cyan-400/50 hover:bg-cyan-400/10 hover:shadow-[0_0_16px_rgba(34,211,238,0.2)]"
+          <button
+            type="button"
+            onClick={() => setShowMore((v) => !v)}
+            aria-expanded={moreExpanded}
+            disabled={controlsDisabled}
+            className="mt-1 flex items-center justify-between rounded-lg px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-widest text-white/40 transition hover:bg-white/5 hover:text-white/70 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-white/40"
           >
-            <ShieldIcon className="h-3.5 w-3.5" />
-            Admin Studio
-          </Link>
-        )}
+            More genres
+            <ChevronIcon className="h-3.5 w-3.5" expanded={moreExpanded} />
+          </button>
+
+          {moreExpanded &&
+            MORE_GENRES.map((item) => (
+              <GenreButton
+                key={item}
+                item={item}
+                active={filter === item}
+                onSelect={(next) => {
+                  setShowMore(true);
+                  onFilterChange(next);
+                }}
+                disabled={controlsDisabled}
+              />
+            ))}
+        </nav>
+
+        <div className="flex shrink-0 flex-col gap-3 px-2 pt-4">
+          <button
+            type="button"
+            onClick={() => onStartRadio(visibleTracks)}
+            disabled={!streamingAllowed}
+            className="w-full rounded-xl border border-fuchsia-500/40 bg-fuchsia-500/10 py-2.5 text-xs font-semibold uppercase tracking-widest text-fuchsia-300 transition hover:bg-fuchsia-500/20 hover:shadow-[0_0_20px_rgba(217,70,239,0.25)] disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {isPlaying ? "Reshuffle Radio" : "Start Radio"}
+          </button>
+
+          {isAdmin && (
+            <Link
+              href="/dashboard/admin"
+              className="flex items-center justify-center gap-2 rounded-xl border border-cyan-400/30 bg-cyan-400/5 py-2.5 text-xs font-semibold uppercase tracking-widest text-cyan-300 transition hover:border-cyan-400/50 hover:bg-cyan-400/10 hover:shadow-[0_0_16px_rgba(34,211,238,0.2)]"
+            >
+              <ShieldIcon className="h-3.5 w-3.5" />
+              Admin Studio
+            </Link>
+          )}
+        </div>
       </div>
     </aside>
   );

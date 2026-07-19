@@ -20,6 +20,10 @@ import {
   flushPendingMediaPlay,
   registerMediaPlayNow,
 } from "@/lib/mediaPlayback";
+import {
+  createQueueHeartbeat,
+  type QueueHeartbeatController,
+} from "@/lib/queueHeartbeat";
 import { useAudioStore } from "@/store/useAudioStore";
 
 const ReactPlayer = dynamic(() => import("react-player"), { ssr: false });
@@ -34,6 +38,8 @@ const PREFETCH_WINDOW_SEC = 30;
 /** Start warming the next media pipeline once the live track is nearly done. */
 const GAPLESS_PREFETCH_RATIO = 0.95;
 const EARLY_HANDOFF_SEC = 0.25;
+/** Extra lead when the tab is hidden — main-thread media events often freeze. */
+const HIDDEN_HANDOFF_SEC = 1.5;
 const PROMOTED_PLAY_POLL_MS = 40;
 const PROMOTED_PLAY_MAX_WAIT_MS = 8_000;
 const ERROR_SKIP_COOLDOWN_MS = 800;
@@ -754,6 +760,111 @@ export default function AudioEngine({
     useAudioStore.getState().nextTrack();
   }, []);
 
+  const heartbeatRef = useRef<QueueHeartbeatController | null>(null);
+  const advanceNowRef = useRef(advanceNow);
+  advanceNowRef.current = advanceNow;
+  const lastHeartbeatSyncAt = useRef(0);
+
+  const syncQueueHeartbeat = useCallback(
+    (playedSec?: number, force = false) => {
+      const heartbeat = heartbeatRef.current;
+      if (!heartbeat) return;
+      const now = performance.now();
+      // Throttle routine syncs; always allow forced sync (track change / visibility).
+      if (!force && now - lastHeartbeatSyncAt.current < 250) return;
+      lastHeartbeatSyncAt.current = now;
+
+      const state = useAudioStore.getState();
+      const trackId = state.currentTrack?.id ?? null;
+      const durationSec =
+        durationRef.current > 0 ? durationRef.current : state.duration;
+      const media = slotRef(liveSlotRef.current).current;
+      const played =
+        typeof playedSec === "number" && Number.isFinite(playedSec)
+          ? playedSec
+          : media && Number.isFinite(media.currentTime)
+            ? media.currentTime
+            : state.playedSeconds;
+      const hidden =
+        typeof document !== "undefined"
+          ? document.visibilityState === "hidden"
+          : false;
+
+      heartbeat.sync({
+        trackId,
+        durationSec,
+        playedSec: played,
+        isPlaying: state.isPlaying && streamingAllowed && !!trackId,
+        handoffSec: hidden ? HIDDEN_HANDOFF_SEC : EARLY_HANDOFF_SEC,
+        prefetchRatio: GAPLESS_PREFETCH_RATIO,
+      });
+    },
+    [slotRef, streamingAllowed],
+  );
+
+  // Isolated Worker heartbeat — wall-clock deadlines survive background-tab freezes.
+  useEffect(() => {
+    const heartbeat = createQueueHeartbeat({
+      onAdvance: (trackId) => {
+        const state = useAudioStore.getState();
+        if (!state.isPlaying || !streamingAllowed) return;
+        if (state.currentTrack?.id !== trackId) return;
+        if (endingRef.current || handoffFiredRef.current) return;
+        benchLog("heartbeat:advance", { trackId });
+        state.ensureUpcoming();
+        // Prefer engine path (endingRef) so we never double-skip with onEnded.
+        advanceNowRef.current();
+      },
+      onPrefetch: (trackId) => {
+        const state = useAudioStore.getState();
+        if (state.currentTrack?.id !== trackId) return;
+        state.ensureUpcoming();
+      },
+    });
+    heartbeatRef.current = heartbeat;
+    syncQueueHeartbeat(undefined, true);
+
+    const onVisibility = () => {
+      // Re-arm the Worker from the live media clock when the tab hides/shows.
+      syncQueueHeartbeat(undefined, true);
+      if (
+        document.visibilityState === "visible" &&
+        useAudioStore.getState().isPlaying &&
+        streamingAllowed
+      ) {
+        // Catch a missed natural end while we were frozen in the background.
+        const media = slotRef(liveSlotRef.current).current;
+        const dur = durationRef.current;
+        if (
+          media &&
+          dur > 0 &&
+          (media.ended ||
+            (Number.isFinite(media.currentTime) &&
+              dur - media.currentTime <= HIDDEN_HANDOFF_SEC))
+        ) {
+          if (!endingRef.current && !handoffFiredRef.current) {
+            useAudioStore.getState().ensureUpcoming();
+            advanceNowRef.current();
+          }
+        } else {
+          flushPendingMediaPlay();
+          tryPlaySlot(liveSlotRef.current);
+        }
+      }
+    };
+
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      heartbeat.dispose();
+      heartbeatRef.current = null;
+    };
+  }, [slotRef, streamingAllowed, syncQueueHeartbeat, tryPlaySlot]);
+
+  useEffect(() => {
+    syncQueueHeartbeat(0, true);
+  }, [currentTrack?.id, isPlaying, streamingAllowed, syncQueueHeartbeat]);
+
   const handleEnded = useCallback(() => {
     if (!streamingAllowed) return;
     // Force the succeeding track into the engine immediately — never stall
@@ -844,8 +955,14 @@ export default function AudioEngine({
         }
       }
 
+      const handoffSec =
+        typeof document !== "undefined" &&
+        document.visibilityState === "hidden"
+          ? HIDDEN_HANDOFF_SEC
+          : EARLY_HANDOFF_SEC;
+
       if (
-        remaining <= EARLY_HANDOFF_SEC &&
+        remaining <= handoffSec &&
         remaining > 0 &&
         !handoffFiredRef.current
       ) {
@@ -853,13 +970,16 @@ export default function AudioEngine({
         return;
       }
 
+      // Keep the Worker wall-clock deadline aligned with real media time.
+      syncQueueHeartbeat(t);
+
       const now = performance.now();
       if (now - lastProgressUiWrite.current >= PROGRESS_UI_INTERVAL_MS) {
         lastProgressUiWrite.current = now;
         useAudioStore.getState().setPlayedSeconds(t);
       }
     },
-    [advanceNow, parkMutedWarmAtStart, playerEl, slotRef],
+    [advanceNow, parkMutedWarmAtStart, playerEl, slotRef, syncQueueHeartbeat],
   );
 
   const handleDurationChange = useCallback(
@@ -868,9 +988,13 @@ export default function AudioEngine({
       if (Number.isFinite(media.duration) && media.duration > 0) {
         durationRef.current = media.duration;
         useAudioStore.getState().setDuration(media.duration);
+        syncQueueHeartbeat(
+          Number.isFinite(media.currentTime) ? media.currentTime : undefined,
+          true,
+        );
       }
     },
-    [],
+    [syncQueueHeartbeat],
   );
 
   const handleReady = useCallback(

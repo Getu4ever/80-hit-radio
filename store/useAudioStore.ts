@@ -84,6 +84,11 @@ interface AudioState {
   markTrackFailed: (trackId: string) => void;
   setBroadcastEnhance: (enabled: boolean) => void;
   setStreamQuality: (quality: string | null) => void;
+  /**
+   * DOM/React-paint-independent advance used by the background Worker
+   * heartbeat when the tab is hidden and media events are frozen.
+   */
+  advanceFromBackground: (expectedTrackId?: string | null) => void;
 }
 
 const TRACK_SWAP_GRACE_MS = 1200;
@@ -420,5 +425,14 @@ export const useAudioStore = create<AudioState>((set, get) => ({
       upcomingTrack: next,
       queue: rest,
     });
+  },
+
+  advanceFromBackground: (expectedTrackId) => {
+    const { currentTrack, isPlaying } = get();
+    if (!isPlaying || !currentTrack) return;
+    // Ignore stale Worker messages after a manual skip / track swap.
+    if (expectedTrackId && currentTrack.id !== expectedTrackId) return;
+    get().ensureUpcoming();
+    get().nextTrack();
   },
 }));
