@@ -69,9 +69,9 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${outfit.variable} ${spaceGrotesk.variable} dark h-full overflow-x-clip antialiased`}
+      className={`${outfit.variable} ${spaceGrotesk.variable} dark overflow-x-clip antialiased`}
     >
-      <body className="flex min-h-full flex-col overflow-x-clip bg-[#07040f] font-[family-name:var(--font-body)] text-white">
+      <body className="min-h-screen overflow-x-clip bg-[#07040f] font-[family-name:var(--font-body)] text-white">
         {children}
         <BroadcastShell />
       </body>

@@ -17,24 +17,34 @@
 
 html {
   overflow-x: clip;
+  overflow-y: auto;
   overscroll-behavior-x: none;
-  scrollbar-width: none;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(34, 211, 238, 0.4) rgba(255, 255, 255, 0.05);
 }
 
 html::-webkit-scrollbar {
-  display: none;
+  width: 10px;
+}
+
+html::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+html::-webkit-scrollbar-thumb {
+  border-radius: 9999px;
+  background: rgba(34, 211, 238, 0.4);
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   overflow-x: clip;
+  overflow-y: visible;
   overscroll-behavior-x: none;
-  scrollbar-width: none;
-}
-
-body::-webkit-scrollbar {
-  display: none;
 }
 
 @keyframes viz-pulse {

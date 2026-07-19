@@ -237,7 +237,7 @@ export default function RadioDashboard() {
   };
 
   return (
-    <div className="flex min-h-screen overflow-x-clip bg-[#07040f] text-white">
+    <div className="flex min-h-screen h-auto w-full items-start overflow-x-clip bg-[#07040f] text-white">
       <Sidebar
         filter={filter}
         onFilterChange={handleFilterChange}
@@ -246,9 +246,9 @@ export default function RadioDashboard() {
         onStartRadio={handleStartRadio}
       />
 
-      <main className="relative flex-1 overflow-x-hidden overflow-y-auto pb-[calc(7.5rem+env(safe-area-inset-bottom,0px))]">
+      <main className="relative min-h-screen h-auto w-full min-w-0 flex-1 overflow-x-hidden overflow-y-auto scroll-smooth pb-[calc(7.5rem+env(safe-area-inset-bottom,0px))]">
         <div
-          className="pointer-events-none absolute inset-0 opacity-40"
+          className="pointer-events-none absolute inset-x-0 top-0 -z-0 h-[40rem] opacity-40"
           aria-hidden
         >
           <div className="absolute -left-32 top-0 h-96 w-96 rounded-full bg-fuchsia-600/20 blur-[120px]" />
@@ -256,7 +256,7 @@ export default function RadioDashboard() {
           <div className="absolute bottom-20 left-1/3 h-64 w-64 rounded-full bg-violet-600/10 blur-[90px]" />
         </div>
 
-        <div className="relative mx-auto max-w-6xl px-4 py-5 sm:px-6 sm:py-8 lg:px-10 lg:py-12">
+        <div className="relative z-10 mx-auto max-w-6xl px-4 py-5 sm:px-6 sm:py-8 lg:px-10 lg:py-12">
           <Header
             searchQuery={searchQuery}
             onSearchChange={handleSearchChange}
@@ -353,8 +353,8 @@ export default function RadioDashboard() {
                   }`}
           </p>
 
-          <div className="relative w-full min-w-0 overflow-x-hidden [contain:layout] [transform:translateZ(0)]">
-            <div className="grid min-h-[28rem] auto-rows-[minmax(0,1fr)] grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 md:grid-cols-3 xl:grid-cols-4">
+          <div className="relative w-full min-w-0 overflow-x-hidden">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 md:grid-cols-3 xl:grid-cols-4">
               {shownTracks.map((track) => (
                 <TrackCard key={track.id} track={track} />
               ))}

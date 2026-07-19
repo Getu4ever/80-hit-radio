@@ -230,7 +230,7 @@ export default function PlayerFooter() {
   const controlsDisabled = !streamingAllowed;
 
   return (
-    <footer className="fixed inset-x-0 bottom-0 z-50 overflow-x-clip border-t border-cyan-500/20 bg-[#0a0614]/95 pb-[env(safe-area-inset-bottom,0px)] backdrop-blur-xl">
+    <footer className="fixed bottom-0 inset-x-0 z-50 overflow-x-clip border-t border-cyan-500/20 bg-[#0a0614]/95 pb-[env(safe-area-inset-bottom,0px)] backdrop-blur-xl">
       <div className="px-0 pt-1">
         <SeekBar
           progress={progress}

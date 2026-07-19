@@ -113,7 +113,7 @@ export default function Sidebar({
     showMore || MORE_GENRES.includes(filter as Subgenre);
 
   return (
-    <aside className="sticky top-0 hidden h-screen w-80 shrink-0 flex-col border-r border-white/10 bg-[#0a0614]/80 px-4 py-8 backdrop-blur-md lg:flex">
+    <aside className="sticky top-0 hidden max-h-dvh w-80 shrink-0 flex-col self-start overflow-y-auto border-r border-white/10 bg-[#0a0614]/80 px-4 py-8 backdrop-blur-md lg:flex">
       <div className="mb-8 w-full">
         <BrandLogo size="lg" priority />
         {subscriptionLabel && (
