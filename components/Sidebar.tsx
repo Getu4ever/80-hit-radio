@@ -1,7 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { SUBGENRES, type Subgenre } from "@/data/tracks";
+import {
+  MORE_GENRES,
+  POPULAR_GENRES,
+  type Subgenre,
+} from "@/data/tracks";
 import { useUserSession } from "@/hooks/useUserSession";
 import { useStreamAccessStore } from "@/store/useStreamAccessStore";
 import BrandLogo from "@/components/BrandLogo";
@@ -33,6 +38,29 @@ function ShieldIcon({ className }: { className?: string }) {
         strokeLinejoin="round"
         d="M9.5 12l1.8 1.8L15 10"
       />
+    </svg>
+  );
+}
+
+function ChevronIcon({
+  className,
+  expanded,
+}: {
+  className?: string;
+  expanded: boolean;
+}) {
+  return (
+    <svg
+      className={`${className ?? ""} transition-transform duration-200 ${
+        expanded ? "rotate-180" : ""
+      }`}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      aria-hidden
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" d="M6 9l6 6 6-6" />
     </svg>
   );
 }
@@ -71,6 +99,9 @@ export default function Sidebar({
   const { isAdmin, subscriptionLabel } = useUserSession();
   const streamingAllowed = useStreamAccessStore((s) => s.allowed);
   const controlsDisabled = !streamingAllowed;
+  const [showMore, setShowMore] = useState(false);
+  const moreOpen =
+    showMore || MORE_GENRES.includes(filter as Subgenre);
 
   return (
     <aside className="sticky top-0 hidden h-dvh w-80 shrink-0 flex-col self-start overflow-hidden border-r border-white/10 bg-[#0a0614]/80 px-4 pb-[calc(7.5rem+env(safe-area-inset-bottom,0px))] pt-8 backdrop-blur-md lg:flex">
@@ -94,7 +125,7 @@ export default function Sidebar({
             onSelect={onFilterChange}
             disabled={controlsDisabled}
           />
-          {SUBGENRES.map((item) => (
+          {POPULAR_GENRES.map((item) => (
             <GenreButton
               key={item}
               item={item}
@@ -103,6 +134,31 @@ export default function Sidebar({
               disabled={controlsDisabled}
             />
           ))}
+
+          <button
+            type="button"
+            onClick={() => setShowMore((v) => !v)}
+            aria-expanded={moreOpen}
+            disabled={controlsDisabled}
+            className="mt-1 flex items-center justify-between rounded-lg px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-widest text-white/40 transition hover:bg-white/5 hover:text-white/70 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-white/40"
+          >
+            More genres
+            <ChevronIcon className="h-3.5 w-3.5" expanded={moreOpen} />
+          </button>
+
+          {moreOpen &&
+            MORE_GENRES.map((item) => (
+              <GenreButton
+                key={item}
+                item={item}
+                active={filter === item}
+                onSelect={(next) => {
+                  setShowMore(true);
+                  onFilterChange(next);
+                }}
+                disabled={controlsDisabled}
+              />
+            ))}
         </nav>
 
         {isAdmin && (
