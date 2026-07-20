@@ -5,7 +5,7 @@ import {
   isClientNewsBulletinEnabled,
   shouldInjectNewsBulletin,
 } from "@/lib/broadcastSchedule";
-import { mediaPlayNow } from "@/lib/mediaPlayback";
+import { mediaPlayNow, stopSilentKeepAlive } from "@/lib/mediaPlayback";
 import { useCatalogStore } from "@/store/useCatalogStore";
 import type { Track } from "@/data/tracks";
 
@@ -425,7 +425,8 @@ export const useAudioStore = create<AudioState>((set, get) => ({
     queueMicrotask(() => trackListenEvent("play_start", first.id));
   },
 
-  stopBroadcast: () =>
+  stopBroadcast: () => {
+    stopSilentKeepAlive();
     set({
       currentTrack: null,
       upcomingTrack: null,
@@ -437,7 +438,8 @@ export const useAudioStore = create<AudioState>((set, get) => ({
       musicPlayedSeconds: 0,
       lastBulletinAtMusicSeconds: 0,
       newsBulletinActive: false,
-    }),
+    });
+  },
 
   setVolume: (volume) =>
     set({ volume: Math.min(1, Math.max(0, volume)) }),

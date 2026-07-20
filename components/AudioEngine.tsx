@@ -18,7 +18,9 @@ import {
 } from "@/lib/broadcastAudio";
 import {
   flushPendingMediaPlay,
+  forcePlayMedia,
   registerMediaPlayNow,
+  startSilentKeepAlive,
 } from "@/lib/mediaPlayback";
 import {
   createQueueHeartbeat,
@@ -159,6 +161,8 @@ export default function AudioEngine({
   const [slotBId, setSlotBId] = useState<string | null>(null);
   const slotAIdRef = useRef<string | null>(null);
   const slotBIdRef = useRef<string | null>(null);
+  /** Persist last YouTube src per slot so ReactPlayer nodes are never unmounted mid-session. */
+  const lastSlotSrcRef = useRef<Record<PlayerSlot, string>>({ a: "", b: "" });
 
   const endingRef = useRef(false);
   const lastErrorSkipAt = useRef(0);
@@ -402,13 +406,8 @@ export default function AudioEngine({
       if (!media.paused) return true;
       // Always attempt play — gating on readyState missed gesture-safe resumes
       // on mobile where the element is loaded but readyState is still low.
-      void media.play().catch(() => {});
-      try {
-        (media as YoutubePlayerElement).api?.playVideo?.();
-      } catch {
-        // Optional iframe API path.
-      }
-      return !media.paused;
+      // forcePlayMedia catches NotAllowedError and re-asserts keep-alive + play.
+      return forcePlayMedia(media as YoutubePlayerElement);
     },
     [slotRef, syncSlotAudio],
   );
@@ -526,6 +525,7 @@ export default function AudioEngine({
     // Defer quality sync / warm-flag work so secondary hooks cannot stall audio.
     allowMutedWarmRef.current = false;
     setCueWarmActive(false);
+    startSilentKeepAlive();
 
     try {
       const yt = media as YoutubePlayerElement;
@@ -537,18 +537,14 @@ export default function AudioEngine({
       // Fall through to sync helpers.
     }
 
-    void media.play().catch(() => {});
-    try {
-      (media as YoutubePlayerElement).api?.playVideo?.();
-    } catch {
-      // Optional iframe API path.
-    }
+    forcePlayMedia(media as YoutubePlayerElement);
 
     // Non-blocking: polish audio routing after play has been requested.
     queueMicrotask(() => {
       syncAllSlotsAudio();
       syncSlotAudio(slot);
       if (media.paused) {
+        forcePlayMedia(media as YoutubePlayerElement);
         awaitPromotedPlayback(slot);
       } else {
         emitPlayingBench(slot, true);
@@ -585,12 +581,7 @@ export default function AudioEngine({
       if (!media) return;
       syncPlayerAudioState(playerEl(slot), { volume: 0, muted: true });
       if (media.paused) {
-        void media.play().catch(() => {});
-        try {
-          (media as YoutubePlayerElement).api?.playVideo?.();
-        } catch {
-          // Optional iframe API path.
-        }
+        forcePlayMedia(media as YoutubePlayerElement);
       }
     },
     [playerEl, slotRef],
@@ -680,7 +671,9 @@ export default function AudioEngine({
 
       queueMicrotask(() => {
         const handlers = promoteHandlersRef.current;
+        startSilentKeepAlive();
         const attempt = () => {
+          startSilentKeepAlive();
           handlers.syncAllSlotsAudio();
           handlers.runSlotSync(nextLive);
           if (handlers.tryPlaySlot(nextLive)) {
@@ -861,6 +854,7 @@ export default function AudioEngine({
     allowMutedWarmRef.current = false;
     setCueWarmActive(false);
     if (!streamingAllowed) return;
+    startSilentKeepAlive();
     syncAllSlotsAudio();
     const slot = liveSlotRef.current;
     if (!tryPlaySlot(slot)) {
@@ -1302,7 +1296,7 @@ export default function AudioEngine({
       if (streamingAllowed && isPlaying) {
         syncSlotAudio(slot);
         const media = slotRef(slot).current;
-        if (media) void media.play().catch(() => {});
+        forcePlayMedia(media as YoutubePlayerElement | null);
       } else if (streamingAllowed && allowMutedWarmRef.current) {
         warmSlotMuted(slot);
       } else {
@@ -1325,11 +1319,16 @@ export default function AudioEngine({
     (slot: PlayerSlot) => {
       if (!streamingAllowed) return;
       if (isPlaying) {
-        // Prefetch must stay muted-playing for seamless next; ignore live pauses.
-        if (slot === liveSlotRef.current) return;
-        syncSlotAudio(slot);
         const media = slotRef(slot).current;
-        if (media) void media.play().catch(() => {});
+        // Browser autoplay policy often pauses the live slot in background tabs
+        // right after a track handoff — instantly force-play + keep-alive.
+        if (slot === liveSlotRef.current) {
+          forcePlayMedia(media as YoutubePlayerElement | null);
+          return;
+        }
+        // Prefetch must stay muted-playing for seamless next.
+        syncSlotAudio(slot);
+        forcePlayMedia(media as YoutubePlayerElement | null);
         return;
       }
       if (allowMutedWarmRef.current) {
@@ -1363,22 +1362,36 @@ export default function AudioEngine({
   const renderSlot = (slot: PlayerSlot) => {
     const trackId = slot === "a" ? slotAId : slotBId;
     const track = resolveTrack(trackId);
-    if (!track) return null;
+    // Swap .src on a persistent node — never unmount the slot mid-session.
+    // Keeping the last src parks the element when the id briefly clears.
+    if (track) {
+      lastSlotSrcRef.current[slot] = youtubeSrc(track.youtubeId);
+    }
+    const src = track
+      ? youtubeSrc(track.youtubeId)
+      : lastSlotSrcRef.current[slot];
+    if (!src) return null;
 
     const isLive = slot === liveSlot;
     const ref = slot === "a" ? playerARef : playerBRef;
     // Muted warm while cued: keep playing=true so the slot stays hot; soft-loop
     // parks near 0 without pausing. Live stays muted until isPlaying.
-    const warming = !isPlaying && cueWarmActive && allowMutedWarmRef.current;
-    const shouldPlay = streamingAllowed && (isPlaying || warming);
-    const slotMuted = !isLive || !isPlaying;
-    const slotVolume = isLive && isPlaying ? volume : 0;
+    const hasActiveTrack = Boolean(track);
+    const warming =
+      hasActiveTrack &&
+      !isPlaying &&
+      cueWarmActive &&
+      allowMutedWarmRef.current;
+    const shouldPlay =
+      streamingAllowed && hasActiveTrack && (isPlaying || warming);
+    const slotMuted = !isLive || !isPlaying || !hasActiveTrack;
+    const slotVolume = isLive && isPlaying && hasActiveTrack ? volume : 0;
 
     return (
       <ReactPlayer
         ref={ref}
         key={`slot-${slot}`}
-        src={youtubeSrc(track.youtubeId)}
+        src={src}
         playing={shouldPlay}
         volume={slotVolume}
         muted={slotMuted}
