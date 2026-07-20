@@ -26,6 +26,12 @@ export interface YoutubePlayerApi {
   playVideo?: () => void;
   pauseVideo?: () => void;
   seekTo?: (seconds: number, allowSeekAhead?: boolean) => void;
+  getPlayerState?: () => number;
+  getCurrentTime?: () => number;
+  getDuration?: () => number;
+  /** YouTube ENDED = 0 */
+  addEventListener?: (event: string, listener: (data: number) => void) => void;
+  removeEventListener?: (event: string, listener: (data: number) => void) => void;
 }
 
 export interface YoutubePlayerElement extends HTMLElement {

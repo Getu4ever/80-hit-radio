@@ -1,5 +1,10 @@
 import { create } from "zustand";
 import { trackListenEvent } from "@/lib/analytics";
+import {
+  CLIENT_NEWS_INTERVAL_SEC,
+  isClientNewsBulletinEnabled,
+  shouldInjectNewsBulletin,
+} from "@/lib/broadcastSchedule";
 import { mediaPlayNow } from "@/lib/mediaPlayback";
 import { useCatalogStore } from "@/store/useCatalogStore";
 import type { Track } from "@/data/tracks";
@@ -66,9 +71,15 @@ interface AudioState {
   broadcastEnhance: boolean;
   streamQuality: string | null;
 
+  /** Cumulative seconds of music playback (excludes news bulletins). */
+  musicPlayedSeconds: number;
+  lastBulletinAtMusicSeconds: number;
+  newsBulletinIntervalSec: number;
+  newsBulletinActive: boolean;
+
   playTrack: (track: Track) => void;
   togglePlay: () => void;
-  nextTrack: () => void;
+  nextTrack: (options?: { skipNewsCheck?: boolean }) => void;
   previousTrack: () => void;
   setQueue: (tracks: Track[]) => void;
   /** Load current/upcoming without playing — warms YouTube before first Play. */
@@ -89,6 +100,8 @@ interface AudioState {
    * heartbeat when the tab is hidden and media events are frozen.
    */
   advanceFromBackground: (expectedTrackId?: string | null) => void;
+  tickMusicPlayedSeconds: (deltaSec: number) => void;
+  completeNewsBulletin: (options?: { skipped?: boolean }) => void;
 }
 
 const TRACK_SWAP_GRACE_MS = 1200;
@@ -108,6 +121,26 @@ export const useAudioStore = create<AudioState>((set, get) => ({
   pendingSeekSeconds: null,
   broadcastEnhance: true,
   streamQuality: null,
+  musicPlayedSeconds: 0,
+  lastBulletinAtMusicSeconds: 0,
+  newsBulletinIntervalSec: CLIENT_NEWS_INTERVAL_SEC,
+  newsBulletinActive: false,
+
+  tickMusicPlayedSeconds: (deltaSec) => {
+    if (!(deltaSec > 0) || !Number.isFinite(deltaSec)) return;
+    set((state) => ({
+      musicPlayedSeconds: state.musicPlayedSeconds + deltaSec,
+    }));
+  },
+
+  completeNewsBulletin: (options) => {
+    void options;
+    set({
+      newsBulletinActive: false,
+      lastBulletinAtMusicSeconds: get().musicPlayedSeconds,
+    });
+    get().nextTrack({ skipNewsCheck: true });
+  },
 
   markTrackFailed: (trackId) => {
     const next = new Set(get().failedTrackIds);
@@ -172,7 +205,23 @@ export const useAudioStore = create<AudioState>((set, get) => ({
     if (nextPlaying) mediaPlayNow();
   },
 
-  nextTrack: () => {
+  nextTrack: (options) => {
+    if (!options?.skipNewsCheck && isClientNewsBulletinEnabled()) {
+      const state = get();
+      if (
+        !state.newsBulletinActive &&
+        state.isPlaying &&
+        shouldInjectNewsBulletin(
+          state.musicPlayedSeconds,
+          state.lastBulletinAtMusicSeconds,
+          state.newsBulletinIntervalSec,
+        )
+      ) {
+        set({ newsBulletinActive: true, isPlaying: false });
+        return;
+      }
+    }
+
     const {
       upcomingTrack,
       currentTrack,
@@ -371,6 +420,9 @@ export const useAudioStore = create<AudioState>((set, get) => ({
       playbackHistory: [],
       playedSeconds: 0,
       duration: 0,
+      musicPlayedSeconds: 0,
+      lastBulletinAtMusicSeconds: 0,
+      newsBulletinActive: false,
     }),
 
   setVolume: (volume) =>
@@ -428,11 +480,17 @@ export const useAudioStore = create<AudioState>((set, get) => ({
   },
 
   advanceFromBackground: (expectedTrackId) => {
-    const { currentTrack, isPlaying } = get();
-    if (!isPlaying || !currentTrack) return;
+    const { currentTrack, isPlaying, newsBulletinActive } = get();
+    if (newsBulletinActive) return;
+    if (!currentTrack) return;
     // Ignore stale Worker messages after a manual skip / track swap.
     if (expectedTrackId && currentTrack.id !== expectedTrackId) return;
+    // Background catch-up: even if isPlaying flipped during a freeze window,
+    // still advance when the Worker / focus recovery demands a handoff.
+    if (!isPlaying) {
+      set({ isPlaying: true });
+    }
     get().ensureUpcoming();
-    get().nextTrack();
+    get().nextTrack({ skipNewsCheck: false });
   },
 }));

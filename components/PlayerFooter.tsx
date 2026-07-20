@@ -308,7 +308,7 @@ export default function PlayerFooter() {
           </button>
           <button
             type="button"
-            onClick={nextTrack}
+            onClick={() => nextTrack()}
             disabled={controlsDisabled}
             className="rounded-full p-2 text-white/70 transition hover:bg-white/10 hover:text-cyan-300 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-white/70"
             aria-label="Next track"

@@ -24,6 +24,12 @@ import {
   createQueueHeartbeat,
   type QueueHeartbeatController,
 } from "@/lib/queueHeartbeat";
+import {
+  bindMediaSessionActions,
+  syncMediaSessionMetadata,
+  syncMediaSessionPlaybackState,
+  syncMediaSessionPosition,
+} from "@/lib/mediaSession";
 import { useAudioStore } from "@/store/useAudioStore";
 
 const ReactPlayer = dynamic(() => import("react-player"), { ssr: false });
@@ -39,7 +45,9 @@ const PREFETCH_WINDOW_SEC = 30;
 const GAPLESS_PREFETCH_RATIO = 0.95;
 const EARLY_HANDOFF_SEC = 0.25;
 /** Extra lead when the tab is hidden — main-thread media events often freeze. */
-const HIDDEN_HANDOFF_SEC = 1.5;
+const HIDDEN_HANDOFF_SEC = 2.5;
+/** Grace past wall-clock end before focus recovery forces the next track. */
+const DEADLINE_OVERDUE_MS = 750;
 const PROMOTED_PLAY_POLL_MS = 40;
 const PROMOTED_PLAY_MAX_WAIT_MS = 8_000;
 const ERROR_SKIP_COOLDOWN_MS = 800;
@@ -156,7 +164,14 @@ export default function AudioEngine({
   const lastErrorSkipAt = useRef(0);
   const consecutiveErrors = useRef(0);
   const lastProgressUiWrite = useRef(0);
+  const lastTickMediaTimeRef = useRef(0);
   const durationRef = useRef(0);
+  /** Absolute wall-clock ms when the live track should hand off (Date.now based). */
+  const trackDeadlineAtRef = useRef(0);
+  const trackDeadlineIdRef = useRef<string | null>(null);
+  const nativeEndedCleanupsRef = useRef<Partial<Record<PlayerSlot, () => void>>>(
+    {},
+  );
   const handoffFiredRef = useRef(false);
   const prefetchedIdRef = useRef<string | null>(null);
   const skipBenchAtRef = useRef(0);
@@ -183,6 +198,115 @@ export default function AudioEngine({
   const playerEl = useCallback(
     (slot: PlayerSlot) => slotRef(slot).current as YoutubePlayerElement | null,
     [slotRef],
+  );
+
+  /** Wall-clock handoff deadline — survives frozen timeupdate/ended in background tabs. */
+  const armTrackDeadline = useCallback(
+    (playedSec: number, durationSec: number, trackId: string | null) => {
+      if (!trackId || !(durationSec > 0) || !Number.isFinite(durationSec)) {
+        trackDeadlineAtRef.current = 0;
+        trackDeadlineIdRef.current = null;
+        return;
+      }
+      const remaining = Math.max(0, durationSec - Math.max(0, playedSec));
+      const hidden =
+        typeof document !== "undefined" &&
+        document.visibilityState === "hidden";
+      const lead = hidden ? HIDDEN_HANDOFF_SEC : EARLY_HANDOFF_SEC;
+      trackDeadlineAtRef.current =
+        Date.now() + Math.max(0, remaining - lead) * 1000;
+      trackDeadlineIdRef.current = trackId;
+    },
+    [],
+  );
+
+  const flushStalledTrackIfOverdue = useCallback((): boolean => {
+    const state = useAudioStore.getState();
+    if (!state.isPlaying && !state.newsBulletinActive) return false;
+    if (state.newsBulletinActive) return false;
+    if (!streamingAllowed) return false;
+    if (endingRef.current || handoffFiredRef.current) return false;
+
+    const trackId = state.currentTrack?.id ?? null;
+    const deadline = trackDeadlineAtRef.current;
+    const deadlineTrack = trackDeadlineIdRef.current;
+    if (!trackId || !deadline || deadlineTrack !== trackId) return false;
+    if (Date.now() < deadline + DEADLINE_OVERDUE_MS) return false;
+
+    benchLog("deadline:flush", { trackId, overdueMs: Date.now() - deadline });
+    endingRef.current = true;
+    handoffFiredRef.current = true;
+    skipBenchAtRef.current = performance.now();
+    trackDeadlineAtRef.current = 0;
+    // Flush any stuck media buffer so the next promote starts clean.
+    const media = slotRef(liveSlotRef.current).current;
+    if (media) {
+      try {
+        media.pause();
+      } catch {
+        // ignore
+      }
+    }
+    state.ensureUpcoming();
+    state.advanceFromBackground(trackId);
+    // nextTrack already swapped — allow future handoffs.
+    endingRef.current = false;
+    handoffFiredRef.current = false;
+    return true;
+  }, [slotRef, streamingAllowed]);
+
+  const attachNativeEnded = useCallback(
+    (slot: PlayerSlot) => {
+      nativeEndedCleanupsRef.current[slot]?.();
+      nativeEndedCleanupsRef.current[slot] = undefined;
+
+      const media = slotRef(slot).current;
+      if (!media) return;
+
+      const onNativeEnded = () => {
+        if (slot !== liveSlotRef.current) return;
+        if (!streamingAllowed) return;
+        if (endingRef.current || handoffFiredRef.current) return;
+        const state = useAudioStore.getState();
+        if (state.newsBulletinActive) return;
+        const trackId = state.currentTrack?.id ?? null;
+        benchLog("native:ended", { trackId, slot });
+        endingRef.current = true;
+        handoffFiredRef.current = true;
+        skipBenchAtRef.current = performance.now();
+        state.ensureUpcoming();
+        state.nextTrack();
+        if (useAudioStore.getState().newsBulletinActive) {
+          endingRef.current = false;
+          handoffFiredRef.current = false;
+        }
+        trackDeadlineAtRef.current = 0;
+      };
+
+      // Hardware-level HTMLMediaElement ended — not a React prop / setTimeout path.
+      media.addEventListener("ended", onNativeEnded);
+
+      const yt = media as YoutubePlayerElement;
+      const onYtState = (data: number) => {
+        // YouTube iframe API: ENDED = 0
+        if (data === 0) onNativeEnded();
+      };
+      try {
+        yt.api?.addEventListener?.("onStateChange", onYtState);
+      } catch {
+        // Optional iframe API path.
+      }
+
+      nativeEndedCleanupsRef.current[slot] = () => {
+        media.removeEventListener("ended", onNativeEnded);
+        try {
+          yt.api?.removeEventListener?.("onStateChange", onYtState);
+        } catch {
+          // ignore
+        }
+      };
+    },
+    [slotRef, streamingAllowed],
   );
 
   const syncSlotAudio = useCallback(
@@ -622,6 +746,9 @@ export default function AudioEngine({
     consecutiveErrors.current = 0;
     durationRef.current = 0;
     lastProgressUiWrite.current = 0;
+    lastTickMediaTimeRef.current = 0;
+    trackDeadlineAtRef.current = 0;
+    trackDeadlineIdRef.current = currentTrack.id;
     skipBenchAtRef.current = performance.now();
     useAudioStore.getState().setPlayedSeconds(0);
     useAudioStore.getState().setDuration(0);
@@ -764,12 +891,17 @@ export default function AudioEngine({
 
   const advanceNow = useCallback(() => {
     if (endingRef.current) return;
+    if (useAudioStore.getState().newsBulletinActive) return;
     endingRef.current = true;
     handoffFiredRef.current = true;
     consecutiveErrors.current = 0;
     skipBenchAtRef.current = performance.now();
     benchLog("skip:request");
     useAudioStore.getState().nextTrack();
+    if (useAudioStore.getState().newsBulletinActive) {
+      endingRef.current = false;
+      handoffFiredRef.current = false;
+    }
   }, []);
 
   const heartbeatRef = useRef<QueueHeartbeatController | null>(null);
@@ -810,8 +942,12 @@ export default function AudioEngine({
         handoffSec: hidden ? HIDDEN_HANDOFF_SEC : EARLY_HANDOFF_SEC,
         prefetchRatio: GAPLESS_PREFETCH_RATIO,
       });
+
+      if (state.isPlaying && trackId && durationSec > 0) {
+        armTrackDeadline(played, durationSec, trackId);
+      }
     },
-    [slotRef, streamingAllowed],
+    [armTrackDeadline, slotRef, streamingAllowed],
   );
 
   // Isolated Worker heartbeat — wall-clock deadlines survive background-tab freezes.
@@ -819,13 +955,21 @@ export default function AudioEngine({
     const heartbeat = createQueueHeartbeat({
       onAdvance: (trackId) => {
         const state = useAudioStore.getState();
-        if (!state.isPlaying || !streamingAllowed) return;
+        if (!streamingAllowed) return;
+        if (state.newsBulletinActive) return;
         if (state.currentTrack?.id !== trackId) return;
         if (endingRef.current || handoffFiredRef.current) return;
         benchLog("heartbeat:advance", { trackId });
-        state.ensureUpcoming();
-        // Prefer engine path (endingRef) so we never double-skip with onEnded.
-        advanceNowRef.current();
+        endingRef.current = true;
+        handoffFiredRef.current = true;
+        skipBenchAtRef.current = performance.now();
+        trackDeadlineAtRef.current = 0;
+        // Store path — does not depend on React effects / setTimeout.
+        state.advanceFromBackground(trackId);
+        if (useAudioStore.getState().newsBulletinActive) {
+          endingRef.current = false;
+          handoffFiredRef.current = false;
+        }
       },
       onPrefetch: (trackId) => {
         const state = useAudioStore.getState();
@@ -837,41 +981,53 @@ export default function AudioEngine({
     syncQueueHeartbeat(undefined, true);
 
     const onVisibility = () => {
-      // Re-arm the Worker from the live media clock when the tab hides/shows.
       syncQueueHeartbeat(undefined, true);
+      if (document.visibilityState !== "visible") return;
+      if (!streamingAllowed) return;
+
+      // Absolute deadline catch-up: if JS froze past the track end, jump now.
+      if (flushStalledTrackIfOverdue()) {
+        flushPendingMediaPlay();
+        return;
+      }
+
+      const state = useAudioStore.getState();
+      if (!state.isPlaying) return;
+
+      const media = slotRef(liveSlotRef.current).current;
+      const dur = durationRef.current;
       if (
-        document.visibilityState === "visible" &&
-        useAudioStore.getState().isPlaying &&
-        streamingAllowed
+        media &&
+        dur > 0 &&
+        (media.ended ||
+          (Number.isFinite(media.currentTime) &&
+            dur - media.currentTime <= HIDDEN_HANDOFF_SEC))
       ) {
-        // Catch a missed natural end while we were frozen in the background.
-        const media = slotRef(liveSlotRef.current).current;
-        const dur = durationRef.current;
-        if (
-          media &&
-          dur > 0 &&
-          (media.ended ||
-            (Number.isFinite(media.currentTime) &&
-              dur - media.currentTime <= HIDDEN_HANDOFF_SEC))
-        ) {
-          if (!endingRef.current && !handoffFiredRef.current) {
-            useAudioStore.getState().ensureUpcoming();
-            advanceNowRef.current();
-          }
-        } else {
-          flushPendingMediaPlay();
-          tryPlaySlot(liveSlotRef.current);
+        if (!endingRef.current && !handoffFiredRef.current) {
+          state.ensureUpcoming();
+          advanceNowRef.current();
         }
+      } else {
+        flushPendingMediaPlay();
+        tryPlaySlot(liveSlotRef.current);
       }
     };
 
     document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("focus", onVisibility);
     return () => {
       document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("focus", onVisibility);
       heartbeat.dispose();
       heartbeatRef.current = null;
     };
-  }, [slotRef, streamingAllowed, syncQueueHeartbeat, tryPlaySlot]);
+  }, [
+    flushStalledTrackIfOverdue,
+    slotRef,
+    streamingAllowed,
+    syncQueueHeartbeat,
+    tryPlaySlot,
+  ]);
 
   useEffect(() => {
     syncQueueHeartbeat(0, true);
@@ -879,11 +1035,49 @@ export default function AudioEngine({
 
   const handleEnded = useCallback(() => {
     if (!streamingAllowed) return;
+    if (endingRef.current || handoffFiredRef.current) return;
     // Force the succeeding track into the engine immediately — never stall
     // waiting for another user action after natural track termination.
     useAudioStore.getState().ensureUpcoming();
     advanceNow();
   }, [advanceNow, streamingAllowed]);
+
+  // OS Media Session keep-alive — marks RithmGen as a priority background audio worker.
+  useEffect(() => {
+    if (!currentTrack) {
+      syncMediaSessionPlaybackState("none");
+      return;
+    }
+    syncMediaSessionMetadata(currentTrack);
+    syncMediaSessionPlaybackState(
+      isPlaying && streamingAllowed ? "playing" : "paused",
+    );
+  }, [currentTrack, isPlaying, streamingAllowed]);
+
+  useEffect(() => {
+    const handlers = {
+      onPlay: () => {
+        const state = useAudioStore.getState();
+        if (!state.isPlaying) state.togglePlay();
+      },
+      onPause: () => {
+        const state = useAudioStore.getState();
+        if (state.isPlaying) state.togglePlay();
+      },
+      onNext: () => useAudioStore.getState().nextTrack(),
+      onPrevious: () => useAudioStore.getState().previousTrack(),
+    };
+    return bindMediaSessionActions(handlers);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      for (const slot of ["a", "b"] as PlayerSlot[]) {
+        nativeEndedCleanupsRef.current[slot]?.();
+        nativeEndedCleanupsRef.current[slot] = undefined;
+      }
+    };
+  }, []);
 
   const handleError = useCallback(() => {
     if (!streamingAllowed) return;
@@ -926,8 +1120,24 @@ export default function AudioEngine({
         ) {
           parkMutedWarmAtStart(liveSlotRef.current);
         }
+        lastTickMediaTimeRef.current = 0;
         return;
       }
+
+      const audioState = useAudioStore.getState();
+      if (audioState.newsBulletinActive) {
+        lastTickMediaTimeRef.current = 0;
+        return;
+      }
+
+      const lastSample = lastTickMediaTimeRef.current;
+      if (lastSample > 0 && t >= lastSample) {
+        const delta = Math.min(t - lastSample, 2.5);
+        if (delta > 0) {
+          audioState.tickMusicPlayedSeconds(delta);
+        }
+      }
+      lastTickMediaTimeRef.current = t;
 
       const dur = durationRef.current;
       const remaining = dur > 0 ? dur - t : Infinity;
@@ -984,6 +1194,8 @@ export default function AudioEngine({
 
       // Keep the Worker wall-clock deadline aligned with real media time.
       syncQueueHeartbeat(t);
+      armTrackDeadline(t, dur, audioState.currentTrack?.id ?? null);
+      syncMediaSessionPosition({ duration: dur, position: t });
 
       const now = performance.now();
       if (now - lastProgressUiWrite.current >= PROGRESS_UI_INTERVAL_MS) {
@@ -991,7 +1203,14 @@ export default function AudioEngine({
         useAudioStore.getState().setPlayedSeconds(t);
       }
     },
-    [advanceNow, parkMutedWarmAtStart, playerEl, slotRef, syncQueueHeartbeat],
+    [
+      advanceNow,
+      armTrackDeadline,
+      parkMutedWarmAtStart,
+      playerEl,
+      slotRef,
+      syncQueueHeartbeat,
+    ],
   );
 
   const handleDurationChange = useCallback(
@@ -1000,13 +1219,22 @@ export default function AudioEngine({
       if (Number.isFinite(media.duration) && media.duration > 0) {
         durationRef.current = media.duration;
         useAudioStore.getState().setDuration(media.duration);
-        syncQueueHeartbeat(
-          Number.isFinite(media.currentTime) ? media.currentTime : undefined,
-          true,
+        const played = Number.isFinite(media.currentTime)
+          ? media.currentTime
+          : 0;
+        syncQueueHeartbeat(played, true);
+        armTrackDeadline(
+          played,
+          media.duration,
+          useAudioStore.getState().currentTrack?.id ?? null,
         );
+        syncMediaSessionPosition({
+          duration: media.duration,
+          position: played,
+        });
       }
     },
-    [syncQueueHeartbeat],
+    [armTrackDeadline, syncQueueHeartbeat],
   );
 
   const handleReady = useCallback(
@@ -1018,6 +1246,7 @@ export default function AudioEngine({
         trackId,
         slot,
       });
+      attachNativeEnded(slot);
       const media = slotRef(slot).current;
       if (media && streamingAllowed && isPlaying) {
         syncSlotAudio(slot);
@@ -1035,6 +1264,7 @@ export default function AudioEngine({
       queueMicrotask(() => scheduleSlotSync(slot));
     },
     [
+      attachNativeEnded,
       scheduleSlotSync,
       slotRef,
       streamingAllowed,
