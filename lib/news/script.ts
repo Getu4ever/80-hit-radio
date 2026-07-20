@@ -26,9 +26,9 @@ export function buildNewsScript(headlines: string[]): string {
   if (tail) body += ` And finally, ${tail}.`;
 
   return (
-    "This is RithmGen News on eighty hit radio. " +
-    "Here are today's top stories from around the world. " +
+    "This is RithmGen News. " +
+    "Here are today's top stories. " +
     body +
-    " That wraps your bulletin. We return to the hits, right after this."
+    " That is the end of this bulletin. We return you now to the music."
   );
 }

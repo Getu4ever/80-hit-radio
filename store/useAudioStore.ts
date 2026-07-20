@@ -154,42 +154,48 @@ export const useAudioStore = create<AudioState>((set, get) => ({
   },
 
   playTrack: (track) => {
-    const { currentTrack, playbackHistory, queue, failedTrackIds } = get();
+    const { currentTrack, playbackHistory } = get();
+
+    // Gesture-first: flip playing state and start audio before any queue work,
+    // analytics, or catalog shuffle can stall the click stack.
     const nextHistory =
       currentTrack && currentTrack.id !== track.id
         ? [...playbackHistory, currentTrack]
         : playbackHistory;
 
-    // Seed from catalog when the live queue is empty so the dual-slot
-    // engine can prefetch the next source immediately after this pick.
-    let remaining = queue.filter((t) => t.id !== track.id);
-    if (remaining.length === 0) {
-      remaining = shuffleWithArtistGap(
-        useCatalogStore.getState().getRadioTracks(),
-        track.artist,
-        failedTrackIds,
-      ).filter((t) => t.id !== track.id);
-    }
-    const upcoming = pickRandomTrack(
-      remaining,
-      track.artist,
-      failedTrackIds,
-    );
-
     set({
       currentTrack: track,
-      upcomingTrack: upcoming,
       isPlaying: true,
-      queue: upcoming
-        ? remaining.filter((t) => t.id !== upcoming.id)
-        : remaining,
       playbackHistory: nextHistory,
       playedSeconds: 0,
       duration: 0,
       ignorePlaybackErrorsUntil: Date.now() + TRACK_SWAP_GRACE_MS,
     });
-    trackListenEvent("play_start", track.id);
     mediaPlayNow();
+
+    queueMicrotask(() => {
+      const { queue, failedTrackIds } = get();
+      let remaining = queue.filter((t) => t.id !== track.id);
+      if (remaining.length === 0) {
+        remaining = shuffleWithArtistGap(
+          useCatalogStore.getState().getRadioTracks(),
+          track.artist,
+          failedTrackIds,
+        ).filter((t) => t.id !== track.id);
+      }
+      const upcoming = pickRandomTrack(
+        remaining,
+        track.artist,
+        failedTrackIds,
+      );
+      set({
+        upcomingTrack: upcoming,
+        queue: upcoming
+          ? remaining.filter((t) => t.id !== upcoming.id)
+          : remaining,
+      });
+      trackListenEvent("play_start", track.id);
+    });
   },
 
   togglePlay: () => {
@@ -202,7 +208,10 @@ export const useAudioStore = create<AudioState>((set, get) => ({
     // Resume/pause only — never reshuffle a cued track (keeps warm buffer).
     const nextPlaying = !isPlaying;
     set({ isPlaying: nextPlaying });
-    if (nextPlaying) mediaPlayNow();
+    if (nextPlaying) {
+      mediaPlayNow();
+      queueMicrotask(() => trackListenEvent("play_start", currentTrack.id));
+    }
   },
 
   nextTrack: (options) => {
@@ -373,11 +382,16 @@ export const useAudioStore = create<AudioState>((set, get) => ({
   startRadio: (seed) => {
     const { currentTrack, isPlaying, failedTrackIds } = get();
 
-    // Resume a warmed cue instead of reshuffling — keeps Play/Start on the
-    // already-buffered YouTube slot (critical for mobile gesture + less delay).
+    // Resume a warmed cue — unmute immediately, defer analytics.
     if (!seed && currentTrack && !isPlaying) {
       set({ isPlaying: true });
-      trackListenEvent("play_start", currentTrack.id);
+      mediaPlayNow();
+      queueMicrotask(() => trackListenEvent("play_start", currentTrack.id));
+      return;
+    }
+
+    // Prefer keeping an already-cued track live when reshuffling isn't forced.
+    if (!seed && currentTrack && isPlaying) {
       mediaPlayNow();
       return;
     }
@@ -407,8 +421,8 @@ export const useAudioStore = create<AudioState>((set, get) => ({
       duration: 0,
       ignorePlaybackErrorsUntil: Date.now() + TRACK_SWAP_GRACE_MS,
     });
-    trackListenEvent("play_start", first.id);
     mediaPlayNow();
+    queueMicrotask(() => trackListenEvent("play_start", first.id));
   },
 
   stopBroadcast: () =>

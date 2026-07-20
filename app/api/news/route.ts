@@ -83,7 +83,9 @@ export async function GET() {
     try {
       const { readFile } = await import("node:fs/promises");
       const { join } = await import("node:path");
-      const stale = await readFile(join("/tmp/rithmgen-news", "latest_news.mp3"));
+      const stale = await readFile(
+        join("/tmp/rithmgen-news", "latest_news_bbc_daniel.mp3"),
+      );
       if (stale.length > 0) {
         return audioResponse(Buffer.from(stale), true, null);
       }

@@ -4,8 +4,8 @@ import path from "node:path";
 export const NEWS_CACHE_TTL_MS = 60 * 60 * 1000;
 
 const CACHE_DIR = path.join("/tmp", "rithmgen-news");
-const MP3_PATH = path.join(CACHE_DIR, "latest_news.mp3");
-const META_PATH = path.join(CACHE_DIR, "latest_news.meta.json");
+const MP3_PATH = path.join(CACHE_DIR, "latest_news_bbc_daniel.mp3");
+const META_PATH = path.join(CACHE_DIR, "latest_news_bbc_daniel.meta.json");
 
 type CacheMeta = {
   generatedAt: number;

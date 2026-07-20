@@ -1,7 +1,10 @@
 import { serverEnv } from "@/lib/env";
 
-/** ElevenLabs "Adam" — default high-fidelity male host voice. */
-export const ELEVEN_ADAM_VOICE_ID = "pNInz6obpgDQGcFmaJgB";
+/**
+ * ElevenLabs "Daniel" — British, formal, news-presenter timbre (BBC-style).
+ * Prefer this over Adam/Brian for authoritative UK English bulletins.
+ */
+export const ELEVEN_BBC_VOICE_ID = "onwK4e9ZLuTAKqWW03F9";
 
 export function getElevenLabsApiKey(): string {
   return serverEnv("ELEVENLABS_API_KEY");
@@ -18,7 +21,7 @@ export async function synthesizeLuxuryBulletin(text: string): Promise<Buffer> {
     throw new Error("ELEVENLABS_API_KEY is not configured");
   }
 
-  const url = `https://api.elevenlabs.io/v1/text-to-speech/${ELEVEN_ADAM_VOICE_ID}`;
+  const url = `https://api.elevenlabs.io/v1/text-to-speech/${ELEVEN_BBC_VOICE_ID}`;
 
   const res = await fetch(url, {
     method: "POST",
@@ -30,10 +33,12 @@ export async function synthesizeLuxuryBulletin(text: string): Promise<Buffer> {
     body: JSON.stringify({
       text,
       model_id: "eleven_v3",
+      // British English delivery for the luxury news host.
+      language_code: "en",
       voice_settings: {
-        stability: 0.5,
-        similarity_boost: 0.78,
-        style: 0.35,
+        stability: 0.65,
+        similarity_boost: 0.85,
+        style: 0.15,
         use_speaker_boost: true,
       },
     }),

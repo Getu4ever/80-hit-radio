@@ -17,9 +17,9 @@ let pendingPlay = false;
 let retryTimer: ReturnType<typeof setTimeout> | null = null;
 let unlockMediaEl: HTMLAudioElement | null = null;
 
-const GESTURE_WINDOW_MS = 4_000;
-const RETRY_INTERVAL_MS = 50;
-const MAX_RETRIES = 40;
+const GESTURE_WINDOW_MS = 6_000;
+const RETRY_INTERVAL_MS = 32;
+const MAX_RETRIES = 60;
 
 export function registerMediaPlayNow(fn: PlayNowFn | null): void {
   playNowHandler = fn;

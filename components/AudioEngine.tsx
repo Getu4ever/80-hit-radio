@@ -283,8 +283,14 @@ export default function AudioEngine({
         trackDeadlineAtRef.current = 0;
       };
 
-      // Hardware-level HTMLMediaElement ended — not a React prop / setTimeout path.
-      media.addEventListener("ended", onNativeEnded);
+      // Hardware-level HTMLMediaElement ended — capture so nothing can swallow it.
+      // Browsers must not rely on React props / useEffect / setTimeout for queue advance.
+      media.addEventListener("ended", onNativeEnded, { capture: true });
+      try {
+        media.onended = onNativeEnded;
+      } catch {
+        // Some embeds expose a read-only onended.
+      }
 
       const yt = media as YoutubePlayerElement;
       const onYtState = (data: number) => {
@@ -298,7 +304,14 @@ export default function AudioEngine({
       }
 
       nativeEndedCleanupsRef.current[slot] = () => {
-        media.removeEventListener("ended", onNativeEnded);
+        media.removeEventListener("ended", onNativeEnded, {
+          capture: true,
+        } as EventListenerOptions);
+        try {
+          if (media.onended === onNativeEnded) media.onended = null;
+        } catch {
+          // ignore
+        }
         try {
           yt.api?.removeEventListener?.("onStateChange", onYtState);
         } catch {
@@ -509,16 +522,19 @@ export default function AudioEngine({
     const media = slotRef(slot).current;
     if (!media) return false;
 
-    // Real playback — stop soft-loop warm; unmute before any async work.
+    // Real playback — unmute + play() FIRST inside the gesture token.
+    // Defer quality sync / warm-flag work so secondary hooks cannot stall audio.
     allowMutedWarmRef.current = false;
     setCueWarmActive(false);
-    syncAllSlotsAudio();
-    syncSlotAudio(slot);
 
-    // Already muted-playing after cue warm → audible without waiting on play().
-    if (!media.paused) {
-      emitPlayingBench(slot, true);
-      return true;
+    try {
+      const yt = media as YoutubePlayerElement;
+      media.muted = false;
+      media.volume = Math.min(1, Math.max(0, volume));
+      yt.api?.unMute?.();
+      yt.api?.setVolume?.(Math.round(Math.min(1, Math.max(0, volume)) * 100));
+    } catch {
+      // Fall through to sync helpers.
     }
 
     void media.play().catch(() => {});
@@ -527,11 +543,18 @@ export default function AudioEngine({
     } catch {
       // Optional iframe API path.
     }
-    if (media.paused) {
-      awaitPromotedPlayback(slot);
-    } else {
-      emitPlayingBench(slot, true);
-    }
+
+    // Non-blocking: polish audio routing after play has been requested.
+    queueMicrotask(() => {
+      syncAllSlotsAudio();
+      syncSlotAudio(slot);
+      if (media.paused) {
+        awaitPromotedPlayback(slot);
+      } else {
+        emitPlayingBench(slot, true);
+      }
+    });
+
     return true;
   }, [
     awaitPromotedPlayback,
@@ -541,6 +564,7 @@ export default function AudioEngine({
     streamingAllowed,
     syncAllSlotsAudio,
     syncSlotAudio,
+    volume,
   ]);
 
   useEffect(() => {
@@ -1033,15 +1057,6 @@ export default function AudioEngine({
     syncQueueHeartbeat(0, true);
   }, [currentTrack?.id, isPlaying, streamingAllowed, syncQueueHeartbeat]);
 
-  const handleEnded = useCallback(() => {
-    if (!streamingAllowed) return;
-    if (endingRef.current || handoffFiredRef.current) return;
-    // Force the succeeding track into the engine immediately — never stall
-    // waiting for another user action after natural track termination.
-    useAudioStore.getState().ensureUpcoming();
-    advanceNow();
-  }, [advanceNow, streamingAllowed]);
-
   // OS Media Session keep-alive — marks RithmGen as a priority background audio worker.
   useEffect(() => {
     if (!currentTrack) {
@@ -1143,8 +1158,7 @@ export default function AudioEngine({
       const remaining = dur > 0 ? dur - t : Infinity;
       const progressRatio = dur > 0 ? t / dur : 0;
 
-      // Gapless: ensure the next track is selected and the prefetch slot is
-      // warming well before end — at 95% completion and again in the final 30s.
+      // Prefetch only — never call nextTrack from timeupdate (throttled in background).
       if (
         progressRatio >= GAPLESS_PREFETCH_RATIO ||
         remaining <= PREFETCH_WINDOW_SEC + 1
@@ -1177,21 +1191,6 @@ export default function AudioEngine({
         }
       }
 
-      const handoffSec =
-        typeof document !== "undefined" &&
-        document.visibilityState === "hidden"
-          ? HIDDEN_HANDOFF_SEC
-          : EARLY_HANDOFF_SEC;
-
-      if (
-        remaining <= handoffSec &&
-        remaining > 0 &&
-        !handoffFiredRef.current
-      ) {
-        advanceNow();
-        return;
-      }
-
       // Keep the Worker wall-clock deadline aligned with real media time.
       syncQueueHeartbeat(t);
       armTrackDeadline(t, dur, audioState.currentTrack?.id ?? null);
@@ -1204,7 +1203,6 @@ export default function AudioEngine({
       }
     },
     [
-      advanceNow,
       armTrackDeadline,
       parkMutedWarmAtStart,
       playerEl,
@@ -1286,6 +1284,7 @@ export default function AudioEngine({
   const handleCanPlay = useCallback(
     (slot: PlayerSlot, trackId: string | null) => {
       if (trackId) slotReadyRef.current[slot] = trackId;
+      attachNativeEnded(slot);
       if (slot === liveSlotRef.current) {
         if (isPlaying) {
           tryPlaySlot(slot);
@@ -1293,6 +1292,7 @@ export default function AudioEngine({
           if (media && !media.paused) {
             emitPlayingBench(slot, false);
           }
+          flushPendingMediaPlay();
         } else if (streamingAllowed && allowMutedWarmRef.current) {
           warmSlotMuted(slot);
         }
@@ -1310,6 +1310,7 @@ export default function AudioEngine({
       }
     },
     [
+      attachNativeEnded,
       emitPlayingBench,
       isPlaying,
       slotRef,
@@ -1388,7 +1389,6 @@ export default function AudioEngine({
         preload="auto"
         config={{ youtube: YOUTUBE_PLAYER_CONFIG }}
         onReady={() => handleReady(slot, trackId)}
-        onEnded={isLive ? handleEnded : undefined}
         onError={
           isLive
             ? handleError
