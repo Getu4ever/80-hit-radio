@@ -10,9 +10,9 @@
 type PlayNowFn = () => boolean;
 
 type MediaLike = {
-  muted: boolean;
-  paused: boolean;
-  play: () => Promise<void> | void;
+  muted?: boolean;
+  paused?: boolean;
+  play?: () => Promise<void> | void;
   api?: {
     playVideo?: () => void;
     unMute?: () => void;
@@ -232,57 +232,64 @@ export function unlockMediaGesture(): void {
  * Force-play a media element (YouTube slot wrapper). On NotAllowedError /
  * autoplay rejection, instantly re-assert keep-alive and retry play + YT API.
  */
-export function forcePlayMedia(media: MediaLike | null | undefined): boolean {
-  if (!media) return false;
+export function forcePlayMedia(media: unknown): boolean {
+  if (!media || typeof media !== "object") return false;
+  const el = media as MediaLike;
   startSilentKeepAlive();
 
   const attempt = (): boolean => {
     try {
-      media.muted = media.muted; // no-op read to touch element
-      const p = media.play();
-      if (p && typeof p.then === "function") {
-        void p.catch((err: unknown) => {
-          const name =
-            err && typeof err === "object" && "name" in err
-              ? String((err as { name: string }).name)
-              : "";
-          const message =
-            err && typeof err === "object" && "message" in err
-              ? String((err as { message: string }).message)
-              : String(err ?? "");
-          const blocked =
-            name === "NotAllowedError" ||
-            /not allowed|user didn't interact|autoplay/i.test(message);
-          if (blocked || media.paused) {
-            // Fallback: re-assert keep-alive then native play + iframe API.
-            startSilentKeepAlive();
-            try {
-              media.muted = false;
-            } catch {
-              // ignore
+      const playFn = el.play;
+      if (typeof playFn === "function") {
+        const p = playFn.call(el);
+        if (p && typeof (p as Promise<void>).then === "function") {
+          void (p as Promise<void>).catch((err: unknown) => {
+            const name =
+              err && typeof err === "object" && "name" in err
+                ? String((err as { name: string }).name)
+                : "";
+            const message =
+              err && typeof err === "object" && "message" in err
+                ? String((err as { message: string }).message)
+                : String(err ?? "");
+            const blocked =
+              name === "NotAllowedError" ||
+              /not allowed|user didn't interact|autoplay/i.test(message);
+            if (blocked || el.paused !== false) {
+              // Fallback: re-assert keep-alive then native play + iframe API.
+              startSilentKeepAlive();
+              try {
+                if (typeof el.muted === "boolean") el.muted = false;
+              } catch {
+                // ignore
+              }
+              try {
+                void el.play?.()?.catch?.(() => {});
+              } catch {
+                // ignore
+              }
+              try {
+                el.api?.playVideo?.();
+              } catch {
+                // Optional iframe API path.
+              }
             }
-            void media.play().catch(() => {});
-            try {
-              media.api?.playVideo?.();
-            } catch {
-              // Optional iframe API path.
-            }
-          }
-        });
+          });
+        }
       }
       try {
-        media.api?.playVideo?.();
+        el.api?.playVideo?.();
       } catch {
         // Optional iframe API path.
       }
-      return !media.paused;
+      return el.paused === false;
     } catch {
       try {
-        media.api?.playVideo?.();
+        el.api?.playVideo?.();
       } catch {
         // ignore
       }
-      return !media.paused;
+      return el.paused === false;
     }
   };
 
