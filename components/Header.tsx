@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useUserSession } from "@/hooks/useUserSession";
 import BrandLogo from "@/components/BrandLogo";
+import VoiceAssistant from "@/components/VoiceAssistant";
 
 function UserIcon({ className }: { className?: string }) {
   return (
@@ -273,9 +274,10 @@ export default function Header({
         placeholder="Search song, artist, year…"
         autoComplete="off"
         enterKeyHint="search"
-        className="w-full rounded-xl border border-white/10 bg-white/[0.05] py-2.5 pl-10 pr-12 text-sm text-white placeholder:text-white/35 shadow-[inset_0_0_0_1px_rgba(34,211,238,0.08)] outline-none transition focus:border-cyan-400/45 focus:bg-white/[0.07] focus:shadow-[0_0_20px_rgba(34,211,238,0.12)] sm:py-3 sm:pl-11 sm:pr-24 sm:text-base"
+        className="w-full rounded-xl border border-white/10 bg-white/[0.05] py-2.5 pl-10 pr-[4.75rem] text-sm text-white placeholder:text-white/35 shadow-[inset_0_0_0_1px_rgba(34,211,238,0.08)] outline-none transition focus:border-cyan-400/45 focus:bg-white/[0.07] focus:shadow-[0_0_20px_rgba(34,211,238,0.12)] sm:py-3 sm:pl-11 sm:pr-32 sm:text-base"
       />
-      <div className="absolute right-1.5 top-1/2 flex -translate-y-1/2 items-center gap-1 sm:right-2">
+      <div className="absolute right-1.5 top-1/2 flex -translate-y-1/2 items-center gap-0.5 sm:right-2 sm:gap-1">
+        <VoiceAssistant onSearchQuery={onSearchChange} />
         {searchQuery ? (
           <button
             type="button"
