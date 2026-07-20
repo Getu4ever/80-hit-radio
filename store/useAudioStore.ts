@@ -220,7 +220,17 @@ export const useAudioStore = create<AudioState>((set, get) => ({
   },
 
   nextTrack: (options) => {
-    if (!options?.skipNewsCheck && isClientNewsBulletinEnabled()) {
+    const tabHidden =
+      typeof document !== "undefined" &&
+      document.visibilityState === "hidden";
+
+    // Never pause for news while the tab is hidden — that ends the media
+    // session and browsers will not let YouTube start the next song.
+    if (
+      !options?.skipNewsCheck &&
+      !tabHidden &&
+      isClientNewsBulletinEnabled()
+    ) {
       const state = get();
       if (
         !state.newsBulletinActive &&

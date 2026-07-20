@@ -43,7 +43,7 @@ var prefetchAt = 0;
 var prefetchSent = false;
 var advanceSent = false;
 var timer = null;
-var tickMs = 200;
+var tickMs = 250;
 
 function clearTimer() {
   if (timer != null) {
@@ -58,6 +58,7 @@ function recompute() {
     prefetchAt = 0;
     return;
   }
+  // Wall-clock absolute deadline — survives frozen main-thread media clocks.
   var remainingToHandoff = Math.max(0, durationSec - playedSec - handoffSec);
   deadlineAt = Date.now() + remainingToHandoff * 1000;
   var prefetchAtSec = durationSec * prefetchRatio;
