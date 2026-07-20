@@ -9,7 +9,10 @@
 
 type PlayNowFn = () => boolean;
 
-type MediaLike = HTMLMediaElement & {
+type MediaLike = {
+  muted: boolean;
+  paused: boolean;
+  play: () => Promise<void> | void;
   api?: {
     playVideo?: () => void;
     unMute?: () => void;
