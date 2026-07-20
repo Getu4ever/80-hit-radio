@@ -370,3 +370,23 @@ export function flushPendingMediaPlay(): boolean {
     return false;
   }
 }
+
+type PersistentAdvanceFn = (reason: string) => void;
+let persistentAdvanceHandler: PersistentAdvanceFn | null = null;
+
+/** AudioEngine registers the single-node advance path here. */
+export function registerPersistentAdvance(
+  fn: PersistentAdvanceFn | null,
+): void {
+  persistentAdvanceHandler = fn;
+}
+
+/**
+ * UI / Media Session next — injects on the permanent player when mounted.
+ * Returns false if the engine isn't ready (caller should fall back to store).
+ */
+export function requestPersistentAdvance(reason = "ui"): boolean {
+  if (!persistentAdvanceHandler) return false;
+  persistentAdvanceHandler(reason);
+  return true;
+}

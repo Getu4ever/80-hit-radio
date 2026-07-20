@@ -6,6 +6,7 @@ import {
   shouldInjectNewsBulletin,
 } from "@/lib/broadcastSchedule";
 import { mediaPlayNow, stopSilentKeepAlive } from "@/lib/mediaPlayback";
+import { releaseBroadcastWakeLock } from "@/lib/wakeLock";
 import { useCatalogStore } from "@/store/useCatalogStore";
 import type { Track } from "@/data/tracks";
 
@@ -79,7 +80,11 @@ interface AudioState {
 
   playTrack: (track: Track) => void;
   togglePlay: () => void;
-  nextTrack: (options?: { skipNewsCheck?: boolean }) => void;
+  nextTrack: (options?: {
+    skipNewsCheck?: boolean;
+    /** Engine already injected + played the next src — skip mediaPlayNow. */
+    skipMediaPlay?: boolean;
+  }) => void;
   previousTrack: () => void;
   setQueue: (tracks: Track[]) => void;
   /** Load current/upcoming without playing — warms YouTube before first Play. */
@@ -301,7 +306,9 @@ export const useAudioStore = create<AudioState>((set, get) => ({
       ignorePlaybackErrorsUntil: Date.now() + TRACK_SWAP_GRACE_MS,
     });
     trackListenEvent("play_start", next.id);
-    mediaPlayNow();
+    if (!options?.skipMediaPlay) {
+      mediaPlayNow();
+    }
   },
 
   previousTrack: () => {
@@ -427,6 +434,7 @@ export const useAudioStore = create<AudioState>((set, get) => ({
 
   stopBroadcast: () => {
     stopSilentKeepAlive();
+    releaseBroadcastWakeLock();
     set({
       currentTrack: null,
       upcomingTrack: null,

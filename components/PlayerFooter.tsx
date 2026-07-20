@@ -2,6 +2,7 @@
 
 import { useCallback, useRef, useState } from "react";
 import { formatStreamQualityLabel } from "@/lib/broadcastAudio";
+import { requestPersistentAdvance } from "@/lib/mediaPlayback";
 import SoundWave from "@/components/SoundWave";
 import ShareStation from "@/components/ShareStation";
 import { useAudioStore } from "@/store/useAudioStore";
@@ -308,7 +309,9 @@ export default function PlayerFooter() {
           </button>
           <button
             type="button"
-            onClick={() => nextTrack()}
+            onClick={() => {
+              if (!requestPersistentAdvance("footer-next")) nextTrack();
+            }}
             disabled={controlsDisabled}
             className="rounded-full p-2 text-white/70 transition hover:bg-white/10 hover:text-cyan-300 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-white/70"
             aria-label="Next track"

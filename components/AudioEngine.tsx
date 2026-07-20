@@ -1,5 +1,15 @@
 "use client";
 
+/**
+ * Single-Instance Persistent Player
+ *
+ * One ReactPlayer / media node for the whole radio session. Track changes only
+ * swap the source on that same node (YouTube loadVideoById / .src) — we never
+ * destroy, remount, or dual-slot promote between songs. Native `ended` injects
+ * the next URL from the store's raw queue before React paints, so background
+ * tabs cannot GC the media session between tracks.
+ */
+
 import {
   useCallback,
   useEffect,
@@ -20,6 +30,7 @@ import {
   flushPendingMediaPlay,
   forcePlayMedia,
   registerMediaPlayNow,
+  registerPersistentAdvance,
   startSilentKeepAlive,
 } from "@/lib/mediaPlayback";
 import {
@@ -32,7 +43,16 @@ import {
   syncMediaSessionPlaybackState,
   syncMediaSessionPosition,
 } from "@/lib/mediaSession";
+import {
+  reassertBroadcastWakeLock,
+  requestBroadcastWakeLock,
+} from "@/lib/wakeLock";
+import {
+  isClientNewsBulletinEnabled,
+  shouldInjectNewsBulletin,
+} from "@/lib/broadcastSchedule";
 import { useAudioStore } from "@/store/useAudioStore";
+import type { Track } from "@/data/tracks";
 
 const ReactPlayer = dynamic(() => import("react-player"), { ssr: false });
 
@@ -40,97 +60,25 @@ interface AudioEngineProps {
   streamingAllowed?: boolean;
 }
 
-type PlayerSlot = "a" | "b";
-
 const PREFETCH_WINDOW_SEC = 30;
-/** Start warming the next media pipeline once the live track is nearly done. */
 const GAPLESS_PREFETCH_RATIO = 0.95;
 const EARLY_HANDOFF_SEC = 0.25;
-/** Extra lead when the tab is hidden — main-thread media events often freeze. */
 const HIDDEN_HANDOFF_SEC = 2.5;
-/** Grace past wall-clock end before focus recovery forces the next track. */
 const DEADLINE_OVERDUE_MS = 750;
-const PROMOTED_PLAY_POLL_MS = 40;
-const PROMOTED_PLAY_MAX_WAIT_MS = 8_000;
 const ERROR_SKIP_COOLDOWN_MS = 800;
 const MAX_CONSECUTIVE_ERRORS = 8;
 const PROGRESS_UI_INTERVAL_MS = 400;
 const QUALITY_REASSERT_MS = 30_000;
-/**
- * Muted cue warm-up soft-loops near 0 once enough data is buffered.
- * Staying muted-playing (not paused) lets Play only unmute — same as Next.
- */
 const MUTED_WARM_LOOP_SEC = 1.5;
 const MUTED_WARM_MIN_BUFFER_SEC = 2;
 
-function isYoutubeConsoleNoise(value: unknown): boolean {
-  if (value == null) return true;
-  if (typeof value === "string") {
-    return /youtube|iframe player error|getVolume/i.test(value);
-  }
-  if (typeof value !== "object") return false;
-  if (value instanceof Error) {
-    return /youtube|iframe player error|getVolume/i.test(value.message);
-  }
-  const record = value as Record<string, unknown>;
-  if (typeof record.data === "number") return true;
-  if (
-    typeof record.message === "string" &&
-    /youtube|iframe player error|getVolume/i.test(record.message)
-  ) {
-    return true;
-  }
-  try {
-    const json = JSON.stringify(value);
-    if (!json || json === "{}") return true;
-  } catch {
-    return true;
-  }
-  return false;
-}
-
-function benchLog(type: string, detail: Record<string, unknown> = {}) {
-  if (typeof window === "undefined") return;
-  if (!(window as Window & { __RADIO_BENCH__?: boolean }).__RADIO_BENCH__) return;
-  console.log(`[RADIO-BENCH] ${type}`, JSON.stringify({ at: performance.now(), ...detail }));
-}
-
-let youtubeConsolePatched = false;
-function ensureYoutubeConsolePatch() {
-  if (typeof window === "undefined" || youtubeConsolePatched) return;
-  youtubeConsolePatched = true;
-  const original = console.error.bind(console);
-  console.error = (...args: unknown[]) => {
-    if (args.some(isYoutubeConsoleNoise)) return;
-    if (
-      args[0] instanceof TypeError &&
-      /getVolume is not a function/i.test(args[0].message)
-    ) {
-      return;
-    }
-    original(...args);
-  };
-
-  const onWindowError = (event: ErrorEvent) => {
-    if (/getVolume is not a function/i.test(event.message)) {
-      event.preventDefault();
-      event.stopImmediatePropagation();
-    }
-  };
-  window.addEventListener("error", onWindowError);
-}
-
-ensureYoutubeConsolePatch();
+/** Stable forever — remounting this key would recreate the media node. */
+const PERSISTENT_PLAYER_KEY = "rithmgen-persistent-player";
 
 function youtubeSrc(youtubeId: string) {
   return `https://www.youtube.com/watch?v=${youtubeId}`;
 }
 
-function otherSlot(slot: PlayerSlot): PlayerSlot {
-  return slot === "a" ? "b" : "a";
-}
-
-/** True when the cued slot has enough media buffered for a near-instant unmute. */
 function hasWarmBuffer(media: HTMLMediaElement, minSec = MUTED_WARM_MIN_BUFFER_SEC) {
   try {
     if (media.readyState >= HTMLMediaElement.HAVE_ENOUGH_DATA) return true;
@@ -144,67 +92,133 @@ function hasWarmBuffer(media: HTMLMediaElement, minSec = MUTED_WARM_MIN_BUFFER_S
   }
 }
 
+function benchLog(type: string, detail: Record<string, unknown> = {}) {
+  if (typeof window === "undefined") return;
+  if (!(window as Window & { __RADIO_BENCH__?: boolean }).__RADIO_BENCH__) return;
+  console.log(
+    `[RADIO-BENCH] ${type}`,
+    JSON.stringify({ at: performance.now(), ...detail }),
+  );
+}
+
+let youtubeConsolePatched = false;
+function ensureYoutubeConsolePatch() {
+  if (typeof window === "undefined" || youtubeConsolePatched) return;
+  youtubeConsolePatched = true;
+  const original = console.error.bind(console);
+  console.error = (...args: unknown[]) => {
+    if (
+      args.some((value) => {
+        if (value == null) return true;
+        if (typeof value === "string") {
+          return /youtube|iframe player error|getVolume/i.test(value);
+        }
+        if (value instanceof Error) {
+          return /youtube|iframe player error|getVolume/i.test(value.message);
+        }
+        return false;
+      })
+    ) {
+      return;
+    }
+    original(...args);
+  };
+}
+
+ensureYoutubeConsolePatch();
+
+/**
+ * Imperatively swap the persistent node's source WITHOUT unmounting it.
+ * Prefer YouTube iframe API loadVideoById; fall back to HTMLMediaElement.src.
+ */
+function injectSourceOnPersistentNode(
+  media: HTMLMediaElement | null,
+  youtubeId: string,
+): void {
+  if (!media || !youtubeId) return;
+  const yt = media as YoutubePlayerElement;
+  const url = youtubeSrc(youtubeId);
+
+  try {
+    yt.api?.loadVideoById?.({ videoId: youtubeId, startSeconds: 0 });
+  } catch {
+    try {
+      yt.api?.loadVideoById?.(youtubeId);
+    } catch {
+      // Fall through to element src swap.
+    }
+  }
+
+  try {
+    if (typeof (media as HTMLMediaElement).src === "string") {
+      const el = media as HTMLMediaElement;
+      if (el.src !== url && !el.src.includes(youtubeId)) {
+        el.src = url;
+        el.load();
+      }
+    }
+  } catch {
+    // YouTube iframe wrappers may not expose a writable src.
+  }
+}
+
 export default function AudioEngine({
   streamingAllowed = true,
 }: AudioEngineProps) {
   const currentTrack = useAudioStore((s) => s.currentTrack);
-  const upcomingTrack = useAudioStore((s) => s.upcomingTrack);
   const isPlaying = useAudioStore((s) => s.isPlaying);
   const volume = useAudioStore((s) => s.volume);
   const broadcastEnhance = useAudioStore((s) => s.broadcastEnhance);
+  const seekRequestId = useAudioStore((s) => s.seekRequestId);
+  const pendingSeekSeconds = useAudioStore((s) => s.pendingSeekSeconds);
 
-  const playerARef = useRef<HTMLVideoElement | null>(null);
-  const playerBRef = useRef<HTMLVideoElement | null>(null);
-  const liveSlotRef = useRef<PlayerSlot>("a");
-  const [liveSlot, setLiveSlot] = useState<PlayerSlot>("a");
-  const [slotAId, setSlotAId] = useState<string | null>(null);
-  const [slotBId, setSlotBId] = useState<string | null>(null);
-  const slotAIdRef = useRef<string | null>(null);
-  const slotBIdRef = useRef<string | null>(null);
-  /** Persist last YouTube src per slot so ReactPlayer nodes are never unmounted mid-session. */
-  const lastSlotSrcRef = useRef<Record<PlayerSlot, string>>({ a: "", b: "" });
+  /** THE single permanent media node — never replaced between tracks. */
+  const playerRef = useRef<HTMLVideoElement | null>(null);
+  /** Last src kept so the node stays mounted when store briefly clears. */
+  const lastSrcRef = useRef("");
+  const lastYoutubeIdRef = useRef<string | null>(null);
+  const mountedOnceRef = useRef(false);
 
   const endingRef = useRef(false);
+  const handoffFiredRef = useRef(false);
   const lastErrorSkipAt = useRef(0);
   const consecutiveErrors = useRef(0);
   const lastProgressUiWrite = useRef(0);
   const lastTickMediaTimeRef = useRef(0);
   const durationRef = useRef(0);
-  /** Absolute wall-clock ms when the live track should hand off (Date.now based). */
   const trackDeadlineAtRef = useRef(0);
   const trackDeadlineIdRef = useRef<string | null>(null);
-  const nativeEndedCleanupsRef = useRef<Partial<Record<PlayerSlot, () => void>>>(
-    {},
-  );
-  const handoffFiredRef = useRef(false);
-  const prefetchedIdRef = useRef<string | null>(null);
+  const nativeEndedCleanupRef = useRef<(() => void) | null>(null);
   const skipBenchAtRef = useRef(0);
   const playingEmittedForSkipRef = useRef(0);
-  const slotReadyRef = useRef<Record<PlayerSlot, string | null>>({ a: null, b: null });
-  const promoteCleanupRef = useRef<(() => void) | null>(null);
-  const lastPromotedTrackRef = useRef<string | null>(null);
-  /** While true, keep the live slot muted-playing so the first Play only unmutes. */
   const allowMutedWarmRef = useRef(true);
-  /** React state mirror — stays true through cue warm soft-loop until real Play. */
   const [cueWarmActive, setCueWarmActive] = useState(true);
-
-  liveSlotRef.current = liveSlot;
+  /** React mirror of the persistent src — updated AFTER imperative inject. */
+  const [playerSrc, setPlayerSrc] = useState("");
 
   ensureYoutubeConsolePatch();
 
-  const livePlayerRef = liveSlot === "a" ? playerARef : playerBRef;
-
-  const slotRef = useCallback(
-    (slot: PlayerSlot) => (slot === "a" ? playerARef : playerBRef),
+  const mediaEl = useCallback(
+    () => playerRef.current as YoutubePlayerElement | null,
     [],
   );
 
-  const playerEl = useCallback(
-    (slot: PlayerSlot) => slotRef(slot).current as YoutubePlayerElement | null,
-    [slotRef],
-  );
+  const syncAudio = useCallback(() => {
+    const audible = useAudioStore.getState().isPlaying && streamingAllowed;
+    syncPlayerAudioState(mediaEl(), {
+      volume: audible ? volume : 0,
+      muted: !audible,
+    });
+  }, [mediaEl, streamingAllowed, volume]);
 
-  /** Wall-clock handoff deadline — survives frozen timeupdate/ended in background tabs. */
+  const tryPlay = useCallback(() => {
+    const media = playerRef.current;
+    if (!media) return false;
+    syncAudio();
+    if (!media.paused) return true;
+    return forcePlayMedia(media);
+  }, [syncAudio]);
+
   const armTrackDeadline = useCallback(
     (playedSec: number, durationSec: number, trackId: string | null) => {
       if (!trackId || !(durationSec > 0) || !Number.isFinite(durationSec)) {
@@ -224,10 +238,136 @@ export default function AudioEngine({
     [],
   );
 
+  /**
+   * Peek the next Track from raw store arrays (no React). Used by native ended
+   * so we can inject the URL before any layout paint / setState flush.
+   */
+  const peekNextTrack = useCallback((): Track | null => {
+    const state = useAudioStore.getState();
+    state.ensureUpcoming();
+    const after = useAudioStore.getState();
+    const failed = after.failedTrackIds;
+    if (after.upcomingTrack && !failed.has(after.upcomingTrack.id)) {
+      return after.upcomingTrack;
+    }
+    const rest = after.queue.filter((t) => !failed.has(t.id));
+    if (rest.length > 0) return rest[0] ?? null;
+    return null;
+  }, []);
+
+  /**
+   * Core handoff: inject next URL into the SAME node, then sync Zustand.
+   * Independent of React re-renders — safe in hidden tabs.
+   */
+  const advancePersistent = useCallback(
+    (reason: string) => {
+      if (!streamingAllowed) return;
+      if (endingRef.current || handoffFiredRef.current) return;
+      const state = useAudioStore.getState();
+      if (state.newsBulletinActive) return;
+
+      const next = peekNextTrack();
+      if (!next) {
+        // Fall back to store reshuffle; still keep the same media node.
+        endingRef.current = true;
+        handoffFiredRef.current = true;
+        skipBenchAtRef.current = performance.now();
+        state.nextTrack({ skipNewsCheck: false });
+        endingRef.current = false;
+        handoffFiredRef.current = false;
+        return;
+      }
+
+      // News must win BEFORE we touch the media node — otherwise we'd inject
+      // the next song and then pause for a bulletin.
+      if (
+        isClientNewsBulletinEnabled() &&
+        state.isPlaying &&
+        !state.newsBulletinActive &&
+        shouldInjectNewsBulletin(
+          state.musicPlayedSeconds,
+          state.lastBulletinAtMusicSeconds,
+          state.newsBulletinIntervalSec,
+        )
+      ) {
+        endingRef.current = true;
+        handoffFiredRef.current = true;
+        useAudioStore.getState().nextTrack({ skipNewsCheck: false });
+        endingRef.current = false;
+        handoffFiredRef.current = false;
+        return;
+      }
+
+      endingRef.current = true;
+      handoffFiredRef.current = true;
+      skipBenchAtRef.current = performance.now();
+      trackDeadlineAtRef.current = 0;
+      benchLog("persistent:advance", { reason, nextId: next.id });
+
+      // 1) Keep silent keep-alive + wake lock alive across the swap.
+      startSilentKeepAlive();
+      requestBroadcastWakeLock();
+
+      // 2) Inject source on the permanent node BEFORE React state updates.
+      lastYoutubeIdRef.current = next.youtubeId;
+      lastSrcRef.current = youtubeSrc(next.youtubeId);
+      injectSourceOnPersistentNode(playerRef.current, next.youtubeId);
+      setPlayerSrc(lastSrcRef.current);
+
+      // 3) Unmute + play immediately on the same instance.
+      try {
+        const media = playerRef.current;
+        if (media) {
+          media.muted = false;
+          media.volume = Math.min(
+            1,
+            Math.max(0, useAudioStore.getState().volume),
+          );
+        }
+        const yt = mediaEl();
+        yt?.api?.unMute?.();
+        yt?.api?.setVolume?.(
+          Math.round(
+            Math.min(1, Math.max(0, useAudioStore.getState().volume)) * 100,
+          ),
+        );
+        yt?.api?.playVideo?.();
+      } catch {
+        // forcePlay below still runs.
+      }
+      forcePlayMedia(playerRef.current);
+
+      // 4) Sync store for UI — skip mediaPlayNow (already playing) + news check
+      //    (already handled above).
+      useAudioStore.getState().nextTrack({
+        skipNewsCheck: true,
+        skipMediaPlay: true,
+      });
+
+      // Confirm the store landed on the track we injected.
+      const landed = useAudioStore.getState().currentTrack;
+      if (landed && landed.youtubeId !== lastYoutubeIdRef.current) {
+        lastYoutubeIdRef.current = landed.youtubeId;
+        lastSrcRef.current = youtubeSrc(landed.youtubeId);
+        injectSourceOnPersistentNode(playerRef.current, landed.youtubeId);
+        setPlayerSrc(lastSrcRef.current);
+        forcePlayMedia(playerRef.current);
+      }
+
+      durationRef.current = 0;
+      lastTickMediaTimeRef.current = 0;
+      endingRef.current = false;
+      handoffFiredRef.current = false;
+    },
+    [mediaEl, peekNextTrack, streamingAllowed],
+  );
+
+  const advancePersistentRef = useRef(advancePersistent);
+  advancePersistentRef.current = advancePersistent;
+
   const flushStalledTrackIfOverdue = useCallback((): boolean => {
     const state = useAudioStore.getState();
-    if (!state.isPlaying && !state.newsBulletinActive) return false;
-    if (state.newsBulletinActive) return false;
+    if (!state.isPlaying || state.newsBulletinActive) return false;
     if (!streamingAllowed) return false;
     if (endingRef.current || handoffFiredRef.current) return false;
 
@@ -238,330 +378,127 @@ export default function AudioEngine({
     if (Date.now() < deadline + DEADLINE_OVERDUE_MS) return false;
 
     benchLog("deadline:flush", { trackId, overdueMs: Date.now() - deadline });
-    endingRef.current = true;
-    handoffFiredRef.current = true;
-    skipBenchAtRef.current = performance.now();
-    trackDeadlineAtRef.current = 0;
-    // Flush any stuck media buffer so the next promote starts clean.
-    const media = slotRef(liveSlotRef.current).current;
-    if (media) {
+    advancePersistentRef.current("deadline");
+    return true;
+  }, [streamingAllowed]);
+
+  const attachNativeEnded = useCallback(() => {
+    nativeEndedCleanupRef.current?.();
+    nativeEndedCleanupRef.current = null;
+
+    const media = playerRef.current;
+    if (!media) return;
+
+    const onNativeEnded = () => {
+      if (!streamingAllowed) return;
+      if (endingRef.current || handoffFiredRef.current) return;
+      if (useAudioStore.getState().newsBulletinActive) return;
+      benchLog("native:ended", {
+        trackId: useAudioStore.getState().currentTrack?.id,
+      });
+      // Pull next URL from raw queue and inject — no React paint wait.
+      advancePersistentRef.current("ended");
+    };
+
+    media.addEventListener("ended", onNativeEnded, { capture: true });
+    try {
+      media.onended = onNativeEnded;
+    } catch {
+      // Some embeds expose a read-only onended.
+    }
+
+    const yt = media as YoutubePlayerElement;
+    const onYtState = (data: number) => {
+      if (data === 0) onNativeEnded();
+    };
+    try {
+      yt.api?.addEventListener?.("onStateChange", onYtState);
+    } catch {
+      // Optional iframe API path.
+    }
+
+    nativeEndedCleanupRef.current = () => {
+      media.removeEventListener("ended", onNativeEnded, {
+        capture: true,
+      } as EventListenerOptions);
       try {
-        media.pause();
+        if (media.onended === onNativeEnded) media.onended = null;
       } catch {
         // ignore
       }
+      try {
+        yt.api?.removeEventListener?.("onStateChange", onYtState);
+      } catch {
+        // ignore
+      }
+    };
+  }, [streamingAllowed]);
+
+  const parkMutedWarmAtStart = useCallback(() => {
+    if (!allowMutedWarmRef.current) return;
+    const media = playerRef.current;
+    if (!media) return;
+    try {
+      media.currentTime = 0;
+    } catch {
+      // ignore
     }
-    state.ensureUpcoming();
-    state.advanceFromBackground(trackId);
-    // nextTrack already swapped — allow future handoffs.
-    endingRef.current = false;
-    handoffFiredRef.current = false;
-    return true;
-  }, [slotRef, streamingAllowed]);
+    try {
+      (media as YoutubePlayerElement).api?.seekTo?.(0, true);
+    } catch {
+      // ignore
+    }
+    syncPlayerAudioState(mediaEl(), { volume: 0, muted: true });
+    if (media.paused) forcePlayMedia(media);
+  }, [mediaEl]);
 
-  const attachNativeEnded = useCallback(
-    (slot: PlayerSlot) => {
-      nativeEndedCleanupsRef.current[slot]?.();
-      nativeEndedCleanupsRef.current[slot] = undefined;
+  const warmMuted = useCallback(() => {
+    if (!allowMutedWarmRef.current) return;
+    const media = playerRef.current;
+    if (!media) return;
+    syncPlayerAudioState(mediaEl(), { volume: 0, muted: true });
+    if (media.paused) forcePlayMedia(media);
+  }, [mediaEl]);
 
-      const media = slotRef(slot).current;
-      if (!media) return;
-
-      const onNativeEnded = () => {
-        if (slot !== liveSlotRef.current) return;
-        if (!streamingAllowed) return;
-        if (endingRef.current || handoffFiredRef.current) return;
-        const state = useAudioStore.getState();
-        if (state.newsBulletinActive) return;
-        const trackId = state.currentTrack?.id ?? null;
-        benchLog("native:ended", { trackId, slot });
-        endingRef.current = true;
-        handoffFiredRef.current = true;
-        skipBenchAtRef.current = performance.now();
-        state.ensureUpcoming();
-        state.nextTrack();
-        if (useAudioStore.getState().newsBulletinActive) {
-          endingRef.current = false;
-          handoffFiredRef.current = false;
-        }
-        trackDeadlineAtRef.current = 0;
-      };
-
-      // Hardware-level HTMLMediaElement ended — capture so nothing can swallow it.
-      // Browsers must not rely on React props / useEffect / setTimeout for queue advance.
-      media.addEventListener("ended", onNativeEnded, { capture: true });
-      try {
-        media.onended = onNativeEnded;
-      } catch {
-        // Some embeds expose a read-only onended.
-      }
-
-      const yt = media as YoutubePlayerElement;
-      const onYtState = (data: number) => {
-        // YouTube iframe API: ENDED = 0
-        if (data === 0) onNativeEnded();
-      };
-      try {
-        yt.api?.addEventListener?.("onStateChange", onYtState);
-      } catch {
-        // Optional iframe API path.
-      }
-
-      nativeEndedCleanupsRef.current[slot] = () => {
-        media.removeEventListener("ended", onNativeEnded, {
-          capture: true,
-        } as EventListenerOptions);
-        try {
-          if (media.onended === onNativeEnded) media.onended = null;
-        } catch {
-          // ignore
-        }
-        try {
-          yt.api?.removeEventListener?.("onStateChange", onYtState);
-        } catch {
-          // ignore
-        }
-      };
-    },
-    [slotRef, streamingAllowed],
-  );
-
-  const syncSlotAudio = useCallback(
-    (slot: PlayerSlot) => {
-      const isLive = slot === liveSlotRef.current;
-      // Only the live slot is audible, and only while isPlaying — keeps muted
-      // warm-up silent until Play runs inside a user gesture.
-      const audible = isLive && useAudioStore.getState().isPlaying;
-      syncPlayerAudioState(playerEl(slot), {
-        volume: audible ? volume : 0,
-        muted: !audible,
-      });
-    },
-    [playerEl, volume],
-  );
-
-  const syncAllSlotsAudio = useCallback(() => {
-    syncSlotAudio("a");
-    syncSlotAudio("b");
-  }, [syncSlotAudio]);
-
-  const pauseSlot = useCallback(
-    (slot: PlayerSlot) => {
-      const media = slotRef(slot).current;
-      if (media && !media.paused) {
-        media.pause();
-      }
-      syncSlotAudio(slot);
-    },
-    [slotRef, syncSlotAudio],
-  );
-
-  const runSlotSync = useCallback(
-    (slot: PlayerSlot = liveSlotRef.current) => {
-      syncSlotAudio(slot);
-
-      if (!broadcastEnhance || slot !== liveSlotRef.current) return;
-
-      const quality = applyBroadcastQuality(playerEl(slot));
-      if (quality) {
-        useAudioStore.getState().setStreamQuality(quality);
-      }
-    },
-    [broadcastEnhance, playerEl, syncSlotAudio],
-  );
-
-  const scheduleSlotSync = useCallback(
-    (slot: PlayerSlot = liveSlotRef.current) => {
-      runSlotSync(slot);
-      window.setTimeout(() => runSlotSync(slot), 500);
-      window.setTimeout(() => runSlotSync(slot), 2000);
-    },
-    [runSlotSync],
-  );
-
-  const emitPlayingBench = useCallback(
-    (slot: PlayerSlot, promoted = false) => {
-      if (slot !== liveSlotRef.current) return;
-      if (playingEmittedForSkipRef.current === skipBenchAtRef.current) return;
-      playingEmittedForSkipRef.current = skipBenchAtRef.current;
-      const lagMs = skipBenchAtRef.current
-        ? Math.round(performance.now() - skipBenchAtRef.current)
-        : 0;
-      benchLog("playing", {
-        trackId: useAudioStore.getState().currentTrack?.id,
-        lagMs,
-        slot,
-        promoted,
-      });
-      scheduleSlotSync(slot);
-    },
-    [scheduleSlotSync],
-  );
-
-  const tryPlaySlot = useCallback(
-    (slot: PlayerSlot) => {
-      const media = slotRef(slot).current;
-      if (!media || slot !== liveSlotRef.current) return false;
-      syncSlotAudio(slot);
-      if (!media.paused) return true;
-      // Always attempt play — gating on readyState missed gesture-safe resumes
-      // on mobile where the element is loaded but readyState is still low.
-      // forcePlayMedia catches NotAllowedError and re-asserts keep-alive + play.
-      return forcePlayMedia(media as YoutubePlayerElement);
-    },
-    [slotRef, syncSlotAudio],
-  );
-
-  const awaitPromotedPlayback = useCallback(
-    (slot: PlayerSlot) => {
-      promoteCleanupRef.current?.();
-      promoteCleanupRef.current = null;
-
-      const started = performance.now();
-      const media = slotRef(slot).current;
-
-      const finish = (promoted: boolean) => {
-        if (slot !== liveSlotRef.current) return;
-        emitPlayingBench(slot, promoted);
-      };
-
-      if (tryPlaySlot(slot)) {
-        finish(true);
-        return;
-      }
-
-      const onReady = () => {
-        if (slot !== liveSlotRef.current) return;
-        tryPlaySlot(slot);
-        if (!media?.paused) finish(true);
-      };
-
-      media?.addEventListener("canplay", onReady, { once: true });
-      media?.addEventListener("playing", onReady, { once: true });
-
-      const pollId = window.setInterval(() => {
-        if (slot !== liveSlotRef.current) {
-          window.clearInterval(pollId);
-          return;
-        }
-        if (tryPlaySlot(slot)) {
-          window.clearInterval(pollId);
-          finish(true);
-          return;
-        }
-        if (performance.now() - started >= PROMOTED_PLAY_MAX_WAIT_MS) {
-          window.clearInterval(pollId);
-        }
-      }, PROMOTED_PLAY_POLL_MS);
-
-      promoteCleanupRef.current = () => {
-        window.clearInterval(pollId);
-        media?.removeEventListener("canplay", onReady);
-        media?.removeEventListener("playing", onReady);
-      };
-    },
-    [emitPlayingBench, slotRef, tryPlaySlot],
-  );
-
-  const promoteHandlersRef = useRef({
-    tryPlaySlot,
-    emitPlayingBench,
-    awaitPromotedPlayback,
-    runSlotSync,
-    pauseSlot,
-    syncAllSlotsAudio,
-  });
-  promoteHandlersRef.current = {
-    tryPlaySlot,
-    emitPlayingBench,
-    awaitPromotedPlayback,
-    runSlotSync,
-    pauseSlot,
-    syncAllSlotsAudio,
-  };
-
-  /**
-   * Gesture-safe play: find the slot that already holds currentTrack (often the
-   * muted cue warm-up), unmute + play() in this stack.
-   * When the cued slot is already muted-playing, unmute alone is audible ASAP —
-   * same pattern that makes Next seamless on mobile.
-   */
+  /** Gesture-safe play on the single persistent node. */
   const playCurrentInGesture = useCallback(() => {
     if (!streamingAllowed) return false;
-    const trackId = useAudioStore.getState().currentTrack?.id;
-    if (!trackId || !useAudioStore.getState().isPlaying) return false;
+    const track = useAudioStore.getState().currentTrack;
+    if (!track || !useAudioStore.getState().isPlaying) return false;
 
-    let target: PlayerSlot | null = null;
-    if (slotAIdRef.current === trackId) target = "a";
-    else if (slotBIdRef.current === trackId) target = "b";
-
-    // Never start the wrong slot — wait for the track effect to load a new src.
-    if (!target) return false;
-
-    if (target !== liveSlotRef.current) {
-      const demoted = otherSlot(target);
-      liveSlotRef.current = target;
-      setLiveSlot(target);
-      pauseSlot(demoted);
-
-      const upcomingId = useAudioStore.getState().upcomingTrack?.id ?? null;
-      if (demoted === "a") {
-        slotAIdRef.current = upcomingId;
-        setSlotAId(upcomingId);
-        if (upcomingId) slotReadyRef.current.a = null;
-      } else {
-        slotBIdRef.current = upcomingId;
-        setSlotBId(upcomingId);
-        if (upcomingId) slotReadyRef.current.b = null;
-      }
-      lastPromotedTrackRef.current = trackId;
-    }
-
-    const slot = target;
-    const media = slotRef(slot).current;
-    if (!media) return false;
-
-    // Real playback — unmute + play() FIRST inside the gesture token.
-    // Defer quality sync / warm-flag work so secondary hooks cannot stall audio.
     allowMutedWarmRef.current = false;
     setCueWarmActive(false);
     startSilentKeepAlive();
+    requestBroadcastWakeLock();
+
+    const media = playerRef.current;
+    if (!media) return false;
+
+    // Ensure the persistent node holds this track (src swap, never remount).
+    if (lastYoutubeIdRef.current !== track.youtubeId) {
+      lastYoutubeIdRef.current = track.youtubeId;
+      lastSrcRef.current = youtubeSrc(track.youtubeId);
+      injectSourceOnPersistentNode(media, track.youtubeId);
+      setPlayerSrc(lastSrcRef.current);
+    }
 
     try {
-      const yt = media as YoutubePlayerElement;
       media.muted = false;
       media.volume = Math.min(1, Math.max(0, volume));
+      const yt = media as YoutubePlayerElement;
       yt.api?.unMute?.();
       yt.api?.setVolume?.(Math.round(Math.min(1, Math.max(0, volume)) * 100));
     } catch {
-      // Fall through to sync helpers.
+      // sync below
     }
 
-    forcePlayMedia(media as YoutubePlayerElement);
-
-    // Non-blocking: polish audio routing after play has been requested.
+    forcePlayMedia(media);
     queueMicrotask(() => {
-      syncAllSlotsAudio();
-      syncSlotAudio(slot);
-      if (media.paused) {
-        forcePlayMedia(media as YoutubePlayerElement);
-        awaitPromotedPlayback(slot);
-      } else {
-        emitPlayingBench(slot, true);
-      }
+      syncAudio();
+      if (media.paused) forcePlayMedia(media);
     });
-
     return true;
-  }, [
-    awaitPromotedPlayback,
-    emitPlayingBench,
-    pauseSlot,
-    slotRef,
-    streamingAllowed,
-    syncAllSlotsAudio,
-    syncSlotAudio,
-    volume,
-  ]);
+  }, [streamingAllowed, syncAudio, volume]);
 
   useEffect(() => {
     registerMediaPlayNow(() => playCurrentInGesture());
@@ -569,269 +506,50 @@ export default function AudioEngine({
   }, [playCurrentInGesture]);
 
   useEffect(() => {
-    return () => {
-      promoteCleanupRef.current?.();
-    };
+    registerPersistentAdvance((reason) => advancePersistentRef.current(reason));
+    return () => registerPersistentAdvance(null);
   }, []);
 
-  const warmSlotMuted = useCallback(
-    (slot: PlayerSlot) => {
-      if (!allowMutedWarmRef.current) return;
-      const media = slotRef(slot).current;
-      if (!media) return;
-      syncPlayerAudioState(playerEl(slot), { volume: 0, muted: true });
-      if (media.paused) {
-        forcePlayMedia(media as YoutubePlayerElement);
-      }
-    },
-    [playerEl, slotRef],
-  );
-
-  /**
-   * Rewind the cued live slot to 0 while staying muted-playing.
-   * Pausing here used to force a cold play() on the next tap (multi-second delay).
-   */
-  const parkMutedWarmAtStart = useCallback(
-    (slot: PlayerSlot = liveSlotRef.current) => {
-      if (!allowMutedWarmRef.current) return;
-      const media = slotRef(slot).current;
-      if (!media) return;
-
-      try {
-        media.currentTime = 0;
-      } catch {
-        // Some embeds reject seeks until buffered.
-      }
-      try {
-        (media as YoutubePlayerElement).api?.seekTo?.(0, true);
-      } catch {
-        // Optional YouTube iframe API path.
-      }
-
-      syncPlayerAudioState(playerEl(slot), { volume: 0, muted: true });
-      if (media.paused) {
-        void media.play().catch(() => {});
-        try {
-          (media as YoutubePlayerElement).api?.playVideo?.();
-        } catch {
-          // Optional iframe API path.
-        }
-      }
-      useAudioStore.getState().setPlayedSeconds(0);
-    },
-    [playerEl, slotRef],
-  );
-
-  useEffect(() => {
-    if (!currentTrack) {
-      slotAIdRef.current = null;
-      slotBIdRef.current = null;
-      setSlotAId(null);
-      setSlotBId(null);
-      liveSlotRef.current = "a";
-      setLiveSlot("a");
-      return;
-    }
-
-    const live = liveSlotRef.current;
-    const prefetch = otherSlot(live);
-    const prefetchId =
-      prefetch === "a" ? slotAIdRef.current : slotBIdRef.current;
-
-    if (
-      currentTrack.id === prefetchId &&
-      prefetchId &&
-      slotReadyRef.current[prefetch] === prefetchId
-    ) {
-      if (lastPromotedTrackRef.current === currentTrack.id) return;
-      lastPromotedTrackRef.current = currentTrack.id;
-
-      benchLog("buffer:promote", {
-        trackId: currentTrack.id,
-        fromSlot: prefetch,
-        prefetchReady: true,
-      });
-      const nextLive = prefetch;
-      const demotedSlot = otherSlot(nextLive);
-      liveSlotRef.current = nextLive;
-      setLiveSlot(nextLive);
-
-      pauseSlot(demotedSlot);
-
-      const nextPrefetch = otherSlot(nextLive);
-      if (nextPrefetch === "a") {
-        slotAIdRef.current = upcomingTrack?.id ?? null;
-        setSlotAId(upcomingTrack?.id ?? null);
-        if (upcomingTrack?.id) slotReadyRef.current.a = null;
-      } else {
-        slotBIdRef.current = upcomingTrack?.id ?? null;
-        setSlotBId(upcomingTrack?.id ?? null);
-        if (upcomingTrack?.id) slotReadyRef.current.b = null;
-      }
-
-      queueMicrotask(() => {
-        const handlers = promoteHandlersRef.current;
-        startSilentKeepAlive();
-        const attempt = () => {
-          startSilentKeepAlive();
-          handlers.syncAllSlotsAudio();
-          handlers.runSlotSync(nextLive);
-          if (handlers.tryPlaySlot(nextLive)) {
-            handlers.emitPlayingBench(nextLive, true);
-            return;
-          }
-          handlers.awaitPromotedPlayback(nextLive);
-        };
-        attempt();
-        requestAnimationFrame(() => requestAnimationFrame(attempt));
-      });
-      return;
-    }
-
-    if (lastPromotedTrackRef.current !== currentTrack.id) {
-      lastPromotedTrackRef.current = null;
-    }
-
-    benchLog("buffer:load", {
-      trackId: currentTrack.id,
-      liveSlot: live,
-      prefetchReady: slotReadyRef.current[prefetch] === prefetchId,
-    });
-
-    const liveId = currentTrack.id;
-    const prefetchTrackId = upcomingTrack?.id ?? null;
-    let liveTrackChanged = false;
-
-    if (live === "a") {
-      if (slotAIdRef.current !== liveId) {
-        slotAIdRef.current = liveId;
-        setSlotAId(liveId);
-        slotReadyRef.current.a = null;
-        liveTrackChanged = true;
-      }
-      if (slotBIdRef.current !== prefetchTrackId) {
-        slotBIdRef.current = prefetchTrackId;
-        setSlotBId(prefetchTrackId);
-        slotReadyRef.current.b = null;
-      }
-    } else {
-      if (slotBIdRef.current !== liveId) {
-        slotBIdRef.current = liveId;
-        setSlotBId(liveId);
-        slotReadyRef.current.b = null;
-        liveTrackChanged = true;
-      }
-      if (slotAIdRef.current !== prefetchTrackId) {
-        slotAIdRef.current = prefetchTrackId;
-        setSlotAId(prefetchTrackId);
-        slotReadyRef.current.a = null;
-      }
-    }
-
-    if (liveTrackChanged) {
-      pauseSlot(otherSlot(live));
-      // Inject + activate immediately — no dependency on a manual skip.
-      // Flush any pending tap so mobile cold-starts unmute in the gesture window.
-      queueMicrotask(() => {
-        promoteHandlersRef.current.syncAllSlotsAudio();
-        if (useAudioStore.getState().isPlaying) {
-          if (!flushPendingMediaPlay()) {
-            promoteHandlersRef.current.awaitPromotedPlayback(live);
-          }
-        } else if (allowMutedWarmRef.current) {
-          warmSlotMuted(live);
-          warmSlotMuted(otherSlot(live));
-        }
-      });
-      requestAnimationFrame(() => {
-        if (useAudioStore.getState().isPlaying) {
-          flushPendingMediaPlay();
-        }
-      });
-    } else if (useAudioStore.getState().isPlaying) {
-      // Same live id but engine just mounted / recovered — force buffer activation.
-      queueMicrotask(() => {
-        flushPendingMediaPlay();
-      });
-    }
-  }, [currentTrack?.id, upcomingTrack?.id, pauseSlot, warmSlotMuted]);
-
+  // Keep the permanent src in sync when the store changes (manual next / playTrack).
+  // Never unmount — only swap source on the existing node.
   useEffect(() => {
     if (!currentTrack) return;
+    mountedOnceRef.current = true;
+    const url = youtubeSrc(currentTrack.youtubeId);
+    if (lastYoutubeIdRef.current === currentTrack.youtubeId) return;
+
+    lastYoutubeIdRef.current = currentTrack.youtubeId;
+    lastSrcRef.current = url;
+    setPlayerSrc(url);
+    injectSourceOnPersistentNode(playerRef.current, currentTrack.youtubeId);
+
     endingRef.current = false;
     handoffFiredRef.current = false;
     consecutiveErrors.current = 0;
     durationRef.current = 0;
-    lastProgressUiWrite.current = 0;
     lastTickMediaTimeRef.current = 0;
     trackDeadlineAtRef.current = 0;
-    trackDeadlineIdRef.current = currentTrack.id;
-    skipBenchAtRef.current = performance.now();
-    useAudioStore.getState().setPlayedSeconds(0);
-    useAudioStore.getState().setDuration(0);
-    useAudioStore.getState().setStreamQuality(null);
-    benchLog("track:change", {
-      trackId: currentTrack.id,
-      title: currentTrack.title,
-    });
-  }, [currentTrack?.id, currentTrack?.title]);
 
-  const seekRequestId = useAudioStore((s) => s.seekRequestId);
-  const pendingSeekSeconds = useAudioStore((s) => s.pendingSeekSeconds);
-
-  useEffect(() => {
-    if (pendingSeekSeconds == null) return;
-    // User picked a position — never rewind the muted cue warm-up back to 0.
-    allowMutedWarmRef.current = false;
-    setCueWarmActive(false);
-
-    const media = slotRef(liveSlotRef.current).current;
-    const target = Math.max(0, pendingSeekSeconds);
-
-    const applySeek = () => {
-      if (!media) return;
-      try {
-        const max =
-          Number.isFinite(media.duration) && media.duration > 0
-            ? media.duration - 0.15
-            : target;
-        media.currentTime = Math.min(target, Math.max(0, max));
-      } catch {
-        // Some embeds reject seeks until buffered.
-      }
-      const yt = media as YoutubePlayerElement;
-      try {
-        yt.api?.seekTo?.(target, true);
-      } catch {
-        // Optional YouTube iframe API path.
-      }
-    };
-
-    applySeek();
-    const retryId = window.requestAnimationFrame(applySeek);
-    lastProgressUiWrite.current = performance.now();
-    useAudioStore.getState().setPlayedSeconds(target);
-    useAudioStore.getState().clearSeekRequest();
-    return () => window.cancelAnimationFrame(retryId);
-  }, [seekRequestId, pendingSeekSeconds, slotRef]);
-
-  useEffect(() => {
-    if (!streamingAllowed || !currentTrack) return;
-    useAudioStore.getState().ensureUpcoming();
-  }, [streamingAllowed, currentTrack?.id]);
-
-  useEffect(() => {
-    if (!currentTrack) {
+    if (useAudioStore.getState().isPlaying) {
+      allowMutedWarmRef.current = false;
+      setCueWarmActive(false);
+      startSilentKeepAlive();
+      requestBroadcastWakeLock();
+      queueMicrotask(() => {
+        syncAudio();
+        if (!tryPlay()) {
+          // Retry once the iframe finishes loading the new id.
+          window.setTimeout(() => tryPlay(), 120);
+          window.setTimeout(() => tryPlay(), 400);
+        }
+        flushPendingMediaPlay();
+      });
+    } else {
       allowMutedWarmRef.current = true;
       setCueWarmActive(true);
-      return;
+      queueMicrotask(() => warmMuted());
     }
-    // New cued track while paused: allow a fresh muted buffer pass.
-    if (!useAudioStore.getState().isPlaying) {
-      allowMutedWarmRef.current = true;
-      setCueWarmActive(true);
-    }
-  }, [currentTrack?.id]);
+  }, [currentTrack?.id, currentTrack?.youtubeId, syncAudio, tryPlay, warmMuted]);
 
   useEffect(() => {
     if (!isPlaying) {
@@ -841,90 +559,78 @@ export default function AudioEngine({
         streamingAllowed &&
         currentTrack
       ) {
-        // Pre-start muted (allowed without a user gesture) so Play can unmute
-        // inside the tap handler instead of waiting on a cold YouTube buffer.
-        warmSlotMuted(liveSlotRef.current);
-        warmSlotMuted(otherSlot(liveSlotRef.current));
+        warmMuted();
         return;
       }
-      pauseSlot("a");
-      pauseSlot("b");
+      try {
+        playerRef.current?.pause();
+      } catch {
+        // ignore
+      }
+      syncAudio();
       return;
     }
     allowMutedWarmRef.current = false;
     setCueWarmActive(false);
     if (!streamingAllowed) return;
     startSilentKeepAlive();
-    syncAllSlotsAudio();
-    const slot = liveSlotRef.current;
-    if (!tryPlaySlot(slot)) {
-      awaitPromotedPlayback(slot);
+    requestBroadcastWakeLock();
+    syncAudio();
+    if (!tryPlay()) {
+      window.setTimeout(() => tryPlay(), 80);
     }
   }, [
     isPlaying,
     streamingAllowed,
     currentTrack,
-    liveSlot,
     cueWarmActive,
-    pauseSlot,
-    syncAllSlotsAudio,
-    tryPlaySlot,
-    awaitPromotedPlayback,
-    warmSlotMuted,
+    syncAudio,
+    tryPlay,
+    warmMuted,
   ]);
 
   useEffect(() => {
-    syncAllSlotsAudio();
-  }, [volume, syncAllSlotsAudio]);
+    syncAudio();
+  }, [volume, syncAudio]);
 
   useEffect(() => {
     if (!broadcastEnhance || !isPlaying) return;
-    runSlotSync();
-    const id = window.setInterval(() => runSlotSync(), QUALITY_REASSERT_MS);
+    const run = () => {
+      syncAudio();
+      const quality = applyBroadcastQuality(mediaEl());
+      if (quality) useAudioStore.getState().setStreamQuality(quality);
+    };
+    run();
+    const id = window.setInterval(run, QUALITY_REASSERT_MS);
     return () => window.clearInterval(id);
-  }, [broadcastEnhance, isPlaying, runSlotSync, liveSlot, currentTrack?.id]);
+  }, [broadcastEnhance, isPlaying, mediaEl, syncAudio, currentTrack?.id]);
+
+  // Seek requests
+  useEffect(() => {
+    if (pendingSeekSeconds == null) return;
+    const media = playerRef.current;
+    if (!media) return;
+    const target = pendingSeekSeconds;
+    try {
+      media.currentTime = target;
+    } catch {
+      // ignore
+    }
+    try {
+      (media as YoutubePlayerElement).api?.seekTo?.(target, true);
+    } catch {
+      // ignore
+    }
+    useAudioStore.getState().setPlayedSeconds(target);
+    useAudioStore.getState().clearSeekRequest();
+  }, [seekRequestId, pendingSeekSeconds]);
 
   useEffect(() => {
-    if (!upcomingTrack || !streamingAllowed) return;
-    if (!isPlaying && !allowMutedWarmRef.current) return;
-    if (prefetchedIdRef.current === upcomingTrack.id) return;
-    prefetchedIdRef.current = upcomingTrack.id;
-
-    const origins = [
-      "https://www.youtube.com",
-      "https://i.ytimg.com",
-      "https://www.googlevideo.com",
-      "https://www.youtube-nocookie.com",
-    ];
-    for (const href of origins) {
-      if (document.querySelector(`link[rel="preconnect"][href="${href}"]`)) continue;
-      const link = document.createElement("link");
-      link.rel = "preconnect";
-      link.href = href;
-      document.head.appendChild(link);
-    }
-
-    benchLog("prefetch:start", { trackId: upcomingTrack.id });
-  }, [upcomingTrack?.id, upcomingTrack?.youtubeId, streamingAllowed, isPlaying]);
-
-  const advanceNow = useCallback(() => {
-    if (endingRef.current) return;
-    if (useAudioStore.getState().newsBulletinActive) return;
-    endingRef.current = true;
-    handoffFiredRef.current = true;
-    consecutiveErrors.current = 0;
-    skipBenchAtRef.current = performance.now();
-    benchLog("skip:request");
-    useAudioStore.getState().nextTrack();
-    if (useAudioStore.getState().newsBulletinActive) {
-      endingRef.current = false;
-      handoffFiredRef.current = false;
-    }
-  }, []);
+    if (!streamingAllowed || !currentTrack) return;
+    useAudioStore.getState().ensureUpcoming();
+  }, [streamingAllowed, currentTrack?.id]);
 
   const heartbeatRef = useRef<QueueHeartbeatController | null>(null);
-  const advanceNowRef = useRef(advanceNow);
-  advanceNowRef.current = advanceNow;
   const lastHeartbeatSyncAt = useRef(0);
 
   const syncQueueHeartbeat = useCallback(
@@ -932,7 +638,6 @@ export default function AudioEngine({
       const heartbeat = heartbeatRef.current;
       if (!heartbeat) return;
       const now = performance.now();
-      // Throttle routine syncs; always allow forced sync (track change / visibility).
       if (!force && now - lastHeartbeatSyncAt.current < 250) return;
       lastHeartbeatSyncAt.current = now;
 
@@ -940,7 +645,7 @@ export default function AudioEngine({
       const trackId = state.currentTrack?.id ?? null;
       const durationSec =
         durationRef.current > 0 ? durationRef.current : state.duration;
-      const media = slotRef(liveSlotRef.current).current;
+      const media = playerRef.current;
       const played =
         typeof playedSec === "number" && Number.isFinite(playedSec)
           ? playedSec
@@ -965,10 +670,9 @@ export default function AudioEngine({
         armTrackDeadline(played, durationSec, trackId);
       }
     },
-    [armTrackDeadline, slotRef, streamingAllowed],
+    [armTrackDeadline, streamingAllowed],
   );
 
-  // Isolated Worker heartbeat — wall-clock deadlines survive background-tab freezes.
   useEffect(() => {
     const heartbeat = createQueueHeartbeat({
       onAdvance: (trackId) => {
@@ -976,18 +680,7 @@ export default function AudioEngine({
         if (!streamingAllowed) return;
         if (state.newsBulletinActive) return;
         if (state.currentTrack?.id !== trackId) return;
-        if (endingRef.current || handoffFiredRef.current) return;
-        benchLog("heartbeat:advance", { trackId });
-        endingRef.current = true;
-        handoffFiredRef.current = true;
-        skipBenchAtRef.current = performance.now();
-        trackDeadlineAtRef.current = 0;
-        // Store path — does not depend on React effects / setTimeout.
-        state.advanceFromBackground(trackId);
-        if (useAudioStore.getState().newsBulletinActive) {
-          endingRef.current = false;
-          handoffFiredRef.current = false;
-        }
+        advancePersistentRef.current("heartbeat");
       },
       onPrefetch: (trackId) => {
         const state = useAudioStore.getState();
@@ -999,11 +692,12 @@ export default function AudioEngine({
     syncQueueHeartbeat(undefined, true);
 
     const onVisibility = () => {
+      reassertBroadcastWakeLock();
+      startSilentKeepAlive();
       syncQueueHeartbeat(undefined, true);
       if (document.visibilityState !== "visible") return;
       if (!streamingAllowed) return;
 
-      // Absolute deadline catch-up: if JS froze past the track end, jump now.
       if (flushStalledTrackIfOverdue()) {
         flushPendingMediaPlay();
         return;
@@ -1012,7 +706,7 @@ export default function AudioEngine({
       const state = useAudioStore.getState();
       if (!state.isPlaying) return;
 
-      const media = slotRef(liveSlotRef.current).current;
+      const media = playerRef.current;
       const dur = durationRef.current;
       if (
         media &&
@@ -1021,13 +715,10 @@ export default function AudioEngine({
           (Number.isFinite(media.currentTime) &&
             dur - media.currentTime <= HIDDEN_HANDOFF_SEC))
       ) {
-        if (!endingRef.current && !handoffFiredRef.current) {
-          state.ensureUpcoming();
-          advanceNowRef.current();
-        }
+        advancePersistentRef.current("visibility");
       } else {
         flushPendingMediaPlay();
-        tryPlaySlot(liveSlotRef.current);
+        tryPlay();
       }
     };
 
@@ -1041,17 +732,16 @@ export default function AudioEngine({
     };
   }, [
     flushStalledTrackIfOverdue,
-    slotRef,
     streamingAllowed,
     syncQueueHeartbeat,
-    tryPlaySlot,
+    tryPlay,
   ]);
 
   useEffect(() => {
     syncQueueHeartbeat(0, true);
   }, [currentTrack?.id, isPlaying, streamingAllowed, syncQueueHeartbeat]);
 
-  // OS Media Session keep-alive — marks RithmGen as a priority background audio worker.
+  // OS Media Session — permanent background-audio classification.
   useEffect(() => {
     if (!currentTrack) {
       syncMediaSessionPlaybackState("none");
@@ -1064,7 +754,7 @@ export default function AudioEngine({
   }, [currentTrack, isPlaying, streamingAllowed]);
 
   useEffect(() => {
-    const handlers = {
+    return bindMediaSessionActions({
       onPlay: () => {
         const state = useAudioStore.getState();
         if (!state.isPlaying) state.togglePlay();
@@ -1073,26 +763,24 @@ export default function AudioEngine({
         const state = useAudioStore.getState();
         if (state.isPlaying) state.togglePlay();
       },
-      onNext: () => useAudioStore.getState().nextTrack(),
+      onNext: () => {
+        // Manual next — still use persistent inject path.
+        advancePersistentRef.current("mediasession-next");
+      },
       onPrevious: () => useAudioStore.getState().previousTrack(),
-    };
-    return bindMediaSessionActions(handlers);
+    });
   }, []);
 
   useEffect(() => {
     return () => {
-      for (const slot of ["a", "b"] as PlayerSlot[]) {
-        nativeEndedCleanupsRef.current[slot]?.();
-        nativeEndedCleanupsRef.current[slot] = undefined;
-      }
+      nativeEndedCleanupRef.current?.();
+      nativeEndedCleanupRef.current = null;
     };
   }, []);
 
   const handleError = useCallback(() => {
     if (!streamingAllowed) return;
-    if (Date.now() < useAudioStore.getState().ignorePlaybackErrorsUntil) {
-      return;
-    }
+    if (Date.now() < useAudioStore.getState().ignorePlaybackErrorsUntil) return;
     if (endingRef.current) return;
 
     const now = Date.now();
@@ -1110,8 +798,8 @@ export default function AudioEngine({
       return;
     }
 
-    advanceNow();
-  }, [advanceNow, streamingAllowed]);
+    advancePersistentRef.current("error");
+  }, [streamingAllowed]);
 
   const handleTimeUpdate = useCallback(
     (event: SyntheticEvent<HTMLVideoElement>) => {
@@ -1119,15 +807,13 @@ export default function AudioEngine({
       const t = media.currentTime;
       if (!Number.isFinite(t)) return;
 
-      // Muted cue warm-up: soft-loop near 0 once buffered. Never write progress
-      // UI (keeps seek/clock still) and never auto-skip while Play is shown.
       if (!useAudioStore.getState().isPlaying) {
         if (
           allowMutedWarmRef.current &&
           t >= MUTED_WARM_LOOP_SEC &&
           hasWarmBuffer(media)
         ) {
-          parkMutedWarmAtStart(liveSlotRef.current);
+          parkMutedWarmAtStart();
         }
         lastTickMediaTimeRef.current = 0;
         return;
@@ -1142,9 +828,7 @@ export default function AudioEngine({
       const lastSample = lastTickMediaTimeRef.current;
       if (lastSample > 0 && t >= lastSample) {
         const delta = Math.min(t - lastSample, 2.5);
-        if (delta > 0) {
-          audioState.tickMusicPlayedSeconds(delta);
-        }
+        if (delta > 0) audioState.tickMusicPlayedSeconds(delta);
       }
       lastTickMediaTimeRef.current = t;
 
@@ -1152,40 +836,13 @@ export default function AudioEngine({
       const remaining = dur > 0 ? dur - t : Infinity;
       const progressRatio = dur > 0 ? t / dur : 0;
 
-      // Prefetch only — never call nextTrack from timeupdate (throttled in background).
       if (
         progressRatio >= GAPLESS_PREFETCH_RATIO ||
         remaining <= PREFETCH_WINDOW_SEC + 1
       ) {
         useAudioStore.getState().ensureUpcoming();
-        const prefetch = otherSlot(liveSlotRef.current);
-        const prefetchId =
-          prefetch === "a" ? slotAIdRef.current : slotBIdRef.current;
-        const upcomingId = useAudioStore.getState().upcomingTrack?.id ?? null;
-        if (upcomingId && prefetchId === upcomingId) {
-          // Keep the standby slot muted-playing so promote is instant.
-          const prefetchMedia = slotRef(prefetch).current;
-          if (prefetchMedia) {
-            syncPlayerAudioState(playerEl(prefetch), {
-              volume: 0,
-              muted: true,
-            });
-            if (prefetchMedia.paused) {
-              void prefetchMedia.play().catch(() => {});
-              try {
-                (prefetchMedia as YoutubePlayerElement).api?.playVideo?.();
-              } catch {
-                // Optional iframe API path.
-              }
-            }
-          }
-        } else if (upcomingId && prefetchId !== upcomingId) {
-          // Upcoming changed — let the track effect rebind the prefetch src.
-          prefetchedIdRef.current = null;
-        }
       }
 
-      // Keep the Worker wall-clock deadline aligned with real media time.
       syncQueueHeartbeat(t);
       armTrackDeadline(t, dur, audioState.currentTrack?.id ?? null);
       syncMediaSessionPosition({ duration: dur, position: t });
@@ -1196,13 +853,7 @@ export default function AudioEngine({
         useAudioStore.getState().setPlayedSeconds(t);
       }
     },
-    [
-      armTrackDeadline,
-      parkMutedWarmAtStart,
-      playerEl,
-      slotRef,
-      syncQueueHeartbeat,
-    ],
+    [armTrackDeadline, parkMutedWarmAtStart, syncQueueHeartbeat],
   );
 
   const handleDurationChange = useCallback(
@@ -1229,196 +880,81 @@ export default function AudioEngine({
     [armTrackDeadline, syncQueueHeartbeat],
   );
 
-  const handleReady = useCallback(
-    (slot: PlayerSlot, trackId: string | null) => {
-      consecutiveErrors.current = 0;
-      if (trackId) slotReadyRef.current[slot] = trackId;
-      const isLive = slot === liveSlotRef.current;
-      benchLog(isLive ? "player:ready" : "prefetch:ready", {
-        trackId,
-        slot,
-      });
-      attachNativeEnded(slot);
-      const media = slotRef(slot).current;
-      if (media && streamingAllowed && isPlaying) {
-        syncSlotAudio(slot);
-        void media.play().catch(() => {});
-      } else if (
-        media &&
-        streamingAllowed &&
-        allowMutedWarmRef.current &&
-        !isPlaying
-      ) {
-        warmSlotMuted(slot);
-      } else {
-        syncSlotAudio(slot);
-      }
-      queueMicrotask(() => scheduleSlotSync(slot));
-    },
-    [
-      attachNativeEnded,
-      scheduleSlotSync,
-      slotRef,
-      streamingAllowed,
-      isPlaying,
-      syncSlotAudio,
-      warmSlotMuted,
-    ],
-  );
-
-  const handlePlaying = useCallback(
-    (slot: PlayerSlot) => {
-      if (slot !== liveSlotRef.current) return;
-      consecutiveErrors.current = 0;
-      emitPlayingBench(slot, false);
-    },
-    [emitPlayingBench],
-  );
-
-  const handleCanPlay = useCallback(
-    (slot: PlayerSlot, trackId: string | null) => {
-      if (trackId) slotReadyRef.current[slot] = trackId;
-      attachNativeEnded(slot);
-      if (slot === liveSlotRef.current) {
-        if (isPlaying) {
-          tryPlaySlot(slot);
-          const media = slotRef(slot).current;
-          if (media && !media.paused) {
-            emitPlayingBench(slot, false);
-          }
-          flushPendingMediaPlay();
-        } else if (streamingAllowed && allowMutedWarmRef.current) {
-          warmSlotMuted(slot);
-        }
-        return;
-      }
-      benchLog("prefetch:buffered", { trackId, slot });
-      if (streamingAllowed && isPlaying) {
-        syncSlotAudio(slot);
-        const media = slotRef(slot).current;
-        forcePlayMedia(media as YoutubePlayerElement | null);
-      } else if (streamingAllowed && allowMutedWarmRef.current) {
-        warmSlotMuted(slot);
-      } else {
-        syncSlotAudio(slot);
-      }
-    },
-    [
-      attachNativeEnded,
-      emitPlayingBench,
-      isPlaying,
-      slotRef,
-      streamingAllowed,
-      syncSlotAudio,
-      tryPlaySlot,
-      warmSlotMuted,
-    ],
-  );
-
-  const handlePause = useCallback(
-    (slot: PlayerSlot) => {
-      if (!streamingAllowed) return;
-      if (isPlaying) {
-        const media = slotRef(slot).current;
-        // Browser autoplay policy often pauses the live slot in background tabs
-        // right after a track handoff — instantly force-play + keep-alive.
-        if (slot === liveSlotRef.current) {
-          forcePlayMedia(media as YoutubePlayerElement | null);
-          return;
-        }
-        // Prefetch must stay muted-playing for seamless next.
-        syncSlotAudio(slot);
-        forcePlayMedia(media as YoutubePlayerElement | null);
-        return;
-      }
-      if (allowMutedWarmRef.current) {
-        warmSlotMuted(slot);
-      }
-    },
-    [isPlaying, slotRef, streamingAllowed, syncSlotAudio, warmSlotMuted],
-  );
-
-  const handlePrefetchError = useCallback(
-    (trackId: string | null) => {
-      if (!trackId) return;
-      useAudioStore.getState().markTrackFailed(trackId);
-      useAudioStore.getState().ensureUpcoming();
-    },
-    [],
-  );
-
-  const resolveTrack = useCallback(
-    (trackId: string | null) => {
-      if (!trackId) return null;
-      if (currentTrack?.id === trackId) return currentTrack;
-      if (upcomingTrack?.id === trackId) return upcomingTrack;
-      return null;
-    },
-    [currentTrack, upcomingTrack],
-  );
-
-  if (!currentTrack) return null;
-
-  const renderSlot = (slot: PlayerSlot) => {
-    const trackId = slot === "a" ? slotAId : slotBId;
-    const track = resolveTrack(trackId);
-    // Swap .src on a persistent node — never unmount the slot mid-session.
-    // Keeping the last src parks the element when the id briefly clears.
-    if (track) {
-      lastSlotSrcRef.current[slot] = youtubeSrc(track.youtubeId);
+  const handleReady = useCallback(() => {
+    consecutiveErrors.current = 0;
+    attachNativeEnded();
+    const media = playerRef.current;
+    if (media && streamingAllowed && isPlaying) {
+      syncAudio();
+      forcePlayMedia(media);
+    } else if (media && streamingAllowed && allowMutedWarmRef.current) {
+      warmMuted();
+    } else {
+      syncAudio();
     }
-    const src = track
-      ? youtubeSrc(track.youtubeId)
-      : lastSlotSrcRef.current[slot];
-    if (!src) return null;
+  }, [attachNativeEnded, isPlaying, streamingAllowed, syncAudio, warmMuted]);
 
-    const isLive = slot === liveSlot;
-    const ref = slot === "a" ? playerARef : playerBRef;
-    // Muted warm while cued: keep playing=true so the slot stays hot; soft-loop
-    // parks near 0 without pausing. Live stays muted until isPlaying.
-    const hasActiveTrack = Boolean(track);
-    const warming =
-      hasActiveTrack &&
-      !isPlaying &&
-      cueWarmActive &&
-      allowMutedWarmRef.current;
-    const shouldPlay =
-      streamingAllowed && hasActiveTrack && (isPlaying || warming);
-    const slotMuted = !isLive || !isPlaying || !hasActiveTrack;
-    const slotVolume = isLive && isPlaying && hasActiveTrack ? volume : 0;
+  const handlePlaying = useCallback(() => {
+    consecutiveErrors.current = 0;
+    if (playingEmittedForSkipRef.current === skipBenchAtRef.current) return;
+    playingEmittedForSkipRef.current = skipBenchAtRef.current;
+    const lagMs = skipBenchAtRef.current
+      ? Math.round(performance.now() - skipBenchAtRef.current)
+      : 0;
+    benchLog("playing", {
+      trackId: useAudioStore.getState().currentTrack?.id,
+      lagMs,
+      persistent: true,
+    });
+    syncAudio();
+    if (broadcastEnhance) {
+      const quality = applyBroadcastQuality(mediaEl());
+      if (quality) useAudioStore.getState().setStreamQuality(quality);
+    }
+  }, [broadcastEnhance, mediaEl, syncAudio]);
 
-    return (
-      <ReactPlayer
-        ref={ref}
-        key={`slot-${slot}`}
-        src={src}
-        playing={shouldPlay}
-        volume={slotVolume}
-        muted={slotMuted}
-        width={BROADCAST_PLAYER_WIDTH}
-        height={BROADCAST_PLAYER_HEIGHT}
-        controls={false}
-        playsInline
-        preload="auto"
-        config={{ youtube: YOUTUBE_PLAYER_CONFIG }}
-        onReady={() => handleReady(slot, trackId)}
-        onError={
-          isLive
-            ? handleError
-            : () => handlePrefetchError(trackId)
-        }
-        onPlaying={() => handlePlaying(slot)}
-        onPause={() => handlePause(slot)}
-        onCanPlay={() => handleCanPlay(slot, trackId)}
-        onTimeUpdate={isLive ? handleTimeUpdate : undefined}
-        onDurationChange={isLive ? handleDurationChange : undefined}
-      />
-    );
-  };
+  const handleCanPlay = useCallback(() => {
+    attachNativeEnded();
+    if (isPlaying) {
+      tryPlay();
+      flushPendingMediaPlay();
+    } else if (streamingAllowed && allowMutedWarmRef.current) {
+      warmMuted();
+    }
+  }, [attachNativeEnded, isPlaying, streamingAllowed, tryPlay, warmMuted]);
 
-  // Keep iframe props at 1920×1080 for YouTube adaptive quality, but NEVER size
-  // this shell to 1920px — a fixed 1920-wide box makes iOS Safari rubber-band
-  // horizontally (paywall/auth appear shifted left with a dead gap on the right).
+  const handlePause = useCallback(() => {
+    if (!streamingAllowed) return;
+    if (isPlaying) {
+      // Autoplay policy pause mid-session — force the same node back to life.
+      forcePlayMedia(playerRef.current);
+      return;
+    }
+    if (allowMutedWarmRef.current) warmMuted();
+  }, [isPlaying, streamingAllowed, warmMuted]);
+
+  // Always keep the player shell mounted once we've ever had a track, so the
+  // media node is never destroyed between songs or brief store clears.
+  const src = playerSrc || lastSrcRef.current;
+  const showPlayer = Boolean(src) || Boolean(currentTrack);
+  if (!showPlayer && !mountedOnceRef.current) return null;
+
+  const warming =
+    Boolean(currentTrack) &&
+    !isPlaying &&
+    cueWarmActive &&
+    allowMutedWarmRef.current;
+  const shouldPlay =
+    streamingAllowed && Boolean(currentTrack) && (isPlaying || warming);
+  const slotMuted = !isPlaying || !currentTrack;
+  const slotVolume = isPlaying && currentTrack ? volume : 0;
+  // playerSrc wins — imperative handoff sets it before Zustand catches up.
+  // Preferring currentTrack here would briefly re-point React at the old song.
+  const resolvedSrc =
+    playerSrc ||
+    lastSrcRef.current ||
+    (currentTrack ? youtubeSrc(currentTrack.youtubeId) : "");
+
   return (
     <div
       aria-hidden
@@ -1435,8 +971,30 @@ export default function AudioEngine({
           height: BROADCAST_PLAYER_HEIGHT,
         }}
       >
-        {renderSlot("a")}
-        {renderSlot("b")}
+        {resolvedSrc ? (
+          <ReactPlayer
+            ref={playerRef}
+            key={PERSISTENT_PLAYER_KEY}
+            src={resolvedSrc}
+            playing={shouldPlay}
+            volume={slotVolume}
+            muted={slotMuted}
+            width={BROADCAST_PLAYER_WIDTH}
+            height={BROADCAST_PLAYER_HEIGHT}
+            controls={false}
+            playsInline
+            preload="auto"
+            config={{ youtube: YOUTUBE_PLAYER_CONFIG }}
+            onReady={handleReady}
+            onError={handleError}
+            onPlaying={handlePlaying}
+            onPause={handlePause}
+            onCanPlay={handleCanPlay}
+            onTimeUpdate={handleTimeUpdate}
+            onDurationChange={handleDurationChange}
+            onEnded={() => advancePersistentRef.current("react-ended")}
+          />
+        ) : null}
       </div>
     </div>
   );

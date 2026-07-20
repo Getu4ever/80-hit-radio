@@ -29,6 +29,13 @@ export interface YoutubePlayerApi {
   getPlayerState?: () => number;
   getCurrentTime?: () => number;
   getDuration?: () => number;
+  /** Swap source on the same iframe — never destroy the player instance. */
+  loadVideoById?: (
+    id: string | { videoId: string; startSeconds?: number },
+  ) => void;
+  cueVideoById?: (
+    id: string | { videoId: string; startSeconds?: number },
+  ) => void;
   /** YouTube ENDED = 0 */
   addEventListener?: (event: string, listener: (data: number) => void) => void;
   removeEventListener?: (event: string, listener: (data: number) => void) => void;
