@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { formatStreamQualityLabel } from "@/lib/broadcastAudio";
 import SoundWave from "@/components/SoundWave";
 import ShareStation from "@/components/ShareStation";
@@ -96,32 +96,17 @@ function SeekBar({
     [canSeek, duration, onSeek],
   );
 
-  useEffect(() => {
-    if (!dragging) return;
-
-    const onMove = (event: PointerEvent) => {
+  const finishDrag = useCallback(
+    (clientX: number) => {
       if (!draggingRef.current) return;
-      setDragRatio(ratioFromClientX(event.clientX));
-    };
-
-    const onUp = (event: PointerEvent) => {
-      if (!draggingRef.current) return;
-      const ratio = ratioFromClientX(event.clientX);
       draggingRef.current = false;
       setDragging(false);
+      const ratio = ratioFromClientX(clientX);
       setDragRatio(ratio);
       commitSeek(ratio);
-    };
-
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onUp);
-    window.addEventListener("pointercancel", onUp);
-    return () => {
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
-      window.removeEventListener("pointercancel", onUp);
-    };
-  }, [dragging, commitSeek, ratioFromClientX]);
+    },
+    [commitSeek, ratioFromClientX],
+  );
 
   return (
     <div className="group/seek relative">
@@ -141,11 +126,25 @@ function SeekBar({
         onPointerDown={(event) => {
           if (!canSeek) return;
           event.preventDefault();
-          barRef.current?.setPointerCapture?.(event.pointerId);
-          const ratio = ratioFromClientX(event.clientX);
+          barRef.current?.setPointerCapture(event.pointerId);
           draggingRef.current = true;
           setDragging(true);
+          const ratio = ratioFromClientX(event.clientX);
           setDragRatio(ratio);
+          commitSeek(ratio);
+        }}
+        onPointerMove={(event) => {
+          if (!draggingRef.current) return;
+          event.preventDefault();
+          setDragRatio(ratioFromClientX(event.clientX));
+        }}
+        onPointerUp={(event) => {
+          finishDrag(event.clientX);
+          barRef.current?.releasePointerCapture(event.pointerId);
+        }}
+        onPointerCancel={(event) => {
+          finishDrag(event.clientX);
+          barRef.current?.releasePointerCapture(event.pointerId);
         }}
         onKeyDown={(event) => {
           if (!canSeek) return;

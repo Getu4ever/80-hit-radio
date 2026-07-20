@@ -637,9 +637,15 @@ export default function AudioEngine({
 
   useEffect(() => {
     if (pendingSeekSeconds == null) return;
+    // User picked a position — never rewind the muted cue warm-up back to 0.
+    allowMutedWarmRef.current = false;
+    setCueWarmActive(false);
+
     const media = slotRef(liveSlotRef.current).current;
-    if (media) {
-      const target = Math.max(0, pendingSeekSeconds);
+    const target = Math.max(0, pendingSeekSeconds);
+
+    const applySeek = () => {
+      if (!media) return;
       try {
         const max =
           Number.isFinite(media.duration) && media.duration > 0
@@ -655,8 +661,14 @@ export default function AudioEngine({
       } catch {
         // Optional YouTube iframe API path.
       }
-    }
+    };
+
+    applySeek();
+    const retryId = window.requestAnimationFrame(applySeek);
+    lastProgressUiWrite.current = performance.now();
+    useAudioStore.getState().setPlayedSeconds(target);
     useAudioStore.getState().clearSeekRequest();
+    return () => window.cancelAnimationFrame(retryId);
   }, [seekRequestId, pendingSeekSeconds, slotRef]);
 
   useEffect(() => {
