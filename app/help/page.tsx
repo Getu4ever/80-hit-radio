@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import BrandLogo from "@/components/BrandLogo";
+import HelpInstallSection from "@/components/HelpInstallSection";
 import { getSupportEmail } from "@/lib/email/resend";
 
 export const metadata: Metadata = {
@@ -34,6 +35,8 @@ const SECTIONS = [
     body: [
       "Open the On Air deck, press play, and the continuous 80s broadcast keeps going as you move around the site.",
       "Playback stops when you sign out on that device. Guests can sample a short listen before creating an account.",
+      "For the best experience on your phone, install RithmGen to your Home Screen (Help → Install the app, or the Install app link in the header).",
+      "While a song is on air, use On this track to leave a short reaction or note — the lounge follows the current track so it stays calm and in the moment.",
     ],
   },
   {
@@ -128,6 +131,8 @@ export default function HelpPage() {
               </div>
             </section>
           ))}
+
+          <HelpInstallSection />
 
           <section
             id="contact"

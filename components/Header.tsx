@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useUserSession } from "@/hooks/useUserSession";
 import BrandLogo from "@/components/BrandLogo";
 import VoiceAssistant from "@/components/VoiceAssistant";
+import InstallAppLink from "@/components/InstallAppLink";
 
 function UserIcon({ className }: { className?: string }) {
   return (
@@ -184,6 +185,11 @@ export default function Header({
             >
               Help & support
             </Link>
+            <InstallAppLink
+              asMenuItem
+              onClick={() => setMenuOpen(false)}
+              className="block w-full px-4 py-2.5 text-left text-sm text-white/80 transition hover:bg-cyan-400/10 hover:text-cyan-300"
+            />
             {isAdmin && (
               <Link
                 href="/dashboard/admin"
@@ -211,6 +217,7 @@ export default function Header({
 
   const authControls = !isLoggedIn ? (
     <div className="flex shrink-0 items-center gap-2">
+      <InstallAppLink className="inline-flex rounded-xl px-2 py-2 text-[11px] font-semibold text-cyan-300/85 transition hover:bg-cyan-400/10 hover:text-cyan-200 sm:px-3 sm:text-sm" />
       <Link
         href="/auth/login"
         className="inline-flex items-center justify-center whitespace-nowrap rounded-xl border border-white/15 bg-white/[0.04] px-3 py-2 text-xs font-semibold text-white/85 transition hover:border-cyan-400/35 hover:bg-white/[0.07] hover:text-white sm:px-4 sm:py-2.5 sm:text-sm"

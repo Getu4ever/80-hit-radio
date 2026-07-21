@@ -249,6 +249,54 @@ export type Database = {
         };
         Relationships: [];
       };
+      track_lounge_messages: {
+        Row: {
+          id: string;
+          catalog_track_id: string;
+          user_id: string;
+          display_name: string;
+          body: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          catalog_track_id: string;
+          user_id: string;
+          display_name: string;
+          body: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          catalog_track_id?: string;
+          user_id?: string;
+          display_name?: string;
+          body?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      track_lounge_reactions: {
+        Row: {
+          catalog_track_id: string;
+          user_id: string;
+          emoji: string;
+          created_at: string;
+        };
+        Insert: {
+          catalog_track_id: string;
+          user_id: string;
+          emoji: string;
+          created_at?: string;
+        };
+        Update: {
+          catalog_track_id?: string;
+          user_id?: string;
+          emoji?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;

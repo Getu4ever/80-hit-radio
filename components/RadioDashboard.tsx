@@ -14,6 +14,7 @@ import { useCatalogStore } from "@/store/useCatalogStore";
 import { useStreamAccessStore } from "@/store/useStreamAccessStore";
 import Header from "@/components/Header";
 import Sidebar, { type NavFilter } from "@/components/Sidebar";
+import TrackLounge from "@/components/TrackLounge";
 
 function PlayIcon({ className }: { className?: string }) {
   return (
@@ -360,6 +361,8 @@ export default function RadioDashboard() {
               {isPlaying ? "Reshuffle Radio" : "Start Radio"}
             </button>
           </div>
+
+          <TrackLounge track={currentTrack} />
 
           <p className="mb-4 min-h-[1.25rem] truncate text-xs text-white/35">
             {catalogLoading && !catalogLoaded

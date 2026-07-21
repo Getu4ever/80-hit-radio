@@ -2,37 +2,32 @@
 
 import { useEffect, useState } from "react";
 import { isNativeApp } from "@/lib/native/capacitor";
+import {
+  canOfferPwaInstall,
+  isIosDevice,
+  PWA_INSTALL_DISMISS_KEY,
+  usePwaInstallStore,
+} from "@/lib/pwaInstall";
 
 const SW_URL = "/sw.js";
-const INSTALL_DISMISS_KEY = "rithmgen-pwa-install-dismissed";
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 };
 
-function isStandaloneDisplay(): boolean {
-  if (typeof window === "undefined") return false;
-  return (
-    window.matchMedia("(display-mode: standalone)").matches ||
-    (window.navigator as Navigator & { standalone?: boolean }).standalone ===
-      true
-  );
-}
-
-function isIos(): boolean {
-  if (typeof navigator === "undefined") return false;
-  return /iphone|ipad|ipod/i.test(navigator.userAgent);
-}
-
 export default function PwaShell() {
-  const [installEvent, setInstallEvent] =
-    useState<BeforeInstallPromptEvent | null>(null);
-  const [showBanner, setShowBanner] = useState(false);
-  const [showIosHint, setShowIosHint] = useState(false);
+  const deferredPrompt = usePwaInstallStore((s) => s.deferredPrompt);
+  const forceShow = usePwaInstallStore((s) => s.forceShow);
+  const setDeferredPrompt = usePwaInstallStore((s) => s.setDeferredPrompt);
+  const dismissInstallHelp = usePwaInstallStore((s) => s.dismissInstallHelp);
+  const tryNativePrompt = usePwaInstallStore((s) => s.tryNativePrompt);
+  const clearForceShow = usePwaInstallStore((s) => s.clearForceShow);
+
+  const [autoShow, setAutoShow] = useState(false);
+  const [iosHint, setIosHint] = useState(false);
 
   useEffect(() => {
-    // Capacitor already is the installed app — skip SW + install prompts.
     if (isNativeApp()) return;
     if (typeof window === "undefined" || !("serviceWorker" in navigator)) {
       return;
@@ -44,48 +39,49 @@ export default function PwaShell() {
   }, []);
 
   useEffect(() => {
-    if (isNativeApp()) return;
-    if (isStandaloneDisplay()) return;
-    if (localStorage.getItem(INSTALL_DISMISS_KEY) === "1") return;
+    if (!canOfferPwaInstall()) return;
 
     const onBeforeInstall = (event: Event) => {
       event.preventDefault();
-      setInstallEvent(event as BeforeInstallPromptEvent);
-      setShowBanner(true);
+      setDeferredPrompt(event as BeforeInstallPromptEvent);
+      if (localStorage.getItem(PWA_INSTALL_DISMISS_KEY) !== "1") {
+        setAutoShow(true);
+      }
     };
 
     window.addEventListener("beforeinstallprompt", onBeforeInstall);
 
-    if (isIos()) {
-      setShowIosHint(true);
+    if (isIosDevice() && localStorage.getItem(PWA_INSTALL_DISMISS_KEY) !== "1") {
+      setIosHint(true);
+      setAutoShow(true);
     }
 
     return () => {
       window.removeEventListener("beforeinstallprompt", onBeforeInstall);
     };
-  }, []);
+  }, [setDeferredPrompt]);
+
+  const visible = forceShow || autoShow;
+  if (!canOfferPwaInstall() || !visible) return null;
+
+  const showIosCopy = isIosDevice() && !deferredPrompt;
 
   const dismiss = () => {
-    localStorage.setItem(INSTALL_DISMISS_KEY, "1");
-    setShowBanner(false);
-    setShowIosHint(false);
-    setInstallEvent(null);
+    dismissInstallHelp();
+    setAutoShow(false);
+    setIosHint(false);
+    clearForceShow();
   };
 
   const install = async () => {
-    if (!installEvent) return;
-    await installEvent.prompt();
-    const choice = await installEvent.userChoice;
-    setInstallEvent(null);
-    setShowBanner(false);
-    if (choice.outcome === "accepted") {
-      localStorage.setItem(INSTALL_DISMISS_KEY, "1");
+    const outcome = await tryNativePrompt();
+    if (outcome === "unavailable") {
+      // Keep panel open with manual instructions (iOS / unsupported).
+      setAutoShow(true);
+      return;
     }
+    setAutoShow(false);
   };
-
-  if (isNativeApp()) return null;
-  if (isStandaloneDisplay()) return null;
-  if (!showBanner && !showIosHint) return null;
 
   return (
     <div
@@ -97,12 +93,23 @@ export default function PwaShell() {
         Install RithmGen
       </p>
       <p className="mt-2 text-sm leading-relaxed text-white/75">
-        {showIosHint && !installEvent
-          ? "On iPhone/iPad: tap Share, then “Add to Home Screen” for app-like playback and lock-screen controls."
-          : "Install the app for a dedicated radio window, faster launch, and better background listening."}
+        {showIosCopy || iosHint ? (
+          <>
+            Use <span className="text-white/90">Safari</span> (not Chrome). Tap
+            the Share button{" "}
+            <span className="text-cyan-200" aria-hidden>
+              □↑
+            </span>
+            , then <span className="text-white/90">scroll down</span> and tap{" "}
+            <span className="text-white/90">Add to Home Screen</span>. Don’t tap
+            Options / PDF — that only shares the page.
+          </>
+        ) : (
+          "Install the app for a dedicated radio window, faster launch, and better background listening."
+        )}
       </p>
       <div className="mt-4 flex flex-wrap gap-2">
-        {installEvent ? (
+        {deferredPrompt ? (
           <button
             type="button"
             onClick={() => void install()}
