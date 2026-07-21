@@ -57,7 +57,7 @@ export default function VoiceAssistant({
   className = "",
 }: VoiceAssistantProps) {
   const [listening, setListening] = useState(false);
-  const [supported] = useState(() => isSpeechRecognitionSupported());
+  const [supported, setSupported] = useState(false);
   const [toast, setToast] = useState<ToastState>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const toastTimerRef = useRef<number | null>(null);
@@ -76,6 +76,10 @@ export default function VoiceAssistant({
       setToast(null);
       toastTimerRef.current = null;
     }, 3200);
+  }, []);
+
+  useEffect(() => {
+    setSupported(isSpeechRecognitionSupported());
   }, []);
 
   useEffect(() => {

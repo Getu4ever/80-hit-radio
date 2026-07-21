@@ -21,6 +21,8 @@ import {
   applyBroadcastQuality,
   BROADCAST_PLAYER_HEIGHT,
   BROADCAST_PLAYER_WIDTH,
+  installYoutubeIframeApiPatch,
+  patchYoutubeVolumeSafe,
   syncPlayerAudioState,
   YOUTUBE_PLAYER_CONFIG,
   type YoutubePlayerElement,
@@ -116,12 +118,14 @@ function injectYoutubeId(media: HTMLMediaElement | null, youtubeId: string) {
 
 function playMuted(media: HTMLMediaElement | null) {
   if (!media) return;
+  patchYoutubeVolumeSafe(media as YoutubePlayerElement);
   syncPlayerAudioState(media as YoutubePlayerElement, { volume: 0, muted: true });
   forcePlayMedia(media);
 }
 
 function playAudible(media: HTMLMediaElement | null, volume: number) {
   if (!media) return;
+  patchYoutubeVolumeSafe(media as YoutubePlayerElement);
   try {
     media.muted = false;
     media.volume = Math.min(1, Math.max(0, volume));
@@ -179,9 +183,22 @@ export default function AudioEngine({
 
   liveSlotRef.current = liveSlot;
 
+  useEffect(() => {
+    installYoutubeIframeApiPatch();
+  }, []);
+
   const slotRef = useCallback(
     (slot: PlayerSlot) => (slot === "a" ? playerARef : playerBRef),
     [],
+  );
+
+  const bindPlayerRef = useCallback(
+    (slot: PlayerSlot) => (node: HTMLVideoElement | null) => {
+      const targetRef = slotRef(slot);
+      targetRef.current = node;
+      patchYoutubeVolumeSafe(node as YoutubePlayerElement | null);
+    },
+    [slotRef],
   );
 
   const syncSlotAudio = useCallback(
@@ -988,6 +1005,9 @@ export default function AudioEngine({
 
   const handleReady = useCallback(
     (slot: PlayerSlot) => {
+      patchYoutubeVolumeSafe(
+        slotRef(slot).current as YoutubePlayerElement | null,
+      );
       consecutiveErrors.current = 0;
       attachNativeEnded(slot);
       const isLive = slot === liveSlotRef.current;
@@ -1044,7 +1064,6 @@ export default function AudioEngine({
     if (!src) return null;
 
     const isLive = slot === liveSlot;
-    const ref = slot === "a" ? playerARef : playerBRef;
     const hasTrack = Boolean(track);
     const warming =
       hasTrack &&
@@ -1058,15 +1077,15 @@ export default function AudioEngine({
       Boolean(src) &&
       (isPlaying || warming);
     const slotMuted = !isLive || !isPlaying;
-    const slotVolume = isLive && isPlaying ? volume : 0;
+    // Volume is synced imperatively — react-player's volume prop triggers
+    // youtube-video-element getVolume() before the iframe API is ready.
 
     return (
       <ReactPlayer
-        ref={ref}
+        ref={bindPlayerRef(slot)}
         key={`slot-${slot}`}
         src={src}
         playing={playingProp}
-        volume={slotVolume}
         muted={slotMuted}
         width={BROADCAST_PLAYER_WIDTH}
         height={BROADCAST_PLAYER_HEIGHT}

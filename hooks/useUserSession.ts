@@ -209,7 +209,7 @@ export function useUserSession() {
   }, [hydrated, setHydrated, setLoading, setUser]);
 
   const signIn = useCallback(() => {
-    router.push("/auth/signup");
+    router.push("/auth/login");
   }, [router]);
 
   const signOut = useCallback(async () => {

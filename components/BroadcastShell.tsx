@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation";
 import StreamGate from "@/components/StreamGate";
 import PlayerFooter from "@/components/PlayerFooter";
 import NewsBulletinPlayer from "@/components/NewsBulletinPlayer";
+import PwaShell from "@/components/PwaShell";
+import NativeShell from "@/components/NativeShell";
 import LiveAudiencePresence from "@/components/LiveAudiencePresence";
 import { startAnalyticsHeartbeat } from "@/lib/analytics";
 import { useAudioStore } from "@/store/useAudioStore";
@@ -43,6 +45,8 @@ export default function BroadcastShell() {
       <LiveAudiencePresence />
       <StreamGate />
       <NewsBulletinPlayer />
+      <NativeShell />
+      <PwaShell />
       {!hidePlayer ? <PlayerFooter /> : null}
     </>
   );

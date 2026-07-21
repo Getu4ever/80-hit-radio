@@ -52,6 +52,18 @@ export const metadata: Metadata = {
     description: siteDescription,
     images: ["/logo/logo80b.jpg"],
   },
+  appleWebApp: {
+    capable: true,
+    title: "RithmGen",
+    statusBarStyle: "black-translucent",
+  },
+  icons: {
+    icon: [
+      { url: "/favicon_io/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon_io/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+    ],
+    apple: [{ url: "/favicon_io/apple-touch-icon.png", sizes: "180x180" }],
+  },
 };
 
 export const viewport: Viewport = {

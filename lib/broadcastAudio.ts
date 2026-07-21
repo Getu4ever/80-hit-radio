@@ -17,6 +17,7 @@ const QUALITY_RANK = [
 export type YoutubeQuality = (typeof QUALITY_RANK)[number];
 
 export interface YoutubePlayerApi {
+  getVolume?: () => number;
   getAvailableQualityLevels?: () => string[];
   setPlaybackQuality?: (quality: string) => void;
   getPlaybackQuality?: () => string;
@@ -45,8 +46,229 @@ export interface YoutubePlayerElement extends HTMLElement {
   api?: YoutubePlayerApi;
 }
 
+const YOUTUBE_VOLUME_PATCHED = new WeakSet<object>();
+const YOUTUBE_API_PATCHED = new WeakSet<object>();
+let youtubeIframeApiHookInstalled = false;
+let youtubeIframeApiPatchApplied = false;
+
+function safeYoutubeGetVolume(
+  api: YoutubePlayerApi,
+  original?: () => number,
+): number {
+  try {
+    const fn = original ?? api.getVolume;
+    if (typeof fn === "function") {
+      return fn.call(api);
+    }
+  } catch {
+    // YouTube iframe API not ready.
+  }
+  return 100;
+}
+
+/** Force a callable getVolume on one YT player instance. */
+export function ensureYoutubeGetVolume(
+  api: YoutubePlayerApi | null | undefined,
+): YoutubePlayerApi | null | undefined {
+  if (!api || YOUTUBE_API_PATCHED.has(api)) {
+    return api;
+  }
+
+  const original = api.getVolume;
+  try {
+    Object.defineProperty(api, "getVolume", {
+      value() {
+        return safeYoutubeGetVolume(api, original);
+      },
+      writable: true,
+      configurable: true,
+    });
+  } catch {
+    api.getVolume = () => safeYoutubeGetVolume(api, original);
+  }
+
+  YOUTUBE_API_PATCHED.add(api);
+  return api;
+}
+
+/** @deprecated Use ensureYoutubeGetVolume */
+export function wrapYoutubePlayerApi(
+  api: YoutubePlayerApi | null | undefined,
+): YoutubePlayerApi | null | undefined {
+  return ensureYoutubeGetVolume(api);
+}
+
+function wrapYoutubePlayerConstructor(
+  YT: { Player: new (...args: unknown[]) => YoutubePlayerApi },
+): void {
+  const Original = YT.Player as typeof YT.Player & { __rithmgenWrapped?: boolean };
+  if (Original.__rithmgenWrapped) return;
+
+  const Wrapped = function (
+    ...args: unknown[]
+  ): YoutubePlayerApi {
+    const instance = new Original(...args);
+    ensureYoutubeGetVolume(instance);
+    return instance;
+  };
+
+  Wrapped.prototype = Original.prototype;
+  Object.setPrototypeOf(Wrapped, Original);
+  Original.__rithmgenWrapped = true;
+  YT.Player = Wrapped as unknown as typeof YT.Player;
+}
+
+function applyYoutubeIframeApiPatch(): void {
+  if (typeof window === "undefined" || youtubeIframeApiPatchApplied) {
+    return;
+  }
+
+  const YT = (window as Window & { YT?: { Player?: new (...args: unknown[]) => YoutubePlayerApi } })
+    .YT;
+  if (!YT?.Player) return;
+
+  const proto = YT.Player.prototype;
+  if (!YOUTUBE_API_PATCHED.has(proto)) {
+    const original = proto.getVolume;
+    try {
+      Object.defineProperty(proto, "getVolume", {
+        value(this: YoutubePlayerApi) {
+          return safeYoutubeGetVolume(this, original);
+        },
+        writable: true,
+        configurable: true,
+      });
+    } catch {
+      proto.getVolume = function patchedGetVolume(this: YoutubePlayerApi) {
+        return safeYoutubeGetVolume(this, original);
+      };
+    }
+    YOUTUBE_API_PATCHED.add(proto);
+  }
+
+  wrapYoutubePlayerConstructor(
+    YT as { Player: new (...args: unknown[]) => YoutubePlayerApi },
+  );
+  youtubeIframeApiPatchApplied = true;
+}
+
+/** Patch YT.Player before any embed calls getVolume. */
+export function installYoutubeIframeApiPatch(): void {
+  if (typeof window === "undefined") return;
+
+  if ((window as Window & { YT?: { Player?: unknown } }).YT?.Player) {
+    applyYoutubeIframeApiPatch();
+    return;
+  }
+
+  if (youtubeIframeApiHookInstalled) return;
+  youtubeIframeApiHookInstalled = true;
+
+  const win = window as Window & { onYouTubeIframeAPIReady?: () => void };
+  const previous = win.onYouTubeIframeAPIReady;
+  win.onYouTubeIframeAPIReady = () => {
+    previous?.();
+    applyYoutubeIframeApiPatch();
+  };
+}
+
+/** Patch youtube-video custom element volume getter for all instances. */
+function patchYoutubeVideoElementClass(): void {
+  if (typeof window === "undefined") return;
+
+  const ctor = customElements.get("youtube-video");
+  if (!ctor?.prototype || YOUTUBE_VOLUME_PATCHED.has(ctor.prototype)) return;
+
+  const proto = ctor.prototype as HTMLElement & { volume?: number };
+  const desc = Object.getOwnPropertyDescriptor(proto, "volume");
+  if (!desc?.get || !desc?.set) return;
+
+  const origGet = desc.get;
+  const origSet = desc.set;
+
+  Object.defineProperty(proto, "volume", {
+    configurable: true,
+    enumerable: desc.enumerable ?? true,
+    get() {
+      try {
+        return origGet.call(this);
+      } catch {
+        return 1;
+      }
+    },
+    set(value: number) {
+      try {
+        origSet.call(this, value);
+      } catch {
+        // YouTube iframe API not ready.
+      }
+    },
+  });
+
+  YOUTUBE_VOLUME_PATCHED.add(ctor.prototype);
+}
+
+function interceptYoutubeApiProperty(playerEl: YoutubePlayerElement): void {
+  let stored = ensureYoutubeGetVolume(playerEl.api);
+
+  Object.defineProperty(playerEl, "api", {
+    configurable: true,
+    enumerable: true,
+    get() {
+      return stored;
+    },
+    set(value: YoutubePlayerApi | undefined) {
+      stored = ensureYoutubeGetVolume(value);
+    },
+  });
+}
+
+function watchYoutubeApiAssignment(playerEl: YoutubePlayerElement): void {
+  let attempts = 0;
+  const timer = window.setInterval(() => {
+    ensureYoutubeGetVolume(playerEl.api);
+    attempts += 1;
+    if (attempts >= 120) {
+      window.clearInterval(timer);
+    }
+  }, 50);
+}
+
+/**
+ * Harden youtube-video-element against early getVolume calls from react-player
+ * and from YouTube onVolumeChange handlers before the iframe API is ready.
+ */
+export function patchYoutubeVolumeSafe(
+  playerEl: YoutubePlayerElement | null,
+): void {
+  if (!playerEl || YOUTUBE_VOLUME_PATCHED.has(playerEl)) {
+    return;
+  }
+
+  installYoutubeIframeApiPatch();
+  patchYoutubeVideoElementClass();
+  ensureYoutubeGetVolume(playerEl.api);
+
+  try {
+    interceptYoutubeApiProperty(playerEl);
+  } catch {
+    ensureYoutubeGetVolume(playerEl.api);
+    watchYoutubeApiAssignment(playerEl);
+  }
+
+  YOUTUBE_VOLUME_PATCHED.add(playerEl);
+}
+
+if (typeof window !== "undefined") {
+  installYoutubeIframeApiPatch();
+  patchYoutubeVideoElementClass();
+}
+
 /** Pick the highest tier YouTube exposes for this embed. */
-export function pickBestQuality(levels: string[]): string | null {
+export function pickBestQuality(
+  levels: string[] | null | undefined,
+): string | null {
+  if (!levels?.length) return null;
   for (const tier of QUALITY_RANK) {
     if (levels.includes(tier)) return tier;
   }
@@ -100,7 +322,9 @@ export function applyBroadcastQuality(
     return null;
   }
 
-  const levels = api.getAvailableQualityLevels();
+  const levels = api.getAvailableQualityLevels?.();
+  if (!levels?.length) return null;
+
   const best = pickBestQuality(levels);
   if (best) {
     try {

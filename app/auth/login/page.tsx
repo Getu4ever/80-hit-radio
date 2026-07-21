@@ -13,7 +13,7 @@ function AuthForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(true);
+  const [isSignUp, setIsSignUp] = useState(false);
   const [mode, setMode] = useState<"signin" | "reset">("signin");
   const [authError, setAuthError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -30,12 +30,20 @@ function AuthForm() {
 
     const params = new URLSearchParams(window.location.search);
     const confirmed = params.get("confirmed");
+    const authMode = params.get("mode");
     const errorParam = params.get("error");
     const errorDescription = params.get("error_description");
+
+    if (authMode === "signup") {
+      setIsSignUp(true);
+    } else if (authMode === "signin") {
+      setIsSignUp(false);
+    }
 
     if (errorDescription || errorParam) {
       setError(errorDescription ?? errorParam);
     } else if (confirmed === "1") {
+      setIsSignUp(false);
       setInfo("Email confirmed. Sign in to start streaming.");
     }
 
@@ -52,7 +60,7 @@ function AuthForm() {
 
   const resetForm = () => {
     setMode("signin");
-    setIsSignUp(true);
+    setIsSignUp(false);
     setAuthError(null);
     setError(null);
     setInfo(null);

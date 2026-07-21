@@ -210,13 +210,21 @@ export default function Header({
       : null;
 
   const authControls = !isLoggedIn ? (
-    <Link
-      href="/auth/signup"
-      className="inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-xl bg-gradient-to-r from-fuchsia-600 to-cyan-500 px-3 py-2 text-xs font-semibold text-white shadow-[0_0_24px_rgba(217,70,239,0.45),0_0_40px_rgba(34,211,238,0.25)] transition hover:brightness-110 hover:shadow-[0_0_32px_rgba(217,70,239,0.55),0_0_48px_rgba(34,211,238,0.35)] sm:px-4 sm:py-2.5 sm:text-sm"
-    >
-      <span className="sm:hidden">Free trial</span>
-      <span className="hidden sm:inline">Sign In / Start Free Trial</span>
-    </Link>
+    <div className="flex shrink-0 items-center gap-2">
+      <Link
+        href="/auth/login"
+        className="inline-flex items-center justify-center whitespace-nowrap rounded-xl border border-white/15 bg-white/[0.04] px-3 py-2 text-xs font-semibold text-white/85 transition hover:border-cyan-400/35 hover:bg-white/[0.07] hover:text-white sm:px-4 sm:py-2.5 sm:text-sm"
+      >
+        Sign In
+      </Link>
+      <Link
+        href="/auth/signup"
+        className="inline-flex items-center justify-center whitespace-nowrap rounded-xl bg-gradient-to-r from-fuchsia-600 to-cyan-500 px-3 py-2 text-xs font-semibold text-white shadow-[0_0_24px_rgba(217,70,239,0.45),0_0_40px_rgba(34,211,238,0.25)] transition hover:brightness-110 hover:shadow-[0_0_32px_rgba(217,70,239,0.55),0_0_48px_rgba(34,211,238,0.35)] sm:px-4 sm:py-2.5 sm:text-sm"
+      >
+        <span className="sm:hidden">Free trial</span>
+        <span className="hidden sm:inline">Start Free Trial</span>
+      </Link>
+    </div>
   ) : (
     <div className="relative shrink-0">
       <button
