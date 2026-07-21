@@ -1,12 +1,11 @@
 /**
  * Client-side broadcast audio helpers.
- * YouTube adaptive streaming picks bitrate partly from player size — a 0×0
- * embed often gets the lowest audio tier. We maximize tier + re-assert on play.
+ * Prefer stable mid/high tiers — chasing 4K/1080p mid-stream causes rebuffer
+ * crackle on audio-only radio embeds.
  */
 
+/** Prefer stable tiers for radio (audio quality plateaus; avoid 4K thrash). */
 const QUALITY_RANK = [
-  "highres",
-  "hd1080",
   "hd720",
   "large",
   "medium",
@@ -313,7 +312,7 @@ export function syncPlayerAudioState(
   }
 }
 
-/** Select the highest available YouTube playback tier for the live slot. */
+/** Select a stable YouTube playback tier for the live slot (no mid-stream thrash). */
 export function applyBroadcastQuality(
   playerEl: YoutubePlayerElement | null,
 ): YoutubeQuality | null {
@@ -322,11 +321,26 @@ export function applyBroadcastQuality(
     return null;
   }
 
-  const levels = api.getAvailableQualityLevels?.();
+  let levels: string[] | null | undefined;
+  try {
+    levels = api.getAvailableQualityLevels?.();
+  } catch {
+    return null;
+  }
   if (!levels?.length) return null;
 
   const best = pickBestQuality(levels);
-  if (best) {
+  if (!best) return null;
+
+  let current: string | undefined;
+  try {
+    current = api.getPlaybackQuality?.();
+  } catch {
+    current = undefined;
+  }
+
+  // Only change when needed — setPlaybackQuality mid-stream causes crackle.
+  if (current !== best) {
     try {
       api.setPlaybackQuality(best);
     } catch {
@@ -334,8 +348,7 @@ export function applyBroadcastQuality(
     }
   }
 
-  const current = api.getPlaybackQuality?.();
-  return (current as YoutubeQuality | undefined) ?? (best as YoutubeQuality | null);
+  return (best as YoutubeQuality) ?? null;
 }
 
 /**
@@ -350,9 +363,9 @@ export function applyBroadcastEnhancement(
   return applyBroadcastQuality(playerEl);
 }
 
-/** Hidden HD viewport — YouTube uses this for adaptive stream selection. */
-export const BROADCAST_PLAYER_WIDTH = 1920;
-export const BROADCAST_PLAYER_HEIGHT = 1080;
+/** Hidden viewport sized for hd720 audio — enough bitrate without 4K thrash. */
+export const BROADCAST_PLAYER_WIDTH = 1280;
+export const BROADCAST_PLAYER_HEIGHT = 720;
 
 export const YOUTUBE_PLAYER_CONFIG = {
   rel: 0,

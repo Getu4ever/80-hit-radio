@@ -63,19 +63,22 @@ interface AudioEngineProps {
 
 type PlayerSlot = "a" | "b";
 
-const PREFETCH_WINDOW_SEC = 45;
-const GAPLESS_PREFETCH_RATIO = 0.9;
-const EARLY_HANDOFF_SEC = 0.35;
+const PREFETCH_WINDOW_SEC = 90;
+/** Warm the next track from halfway — late prefetch causes cold-load gaps. */
+const GAPLESS_PREFETCH_RATIO = 0.55;
+/** Promote a bit early so unmute + buffer catch up before the old track ends. */
+const EARLY_HANDOFF_SEC = 1.75;
 /** Start promote early in hidden tabs — timeupdate/ended often freeze. */
-const HIDDEN_HANDOFF_SEC = 6;
+const HIDDEN_HANDOFF_SEC = 8;
 const DEADLINE_OVERDUE_MS = 500;
 const ERROR_SKIP_COOLDOWN_MS = 800;
 const MAX_CONSECUTIVE_ERRORS = 8;
 const PROGRESS_UI_INTERVAL_MS = 400;
-const QUALITY_REASSERT_MS = 30_000;
-const MUTED_WARM_LOOP_SEC = 1.5;
-const MUTED_WARM_MIN_BUFFER_SEC = 2;
-const STANDBY_REASSERT_MS = 3_000;
+const MUTED_WARM_LOOP_SEC = 2.5;
+const MUTED_WARM_MIN_BUFFER_SEC = 3;
+const STANDBY_REASSERT_MS = 4_000;
+/** If standby drifts past this while muted, seek back to 0 for instant handoff. */
+const STANDBY_MAX_AHEAD_SEC = 4;
 
 function youtubeSrc(youtubeId: string) {
   return `https://www.youtube.com/watch?v=${youtubeId}`;
@@ -116,6 +119,25 @@ function injectYoutubeId(media: HTMLMediaElement | null, youtubeId: string) {
   }
 }
 
+/** Keep standby near t=0 so promote is unmute-only, not mid-song. */
+function resetStandbyToStart(media: HTMLMediaElement | null) {
+  if (!media) return;
+  const yt = media as YoutubePlayerElement;
+  try {
+    const t = media.currentTime;
+    if (Number.isFinite(t) && t > STANDBY_MAX_AHEAD_SEC) {
+      media.currentTime = 0;
+      yt.api?.seekTo?.(0, true);
+    }
+  } catch {
+    try {
+      yt.api?.seekTo?.(0, true);
+    } catch {
+      // ignore
+    }
+  }
+}
+
 function playMuted(media: HTMLMediaElement | null) {
   if (!media) return;
   patchYoutubeVolumeSafe(media as YoutubePlayerElement);
@@ -126,20 +148,28 @@ function playMuted(media: HTMLMediaElement | null) {
 function playAudible(media: HTMLMediaElement | null, volume: number) {
   if (!media) return;
   patchYoutubeVolumeSafe(media as YoutubePlayerElement);
-  try {
-    media.muted = false;
-    media.volume = Math.min(1, Math.max(0, volume));
-    const yt = media as YoutubePlayerElement;
-    yt.api?.unMute?.();
-    yt.api?.setVolume?.(Math.round(Math.min(1, Math.max(0, volume)) * 100));
-  } catch {
-    // continue
-  }
   syncPlayerAudioState(media as YoutubePlayerElement, {
     volume,
     muted: false,
   });
   forcePlayMedia(media);
+}
+
+/** Hard-silence a slot before the other becomes audible (avoids dual-audio crackle). */
+function silenceSlot(media: HTMLMediaElement | null) {
+  if (!media) return;
+  patchYoutubeVolumeSafe(media as YoutubePlayerElement);
+  syncPlayerAudioState(media as YoutubePlayerElement, { volume: 0, muted: true });
+  try {
+    media.pause();
+  } catch {
+    // ignore
+  }
+  try {
+    (media as YoutubePlayerElement).api?.pauseVideo?.();
+  } catch {
+    // ignore
+  }
 }
 
 export default function AudioEngine({
@@ -225,7 +255,8 @@ export default function AudioEngine({
     const standby = otherSlot(liveSlotRef.current);
     const media = slotRef(standby).current;
     if (!media) return;
-    // Muted autoplay is allowed without a gesture — keep standby always running.
+    // Keep near the start so handoff is instant unmute, not mid-track.
+    resetStandbyToStart(media);
     playMuted(media);
   }, [slotRef, streamingAllowed]);
 
@@ -320,16 +351,13 @@ export default function AudioEngine({
         setLiveSlot(standby);
         lastPromotedTrackRef.current = next.id;
 
-        // Unmute standby FIRST while it is still playing — no cold play().
-        playAudible(standbyMedia, useAudioStore.getState().volume);
+        // Silence old live FIRST so both slots never play aloud together.
+        silenceSlot(liveMedia);
 
-        // Soft-pause old live (don't destroy the node).
-        try {
-          liveMedia?.pause();
-        } catch {
-          // ignore
-        }
-        syncSlotAudio(live);
+        // Snap standby to the start (it may have been looping the warm head).
+        resetStandbyToStart(standbyMedia);
+        playAudible(standbyMedia, useAudioStore.getState().volume);
+        applyBroadcastQuality(standbyMedia as YoutubePlayerElement);
 
         // Rebind demoted slot to the track after next (warm pipeline).
         useAudioStore.getState().nextTrack({
@@ -355,13 +383,16 @@ export default function AudioEngine({
         }
         queueMicrotask(() => {
           playMuted(slotRef(demoted).current);
+          resetStandbyToStart(slotRef(demoted).current);
           playAudible(slotRef(standby).current, useAudioStore.getState().volume);
-          syncAllAudio();
+          syncSlotAudio(standby);
+          syncSlotAudio(demoted);
         });
       } else {
         // Standby not ready — load next onto current live node as last resort,
         // but keep keep-alive running and aggressively retry play.
         lastPromotedTrackRef.current = next.id;
+        silenceSlot(standbyMedia);
         if (live === "a") {
           slotAIdRef.current = next.id;
           setSlotAId(next.id);
@@ -397,6 +428,7 @@ export default function AudioEngine({
         }
         queueMicrotask(() => {
           playMuted(slotRef(demoted).current);
+          resetStandbyToStart(slotRef(demoted).current);
           playAudible(slotRef(live).current, useAudioStore.getState().volume);
           // Background retries — YouTube may reject the first play().
           window.setTimeout(() => {
@@ -404,13 +436,16 @@ export default function AudioEngine({
               slotRef(liveSlotRef.current).current,
               useAudioStore.getState().volume,
             );
-          }, 200);
+          }, 120);
           window.setTimeout(() => {
             playAudible(
               slotRef(liveSlotRef.current).current,
               useAudioStore.getState().volume,
             );
-          }, 800);
+            applyBroadcastQuality(
+              slotRef(liveSlotRef.current).current as YoutubePlayerElement | null,
+            );
+          }, 500);
           syncAllAudio();
         });
       }
@@ -568,7 +603,10 @@ export default function AudioEngine({
           setSlotBId(upcomingTrack.id);
           lastSrcRef.current.b = youtubeSrc(upcomingTrack.youtubeId);
         }
-        queueMicrotask(() => keepStandbyHot());
+        queueMicrotask(() => {
+          injectYoutubeId(slotRef(standby).current, upcomingTrack.youtubeId);
+          keepStandbyHot();
+        });
       }
       return;
     }
@@ -656,6 +694,7 @@ export default function AudioEngine({
     startSilentKeepAlive();
     requestBroadcastWakeLock();
     syncAllAudio();
+    useAudioStore.getState().ensureUpcoming();
     playAudible(
       slotRef(liveSlotRef.current).current,
       useAudioStore.getState().volume,
@@ -692,17 +731,15 @@ export default function AudioEngine({
 
   useEffect(() => {
     if (!broadcastEnhance || !isPlaying) return;
-    const run = () => {
-      syncAllAudio();
+    // Set quality once per live track — periodic setPlaybackQuality causes crackle.
+    const id = window.setTimeout(() => {
       const quality = applyBroadcastQuality(
         slotRef(liveSlotRef.current).current as YoutubePlayerElement | null,
       );
       if (quality) useAudioStore.getState().setStreamQuality(quality);
-    };
-    run();
-    const id = window.setInterval(run, QUALITY_REASSERT_MS);
-    return () => window.clearInterval(id);
-  }, [broadcastEnhance, isPlaying, slotRef, syncAllAudio, currentTrack?.id]);
+    }, 800);
+    return () => window.clearTimeout(id);
+  }, [broadcastEnhance, isPlaying, slotRef, currentTrack?.id]);
 
   useEffect(() => {
     if (pendingSeekSeconds == null) return;
