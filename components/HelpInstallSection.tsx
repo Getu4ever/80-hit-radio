@@ -2,18 +2,23 @@
 
 import { useEffect, useState } from "react";
 import InstallAppLink from "@/components/InstallAppLink";
-import { canOfferPwaInstall, isIosDevice } from "@/lib/pwaInstall";
+import {
+  isIosDevice,
+  isPwaInstallAvailable,
+  usePwaInstallStore,
+} from "@/lib/pwaInstall";
 
 export default function HelpInstallSection() {
-  const [offer, setOffer] = useState(false);
-  const [ios, setIos] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const deferredPrompt = usePwaInstallStore((s) => s.deferredPrompt);
 
   useEffect(() => {
-    setOffer(canOfferPwaInstall());
-    setIos(isIosDevice());
+    setMounted(true);
   }, []);
 
-  if (!offer) return null;
+  if (!mounted || !isPwaInstallAvailable(deferredPrompt)) return null;
+
+  const ios = isIosDevice();
 
   return (
     <section

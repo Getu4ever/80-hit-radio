@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { canOfferPwaInstall, usePwaInstallStore } from "@/lib/pwaInstall";
+import { isPwaInstallAvailable, usePwaInstallStore } from "@/lib/pwaInstall";
 
 type InstallAppLinkProps = {
   className?: string;
@@ -10,22 +10,22 @@ type InstallAppLinkProps = {
   asMenuItem?: boolean;
 };
 
-/** Re-opens install help after “Not now”, or runs Chrome’s install prompt. */
+/** Shown only when a real install path exists (browser prompt or iOS Add to Home Screen). */
 export default function InstallAppLink({
   className = "",
   onClick,
   asMenuItem = false,
 }: InstallAppLinkProps) {
-  const [offer, setOffer] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const requestInstallHelp = usePwaInstallStore((s) => s.requestInstallHelp);
   const tryNativePrompt = usePwaInstallStore((s) => s.tryNativePrompt);
   const deferredPrompt = usePwaInstallStore((s) => s.deferredPrompt);
 
   useEffect(() => {
-    setOffer(canOfferPwaInstall());
+    setMounted(true);
   }, []);
 
-  if (!offer) return null;
+  if (!mounted || !isPwaInstallAvailable(deferredPrompt)) return null;
 
   return (
     <button
@@ -38,6 +38,7 @@ export default function InstallAppLink({
           void tryNativePrompt();
           return;
         }
+        // iOS: reopen the Add to Home Screen tip panel.
         requestInstallHelp();
       }}
     >

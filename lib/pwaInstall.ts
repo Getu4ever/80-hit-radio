@@ -35,11 +35,26 @@ export function isIosDevice(): boolean {
   return /iphone|ipad|ipod/i.test(navigator.userAgent);
 }
 
+/** True when the page is a normal browser tab (not already installed / native). */
 export function canOfferPwaInstall(): boolean {
   if (typeof window === "undefined") return false;
   if (isNativeApp()) return false;
   if (isStandaloneDisplay()) return false;
   return true;
+}
+
+/**
+ * True only when the user can actually install right now:
+ * - Chrome/Edge (and similar) after `beforeinstallprompt`, or
+ * - iPhone/iPad Safari via Add to Home Screen.
+ * Hides the dead “Not now”-only panel on desktop Safari/Firefox/etc.
+ */
+export function isPwaInstallAvailable(
+  deferredPrompt: BeforeInstallPromptEvent | null,
+): boolean {
+  if (!canOfferPwaInstall()) return false;
+  if (deferredPrompt) return true;
+  return isIosDevice();
 }
 
 export const usePwaInstallStore = create<PwaInstallState>((set, get) => ({

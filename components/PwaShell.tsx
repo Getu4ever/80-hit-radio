@@ -5,6 +5,7 @@ import { isNativeApp } from "@/lib/native/capacitor";
 import {
   canOfferPwaInstall,
   isIosDevice,
+  isPwaInstallAvailable,
   PWA_INSTALL_DISMISS_KEY,
   usePwaInstallStore,
 } from "@/lib/pwaInstall";
@@ -49,7 +50,20 @@ export default function PwaShell() {
       }
     };
 
+    const onInstalled = () => {
+      setDeferredPrompt(null);
+      setAutoShow(false);
+      setIosHint(false);
+      clearForceShow();
+      try {
+        localStorage.setItem(PWA_INSTALL_DISMISS_KEY, "1");
+      } catch {
+        // ignore
+      }
+    };
+
     window.addEventListener("beforeinstallprompt", onBeforeInstall);
+    window.addEventListener("appinstalled", onInstalled);
 
     if (isIosDevice() && localStorage.getItem(PWA_INSTALL_DISMISS_KEY) !== "1") {
       setIosHint(true);
@@ -58,11 +72,13 @@ export default function PwaShell() {
 
     return () => {
       window.removeEventListener("beforeinstallprompt", onBeforeInstall);
+      window.removeEventListener("appinstalled", onInstalled);
     };
-  }, [setDeferredPrompt]);
+  }, [setDeferredPrompt, clearForceShow]);
 
   const visible = forceShow || autoShow;
-  if (!canOfferPwaInstall() || !visible) return null;
+  // Never show a “Not now”-only card when no install path exists.
+  if (!isPwaInstallAvailable(deferredPrompt) || !visible) return null;
 
   const showIosCopy = isIosDevice() && !deferredPrompt;
 
