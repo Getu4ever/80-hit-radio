@@ -1,11 +1,12 @@
 /**
  * Client-side broadcast audio helpers.
- * Prefer stable mid/high tiers — chasing 4K/1080p mid-stream causes rebuffer
- * crackle on audio-only radio embeds.
+ * Prefer the highest stable YouTube tier available — audio bitrate rides with
+ * video quality on iframe embeds. Avoid 4K (highres) mid-stream thrash.
  */
 
-/** Prefer stable tiers for radio (audio quality plateaus; avoid 4K thrash). */
+/** Prefer 1080p when offered; fall back through stable radio tiers. */
 const QUALITY_RANK = [
+  "hd1080",
   "hd720",
   "large",
   "medium",
@@ -363,9 +364,9 @@ export function applyBroadcastEnhancement(
   return applyBroadcastQuality(playerEl);
 }
 
-/** Hidden viewport sized for hd720 audio — enough bitrate without 4K thrash. */
-export const BROADCAST_PLAYER_WIDTH = 1280;
-export const BROADCAST_PLAYER_HEIGHT = 720;
+/** Hidden viewport sized for hd1080 — unlocks higher adaptive audio bitrate. */
+export const BROADCAST_PLAYER_WIDTH = 1920;
+export const BROADCAST_PLAYER_HEIGHT = 1080;
 
 export const YOUTUBE_PLAYER_CONFIG = {
   rel: 0,
@@ -374,6 +375,8 @@ export const YOUTUBE_PLAYER_CONFIG = {
   fs: 0,
   disablekb: 1,
   playsinline: 1,
+  // Hint adaptive streaming toward high quality when the embed allows it.
+  vq: "hd1080",
 } as const;
 
 /** Human-readable label for the player footer quality badge. */

@@ -5,14 +5,19 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  isRealYoutubeId,
+  loadYtCache,
+  resolveOfficialVideo,
+  saveYtCache,
+} from "./lib/ytResolve.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, "..");
 const dataDir = path.join(root, "data");
 const outDir = path.join(dataDir, "_curated");
 const cachePath = path.join(outDir, ".yt-cache.json");
-
-const FAKE = /xRockPad|xPopPad|aAfr80s|mN8kYqL3VxY|_vK5m|YqL\d|Qm[A-Z0-9]{2,}[A-Z]/i;
+const YOUTUBE_API_KEY = (process.env.YOUTUBE_API_KEY ?? "").trim();
 
 /** @typedef {[string, string, number, string]} Row */
 /** @typedef {[string, string, number]} Song */
@@ -56,7 +61,7 @@ const POP_TRIM = new Set([
 ]);
 
 function readJson(p) { return JSON.parse(fs.readFileSync(p, "utf8")); }
-function isRealId(id) { return typeof id === "string" && id.length === 11 && /^[A-Za-z0-9_-]{11}$/.test(id) && !FAKE.test(id); }
+function isRealId(id) { return isRealYoutubeId(id); }
 
 /** @param {Row[]} rows */
 function unique(rows) {
@@ -72,40 +77,8 @@ function unique(rows) {
   return out;
 }
 
-/** @type {Record<string, string>} */
-let cache = fs.existsSync(cachePath) ? readJson(cachePath) : {};
-
-/** @param {string} q @param {number} tries */
-async function ytSearch(q, tries = 5) {
-  if (cache[q]) return cache[q];
-  for (let i = 0; i < tries; i++) {
-    try {
-      const url = `https://www.youtube.com/results?search_query=${encodeURIComponent(q)}`;
-      const r = await fetch(url, {
-        headers: {
-          "User-Agent":
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-          "Accept-Language": "en-US,en;q=0.9",
-        },
-        redirect: "follow",
-      });
-      const t = await r.text();
-      const ids = [
-        ...t.matchAll(/"videoId":"([A-Za-z0-9_-]{11})"/g),
-      ].map((m) => m[1]);
-      const id = ids[0] ?? null;
-      if (id) {
-        cache[q] = id;
-        return id;
-      }
-    } catch {
-      if (i === tries - 1) console.warn(`search failed: ${q}`);
-      await new Promise((res) => setTimeout(res, 1000 * (i + 1)));
-    }
-    await new Promise((res) => setTimeout(res, 400));
-  }
-  return null;
-}
+/** @type {Record<string, unknown>} */
+let cache = loadYtCache(cachePath, fs);
 
 /** @param {Song[]} songs @param {number} n */
 async function resolve(songs, n = 1) {
@@ -115,12 +88,24 @@ async function resolve(songs, n = 1) {
   for (let i = 0; i < filtered.length; i += n) {
     const batch = filtered.slice(i, i + n);
     for (const [title, artist, year] of batch) {
-      const id = await ytSearch(`${artist} ${title} official video`);
-      if (id) out.push([title, artist, year, id]);
+      const { videoId, reason } = await resolveOfficialVideo(artist, title, {
+        cache,
+        apiKey: YOUTUBE_API_KEY || undefined,
+        sleepMs: 250,
+      });
+      if (videoId) {
+        out.push([title, artist, year, videoId]);
+        if (reason && reason !== "cache") {
+          console.log(`  ✓ ${artist} — ${title} [${reason}] ${videoId}`);
+        }
+      } else {
+        console.warn(`  ✗ no official/HD match: ${artist} — ${title}`);
+      }
     }
-    if (i % 20 === 0) fs.writeFileSync(cachePath, JSON.stringify(cache, null, 2));
+    if (i % 10 === 0) saveYtCache(cachePath, cache, fs);
     await new Promise((res) => setTimeout(res, 300));
   }
+  saveYtCache(cachePath, cache, fs);
   return out;
 }
 

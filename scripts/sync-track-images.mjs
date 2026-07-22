@@ -7,8 +7,8 @@
  *   2. Supabase public.track_images                 (preferred DB)
  *   3. Supabase Storage rithmgen-assets/tracks/…    (remote backup)
  *
- * When a YouTube thumb 404s, searches YouTube for the official video,
- * repairs the catalog youtube_id, and stores that artwork.
+ * When a YouTube thumb 404s, resolves an official-artist / HD fallback
+ * upload, repairs the catalog youtube_id, and stores that artwork.
  *
  * Run:
  *   node scripts/sync-track-images.mjs
@@ -23,6 +23,11 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createClient } from "@supabase/supabase-js";
 import { DatabaseSync } from "node:sqlite";
+import {
+  loadYtCache,
+  resolveOfficialVideo,
+  saveYtCache,
+} from "./lib/ytResolve.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, "..");
@@ -76,10 +81,10 @@ const supabase = createClient(SUPABASE_URL, SERVICE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false },
 });
 
-/** @type {Record<string, string>} */
-let ytCache = fs.existsSync(YT_CACHE_PATH)
-  ? JSON.parse(fs.readFileSync(YT_CACHE_PATH, "utf8"))
-  : {};
+const YOUTUBE_API_KEY = (process.env.YOUTUBE_API_KEY ?? "").trim();
+
+/** @type {Record<string, unknown>} */
+let ytCache = loadYtCache(YT_CACHE_PATH, fs);
 
 function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms));
@@ -138,31 +143,53 @@ async function downloadThumb(youtubeId) {
   return null;
 }
 
-async function ytSearch(q) {
-  if (ytCache[q]) return ytCache[q];
-  try {
-    const url = `https://www.youtube.com/results?search_query=${encodeURIComponent(q)}`;
-    const r = await fetch(url, {
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept-Language": "en-US,en;q=0.9",
+async function resolveImage(track) {
+  let youtubeId = track.youtubeId;
+  let repaired = false;
+
+  let buffer = await downloadThumb(youtubeId);
+  if (!buffer && !NO_REPAIR) {
+    const { videoId: found, reason } = await resolveOfficialVideo(
+      track.artist,
+      track.title,
+      {
+        cache: ytCache,
+        apiKey: YOUTUBE_API_KEY || undefined,
+        sleepMs: 200,
       },
-      redirect: "follow",
-    });
-    const t = await r.text();
-    const ids = [...t.matchAll(/"videoId":"([A-Za-z0-9_-]{11})"/g)].map(
-      (m) => m[1],
     );
-    const id = ids[0] ?? null;
-    if (id) {
-      ytCache[q] = id;
-      return id;
+    saveYtCache(YT_CACHE_PATH, ytCache, fs);
+    if (found && found !== youtubeId) {
+      const alt = await downloadThumb(found);
+      if (alt) {
+        buffer = alt;
+        youtubeId = found;
+        repaired = true;
+        console.log(`  repaired → ${found} [${reason}]`);
+      }
     }
-  } catch {
-    // ignore
   }
-  return null;
+
+  if (buffer) {
+    return {
+      storeId: track.youtubeId, // keep API key = original catalog id until catalog rewrite
+      playbackId: youtubeId,
+      buffer,
+      contentType: "image/jpeg",
+      ext: "jpg",
+      repaired,
+    };
+  }
+
+  return {
+    storeId: track.youtubeId,
+    playbackId: track.youtubeId,
+    buffer: placeholderSvg(track.title, track.artist),
+    contentType: "image/svg+xml",
+    ext: "svg",
+    repaired: false,
+    placeholder: true,
+  };
 }
 
 function escapeXml(s) {
@@ -324,46 +351,6 @@ function readCached(youtubeId) {
   return null;
 }
 
-async function resolveImage(track) {
-  let youtubeId = track.youtubeId;
-  let repaired = false;
-
-  let buffer = await downloadThumb(youtubeId);
-  if (!buffer && !NO_REPAIR) {
-    const q = `${track.artist} ${track.title} official video`;
-    const found = await ytSearch(q);
-    if (found && found !== youtubeId) {
-      const alt = await downloadThumb(found);
-      if (alt) {
-        buffer = alt;
-        youtubeId = found;
-        repaired = true;
-      }
-    }
-  }
-
-  if (buffer) {
-    return {
-      storeId: track.youtubeId, // keep API key = original catalog id until catalog rewrite
-      playbackId: youtubeId,
-      buffer,
-      contentType: "image/jpeg",
-      ext: "jpg",
-      repaired,
-    };
-  }
-
-  return {
-    storeId: track.youtubeId,
-    playbackId: track.youtubeId,
-    buffer: placeholderSvg(track.title, track.artist),
-    contentType: "image/svg+xml",
-    ext: "svg",
-    repaired: false,
-    placeholder: true,
-  };
-}
-
 async function main() {
   fs.mkdirSync(STORE_DIR, { recursive: true });
   await ensureBucket();
@@ -472,14 +459,14 @@ async function main() {
     await sleep(150);
 
     if ((i + 1) % 25 === 0) {
-      fs.writeFileSync(YT_CACHE_PATH, JSON.stringify(ytCache, null, 2));
+      saveYtCache(YT_CACHE_PATH, ytCache, fs);
       if (catalogDirty) {
         fs.writeFileSync(CATALOG_PATH, JSON.stringify(catalog, null, 2) + "\n");
       }
     }
   }
 
-  fs.writeFileSync(YT_CACHE_PATH, JSON.stringify(ytCache, null, 2));
+  saveYtCache(YT_CACHE_PATH, ytCache, fs);
   if (catalogDirty) {
     fs.writeFileSync(CATALOG_PATH, JSON.stringify(catalog, null, 2) + "\n");
     // Keep seed files in sync for repaired ids — rebuild from catalog is enough for runtime

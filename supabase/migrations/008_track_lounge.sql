@@ -29,6 +29,16 @@ create index if not exists track_lounge_reactions_track_idx
 alter table public.track_lounge_messages enable row level security;
 alter table public.track_lounge_reactions enable row level security;
 
+-- Idempotent policies (safe to re-run this migration)
+drop policy if exists "Anyone can read lounge messages" on public.track_lounge_messages;
+drop policy if exists "Anyone can read lounge reactions" on public.track_lounge_reactions;
+drop policy if exists "Members insert own lounge messages" on public.track_lounge_messages;
+drop policy if exists "Members delete own lounge messages" on public.track_lounge_messages;
+drop policy if exists "Members upsert own lounge reactions" on public.track_lounge_reactions;
+drop policy if exists "Members delete own lounge reactions" on public.track_lounge_reactions;
+drop policy if exists "Admins manage lounge messages" on public.track_lounge_messages;
+drop policy if exists "Admins manage lounge reactions" on public.track_lounge_reactions;
+
 -- Public read (guests can follow the vibe)
 create policy "Anyone can read lounge messages"
   on public.track_lounge_messages for select
