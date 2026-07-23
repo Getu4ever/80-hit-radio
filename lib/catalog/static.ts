@@ -51,6 +51,7 @@ export interface DbTrackRow {
 }
 
 export function dbTrackToTrack(row: DbTrackRow): Track {
+  const artistImage = row.artists?.image_url?.trim() || null;
   return {
     id: row.id,
     title: row.title,
@@ -58,7 +59,7 @@ export function dbTrackToTrack(row: DbTrackRow): Track {
     year: row.year,
     youtubeId: row.youtube_id,
     subgenre: row.subgenre as Subgenre,
-    // Always use DB-backed track art — never external YouTube / artist URLs.
-    imageUrl: trackImagePath(row.youtube_id),
+    // Prefer uploaded artist portrait; otherwise Storage CDN track art.
+    imageUrl: artistImage || trackImagePath(row.youtube_id),
   };
 }

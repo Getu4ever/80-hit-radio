@@ -30,7 +30,7 @@ export interface Track {
   year: number;
   youtubeId: string;
   subgenre: Subgenre;
-  /** Same-origin path — artwork is served from the database via /api/track-images. */
+  /** Artwork URL — Supabase Storage CDN (or API fallback). */
   imageUrl: string;
 }
 
@@ -80,7 +80,7 @@ export const MORE_GENRES: Subgenre[] = SUBGENRES.filter(
     ((catalog as Record<string, unknown[]>)[g]?.length ?? 0) > 0,
 );
 
-/** @deprecated Use trackImagePath — external YouTube thumbs are unreliable. */
+/** @deprecated Use trackImagePath. */
 export function youtubeThumb(youtubeId: string): string {
   return trackImagePath(youtubeId);
 }
