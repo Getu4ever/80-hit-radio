@@ -241,7 +241,7 @@ export const useAudioStore = create<AudioState>((set, get) => ({
           state.newsBulletinIntervalSec,
         )
       ) {
-        set({ newsBulletinActive: true, isPlaying: false });
+        set({ newsBulletinActive: true });
         return;
       }
     }
