@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getCurrentProfile, updateProfileById } from "@/lib/auth/session";
+import { getCurrentProfile } from "@/lib/auth/session";
 import { detectCountryFromHeaders } from "@/lib/geo/country";
 import {
   getAppUrl,
@@ -7,6 +7,7 @@ import {
   isSupabaseConfigured,
 } from "@/lib/env";
 import { getStripe } from "@/lib/stripe";
+import { ensureStripeCustomerForProfile } from "@/lib/stripe/customer";
 import {
   currencyForCountry,
   getStripePriceIdForCurrency,
@@ -29,46 +30,44 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const country = detectCountryFromHeaders(request.headers);
-  const currency = currencyForCountry(country);
-  const priceId = getStripePriceIdForCurrency(currency);
+  try {
+    const country = detectCountryFromHeaders(request.headers);
+    const currency = currencyForCountry(country);
+    const priceId = getStripePriceIdForCurrency(currency);
 
-  const stripe = getStripe();
-  const appUrl = getAppUrl();
+    const stripe = getStripe();
+    const appUrl = getAppUrl();
+    const customerId = await ensureStripeCustomerForProfile(profile);
 
-  let customerId = profile.stripe_customer_id;
-  if (!customerId) {
-    const customer = await stripe.customers.create({
-      email: profile.email,
-      metadata: { supabase_user_id: profile.id },
+    const session = await stripe.checkout.sessions.create({
+      mode: "subscription",
+      customer: customerId,
+      line_items: [{ price: priceId, quantity: 1 }],
+      success_url: `${appUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${appUrl}/pricing?checkout=canceled`,
+      client_reference_id: profile.id,
+      metadata: {
+        supabase_user_id: profile.id,
+        presentment_country: country,
+        presentment_currency: currency,
+      },
+      subscription_data: {
+        metadata: { supabase_user_id: profile.id },
+      },
     });
-    customerId = customer.id;
-    await updateProfileById(profile.id, { stripe_customer_id: customerId });
+
+    if (!session.url) {
+      return NextResponse.json(
+        { error: "Unable to create checkout session" },
+        { status: 500 },
+      );
+    }
+
+    return NextResponse.json({ url: session.url });
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : "Unable to start checkout";
+    console.error("Stripe checkout error:", message);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
-
-  const session = await stripe.checkout.sessions.create({
-    mode: "subscription",
-    customer: customerId,
-    line_items: [{ price: priceId, quantity: 1 }],
-    success_url: `${appUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${appUrl}/pricing?checkout=canceled`,
-    client_reference_id: profile.id,
-    metadata: {
-      supabase_user_id: profile.id,
-      presentment_country: country,
-      presentment_currency: currency,
-    },
-    subscription_data: {
-      metadata: { supabase_user_id: profile.id },
-    },
-  });
-
-  if (!session.url) {
-    return NextResponse.json(
-      { error: "Unable to create checkout session" },
-      { status: 500 },
-    );
-  }
-
-  return NextResponse.json({ url: session.url });
 }

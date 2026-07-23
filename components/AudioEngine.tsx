@@ -76,7 +76,15 @@ const MAX_CONSECUTIVE_ERRORS = 8;
 const PROGRESS_UI_INTERVAL_MS = 400;
 const MUTED_WARM_LOOP_SEC = 2.5;
 const MUTED_WARM_MIN_BUFFER_SEC = 3;
-const STANDBY_REASSERT_MS = 4_000;
+const PLAYBACK_WATCHDOG_MS = 2_500;
+/** Force-resume if live media makes no progress for this long. */
+const STALL_RESUME_MS = 3_000;
+/** Auto-advance if stalled this long near the end (or already ended). */
+const STALL_PROMOTE_MS = 7_000;
+/** Treat as "near end" for stall → promote. */
+const NEAR_END_FOR_STALL_SEC = 15;
+/** Clear stuck handoff locks so promote can run again. */
+const HANDOFF_LOCK_MAX_MS = 6_000;
 /** If standby drifts past this while muted, seek back to 0 for instant handoff. */
 const STANDBY_MAX_AHEAD_SEC = 4;
 
@@ -210,6 +218,10 @@ export default function AudioEngine({
   const [cueWarmActive, setCueWarmActive] = useState(true);
   const heartbeatRef = useRef<QueueHeartbeatController | null>(null);
   const lastHeartbeatSyncAt = useRef(0);
+  /** Watchdog: last observed live currentTime + when progress last moved. */
+  const watchdogMediaTimeRef = useRef(0);
+  const stallSinceRef = useRef(0);
+  const handoffLockedAtRef = useRef(0);
 
   liveSlotRef.current = liveSlot;
 
@@ -281,6 +293,18 @@ export default function AudioEngine({
     return isTabHidden();
   }, []);
 
+  const clearHandoffLock = useCallback(() => {
+    endingRef.current = false;
+    handoffFiredRef.current = false;
+    handoffLockedAtRef.current = 0;
+  }, []);
+
+  const lockHandoff = useCallback(() => {
+    endingRef.current = true;
+    handoffFiredRef.current = true;
+    handoffLockedAtRef.current = Date.now();
+  }, []);
+
   /**
    * Promote the already-playing standby → live. This is the ONLY safe way to
    * advance YouTube in a background tab (unmute, never cold-start).
@@ -288,7 +312,20 @@ export default function AudioEngine({
   const promoteStandby = useCallback(
     (reason: string) => {
       if (!streamingAllowed) return;
-      if (endingRef.current || handoffFiredRef.current) return;
+      if (endingRef.current || handoffFiredRef.current) {
+        // A prior handoff may have died mid-flight and left the lock stuck —
+        // allow watchdog / retries after the grace window.
+        const lockedAt = handoffLockedAtRef.current;
+        if (
+          lockedAt &&
+          Date.now() - lockedAt > HANDOFF_LOCK_MAX_MS
+        ) {
+          clearHandoffLock();
+        } else {
+          if (!lockedAt) handoffLockedAtRef.current = Date.now();
+          return;
+        }
+      }
 
       const state = useAudioStore.getState();
       if (state.newsBulletinActive) return;
@@ -305,11 +342,9 @@ export default function AudioEngine({
           state.newsBulletinIntervalSec,
         )
       ) {
-        endingRef.current = true;
-        handoffFiredRef.current = true;
+        lockHandoff();
         state.nextTrack({ skipNewsCheck: false });
-        endingRef.current = false;
-        handoffFiredRef.current = false;
+        clearHandoffLock();
         return;
       }
 
@@ -319,19 +354,16 @@ export default function AudioEngine({
         useAudioStore.getState().queue[0] ??
         null;
       if (!next) {
-        endingRef.current = true;
-        handoffFiredRef.current = true;
+        lockHandoff();
         useAudioStore.getState().nextTrack({
           skipNewsCheck: true,
           skipMediaPlay: false,
         });
-        endingRef.current = false;
-        handoffFiredRef.current = false;
+        clearHandoffLock();
         return;
       }
 
-      endingRef.current = true;
-      handoffFiredRef.current = true;
+      lockHandoff();
       trackDeadlineAtRef.current = 0;
       startSilentKeepAlive();
       requestBroadcastWakeLock();
@@ -346,117 +378,122 @@ export default function AudioEngine({
       // Prefer promote when standby already holds the next track.
       const canPromote = standbyId === next.id && !!standbyMedia;
 
-      if (canPromote) {
-        liveSlotRef.current = standby;
-        setLiveSlot(standby);
-        lastPromotedTrackRef.current = next.id;
+      try {
+        if (canPromote) {
+          liveSlotRef.current = standby;
+          setLiveSlot(standby);
+          lastPromotedTrackRef.current = next.id;
 
-        // Silence old live FIRST so both slots never play aloud together.
-        silenceSlot(liveMedia);
+          // Silence old live FIRST so both slots never play aloud together.
+          silenceSlot(liveMedia);
 
-        // Snap standby to the start (it may have been looping the warm head).
-        resetStandbyToStart(standbyMedia);
-        playAudible(standbyMedia, useAudioStore.getState().volume);
-        applyBroadcastQuality(standbyMedia as YoutubePlayerElement);
+          // Snap standby to the start (it may have been looping the warm head).
+          resetStandbyToStart(standbyMedia);
+          playAudible(standbyMedia, useAudioStore.getState().volume);
+          applyBroadcastQuality(standbyMedia as YoutubePlayerElement);
 
-        // Rebind demoted slot to the track after next (warm pipeline).
-        useAudioStore.getState().nextTrack({
-          skipNewsCheck: true,
-          skipMediaPlay: true,
-        });
-        const after = useAudioStore.getState().upcomingTrack;
-        const demoted = live;
-        if (demoted === "a") {
-          slotAIdRef.current = after?.id ?? null;
-          setSlotAId(after?.id ?? null);
-          if (after) {
-            lastSrcRef.current.a = youtubeSrc(after.youtubeId);
-            injectYoutubeId(liveMedia, after.youtubeId);
+          // Rebind demoted slot to the track after next (warm pipeline).
+          useAudioStore.getState().nextTrack({
+            skipNewsCheck: true,
+            skipMediaPlay: true,
+          });
+          const after = useAudioStore.getState().upcomingTrack;
+          const demoted = live;
+          if (demoted === "a") {
+            slotAIdRef.current = after?.id ?? null;
+            setSlotAId(after?.id ?? null);
+            if (after) {
+              lastSrcRef.current.a = youtubeSrc(after.youtubeId);
+              injectYoutubeId(liveMedia, after.youtubeId);
+            }
+          } else {
+            slotBIdRef.current = after?.id ?? null;
+            setSlotBId(after?.id ?? null);
+            if (after) {
+              lastSrcRef.current.b = youtubeSrc(after.youtubeId);
+              injectYoutubeId(liveMedia, after.youtubeId);
+            }
           }
+          queueMicrotask(() => {
+            playMuted(slotRef(demoted).current);
+            resetStandbyToStart(slotRef(demoted).current);
+            playAudible(slotRef(standby).current, useAudioStore.getState().volume);
+            syncSlotAudio(standby);
+            syncSlotAudio(demoted);
+          });
         } else {
-          slotBIdRef.current = after?.id ?? null;
-          setSlotBId(after?.id ?? null);
-          if (after) {
-            lastSrcRef.current.b = youtubeSrc(after.youtubeId);
-            injectYoutubeId(liveMedia, after.youtubeId);
+          // Standby not ready — load next onto current live node as last resort,
+          // but keep keep-alive running and aggressively retry play.
+          lastPromotedTrackRef.current = next.id;
+          silenceSlot(standbyMedia);
+          if (live === "a") {
+            slotAIdRef.current = next.id;
+            setSlotAId(next.id);
+            lastSrcRef.current.a = youtubeSrc(next.youtubeId);
+          } else {
+            slotBIdRef.current = next.id;
+            setSlotBId(next.id);
+            lastSrcRef.current.b = youtubeSrc(next.youtubeId);
           }
-        }
-        queueMicrotask(() => {
-          playMuted(slotRef(demoted).current);
-          resetStandbyToStart(slotRef(demoted).current);
-          playAudible(slotRef(standby).current, useAudioStore.getState().volume);
-          syncSlotAudio(standby);
-          syncSlotAudio(demoted);
-        });
-      } else {
-        // Standby not ready — load next onto current live node as last resort,
-        // but keep keep-alive running and aggressively retry play.
-        lastPromotedTrackRef.current = next.id;
-        silenceSlot(standbyMedia);
-        if (live === "a") {
-          slotAIdRef.current = next.id;
-          setSlotAId(next.id);
-          lastSrcRef.current.a = youtubeSrc(next.youtubeId);
-        } else {
-          slotBIdRef.current = next.id;
-          setSlotBId(next.id);
-          lastSrcRef.current.b = youtubeSrc(next.youtubeId);
-        }
-        injectYoutubeId(liveMedia, next.youtubeId);
-        playAudible(liveMedia, useAudioStore.getState().volume);
+          injectYoutubeId(liveMedia, next.youtubeId);
+          playAudible(liveMedia, useAudioStore.getState().volume);
 
-        useAudioStore.getState().nextTrack({
-          skipNewsCheck: true,
-          skipMediaPlay: true,
-        });
-        const after = useAudioStore.getState().upcomingTrack;
-        const demoted = standby;
-        if (demoted === "a") {
-          slotAIdRef.current = after?.id ?? null;
-          setSlotAId(after?.id ?? null);
-          if (after) {
-            lastSrcRef.current.a = youtubeSrc(after.youtubeId);
-            injectYoutubeId(slotRef("a").current, after.youtubeId);
+          useAudioStore.getState().nextTrack({
+            skipNewsCheck: true,
+            skipMediaPlay: true,
+          });
+          const after = useAudioStore.getState().upcomingTrack;
+          const demoted = standby;
+          if (demoted === "a") {
+            slotAIdRef.current = after?.id ?? null;
+            setSlotAId(after?.id ?? null);
+            if (after) {
+              lastSrcRef.current.a = youtubeSrc(after.youtubeId);
+              injectYoutubeId(slotRef("a").current, after.youtubeId);
+            }
+          } else {
+            slotBIdRef.current = after?.id ?? null;
+            setSlotBId(after?.id ?? null);
+            if (after) {
+              lastSrcRef.current.b = youtubeSrc(after.youtubeId);
+              injectYoutubeId(slotRef("b").current, after.youtubeId);
+            }
           }
-        } else {
-          slotBIdRef.current = after?.id ?? null;
-          setSlotBId(after?.id ?? null);
-          if (after) {
-            lastSrcRef.current.b = youtubeSrc(after.youtubeId);
-            injectYoutubeId(slotRef("b").current, after.youtubeId);
-          }
+          queueMicrotask(() => {
+            playMuted(slotRef(demoted).current);
+            resetStandbyToStart(slotRef(demoted).current);
+            playAudible(slotRef(live).current, useAudioStore.getState().volume);
+            // Background retries — YouTube may reject the first play().
+            window.setTimeout(() => {
+              playAudible(
+                slotRef(liveSlotRef.current).current,
+                useAudioStore.getState().volume,
+              );
+            }, 120);
+            window.setTimeout(() => {
+              playAudible(
+                slotRef(liveSlotRef.current).current,
+                useAudioStore.getState().volume,
+              );
+              applyBroadcastQuality(
+                slotRef(liveSlotRef.current).current as YoutubePlayerElement | null,
+              );
+            }, 500);
+            syncAllAudio();
+          });
         }
-        queueMicrotask(() => {
-          playMuted(slotRef(demoted).current);
-          resetStandbyToStart(slotRef(demoted).current);
-          playAudible(slotRef(live).current, useAudioStore.getState().volume);
-          // Background retries — YouTube may reject the first play().
-          window.setTimeout(() => {
-            playAudible(
-              slotRef(liveSlotRef.current).current,
-              useAudioStore.getState().volume,
-            );
-          }, 120);
-          window.setTimeout(() => {
-            playAudible(
-              slotRef(liveSlotRef.current).current,
-              useAudioStore.getState().volume,
-            );
-            applyBroadcastQuality(
-              slotRef(liveSlotRef.current).current as YoutubePlayerElement | null,
-            );
-          }, 500);
-          syncAllAudio();
-        });
+      } finally {
+        durationRef.current = 0;
+        lastTickMediaTimeRef.current = 0;
+        watchdogMediaTimeRef.current = 0;
+        stallSinceRef.current = 0;
+        consecutiveErrors.current = 0;
+        clearHandoffLock();
       }
-
-      durationRef.current = 0;
-      lastTickMediaTimeRef.current = 0;
-      consecutiveErrors.current = 0;
-      endingRef.current = false;
-      handoffFiredRef.current = false;
     },
     [
+      clearHandoffLock,
+      lockHandoff,
       shouldSkipNewsForBackground,
       slotRef,
       streamingAllowed,
@@ -710,20 +747,99 @@ export default function AudioEngine({
     syncAllAudio,
   ]);
 
-  // While playing, periodically re-assert muted standby so background GC
-  // cannot leave the next track cold.
+  // Playback watchdog: keep standby warm AND recover "zombie play"
+  // (isPlaying true, YouTube silent / ended / frozen) without waiting for a tap.
   useEffect(() => {
-    if (!isPlaying || !streamingAllowed) return;
+    if (!isPlaying || !streamingAllowed) {
+      stallSinceRef.current = 0;
+      watchdogMediaTimeRef.current = 0;
+      return;
+    }
     const id = window.setInterval(() => {
+      const state = useAudioStore.getState();
+      if (!state.isPlaying || !streamingAllowed) return;
+      if (state.newsBulletinActive) {
+        stallSinceRef.current = 0;
+        return;
+      }
+
       startSilentKeepAlive();
       keepStandbyHot();
+
+      // Unlock a handoff that never finished (prevents permanent silence).
+      if (endingRef.current || handoffFiredRef.current) {
+        const lockedAt = handoffLockedAtRef.current || Date.now();
+        handoffLockedAtRef.current = lockedAt;
+        if (Date.now() - lockedAt > HANDOFF_LOCK_MAX_MS) {
+          clearHandoffLock();
+        } else {
+          return;
+        }
+      }
+
       const live = slotRef(liveSlotRef.current).current;
-      if (live?.paused) {
+      if (!live) return;
+
+      const now = Date.now();
+      const t = Number.isFinite(live.currentTime) ? live.currentTime : 0;
+      const dur =
+        durationRef.current > 0
+          ? durationRef.current
+          : Number.isFinite(live.duration) && live.duration > 0
+            ? live.duration
+            : state.duration > 0
+              ? state.duration
+              : 0;
+      const prevT = watchdogMediaTimeRef.current;
+      const progressed =
+        prevT === 0 || Math.abs(t - prevT) >= 0.12 || t < prevT - 0.5;
+
+      if (progressed) {
+        watchdogMediaTimeRef.current = t;
+        stallSinceRef.current = now;
+      } else if (!stallSinceRef.current) {
+        stallSinceRef.current = now;
+      }
+
+      const stalledFor = stallSinceRef.current
+        ? now - stallSinceRef.current
+        : 0;
+      const nearEnd = dur > 0 && dur - t <= NEAR_END_FOR_STALL_SEC;
+      const ended =
+        live.ended ||
+        (dur > 0 && Number.isFinite(t) && t >= dur - 0.35);
+
+      if (ended) {
+        promoteRef.current("watchdog-ended");
+        stallSinceRef.current = 0;
+        return;
+      }
+
+      if (live.paused || stalledFor >= STALL_RESUME_MS) {
         playAudible(live, useAudioStore.getState().volume);
       }
-    }, STANDBY_REASSERT_MS);
+
+      // Stuck at end (or never leaving the last seconds) → advance.
+      if (stalledFor >= STALL_PROMOTE_MS && nearEnd) {
+        promoteRef.current("watchdog-stall");
+        stallSinceRef.current = 0;
+        return;
+      }
+
+      // Stuck at the start after a cold handoff — force play, then advance.
+      if (stalledFor >= STALL_PROMOTE_MS + 3_000 && t < 1.5) {
+        promoteRef.current("watchdog-start-stall");
+        stallSinceRef.current = 0;
+      }
+    }, PLAYBACK_WATCHDOG_MS);
     return () => window.clearInterval(id);
-  }, [isPlaying, streamingAllowed, keepStandbyHot, slotRef]);
+  }, [
+    clearHandoffLock,
+    isPlaying,
+    keepStandbyHot,
+    slotRef,
+    streamingAllowed,
+  ]);
 
   useEffect(() => {
     syncAllAudio();
@@ -740,6 +856,11 @@ export default function AudioEngine({
     }, 800);
     return () => window.clearTimeout(id);
   }, [broadcastEnhance, isPlaying, slotRef, currentTrack?.id]);
+
+  useEffect(() => {
+    stallSinceRef.current = 0;
+    watchdogMediaTimeRef.current = 0;
+  }, [currentTrack?.id]);
 
   useEffect(() => {
     if (pendingSeekSeconds == null) return;
