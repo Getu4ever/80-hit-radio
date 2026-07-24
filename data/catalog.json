@@ -1,286 +1,10 @@
 {
   "Pop": [
     [
-      "Mamma Mia",
-      "ABBA",
-      1975,
-      "U4Sm7v6PDY8"
-    ],
-    [
-      "Dancing Queen",
-      "ABBA",
-      1976,
-      "-sVB91NTa4A"
-    ],
-    [
-      "Take a Chance on Me",
-      "ABBA",
-      1978,
-      "f_lfgahuMk0"
-    ],
-    [
-      "Gimme! Gimme! Gimme! (A Man After Midnight)",
-      "ABBA",
-      1979,
-      "-mHMvYn6RVs"
-    ],
-    [
-      "Call Me",
-      "Blondie",
-      1980,
-      "StKVS0eI85I"
-    ],
-    [
-      "Hold the Line",
-      "Toto",
-      1980,
-      "htgr3pvBr-I"
-    ],
-    [
-      "I'm Coming Out",
-      "Diana Ross",
-      1980,
-      "F-mjl63e0ms"
-    ],
-    [
-      "Rapture",
-      "Blondie",
-      1980,
-      "pHCdS7O248g"
-    ],
-    [
-      "Super Trouper",
-      "ABBA",
-      1980,
-      "ktNt-69TixI"
-    ],
-    [
-      "The Tide Is High",
-      "Blondie",
-      1980,
-      "fAb8Q9X2xAc"
-    ],
-    [
-      "The Winner Takes It All",
-      "ABBA",
-      1980,
-      "81WhM9dOcYI"
-    ],
-    [
-      "Upside Down",
-      "Diana Ross",
-      1980,
-      "Po0BbGMSX4g"
-    ],
-    [
-      "Don't You Want Me",
-      "The Human League",
-      1981,
-      "uPudE8nDog0"
-    ],
-    [
-      "Down Under",
-      "Men at Work",
-      1981,
-      "XfR9iY5y94s"
-    ],
-    [
-      "In the Air Tonight",
-      "Phil Collins",
-      1981,
-      "YkADj0TPrJA"
-    ],
-    [
-      "Physical",
-      "Olivia Newton-John",
-      1981,
-      "vWz9VN40nCA"
-    ],
-    [
-      "Tainted Love",
-      "Soft Cell",
-      1981,
-      "XZVpR3Pk-r8"
-    ],
-    [
-      "1999",
-      "Prince",
-      1982,
-      "rblt2EtFfC4"
-    ],
-    [
-      "Africa",
-      "Toto",
-      1982,
-      "FTQbiNvZqaY"
-    ],
-    [
-      "Come On Eileen",
-      "Dexys Midnight Runners",
-      1982,
-      "oc-P8oDuS0Q"
-    ],
-    [
-      "Do You Really Want to Hurt Me",
-      "Culture Club",
-      1982,
-      "2nXGPZaTKik"
-    ],
-    [
-      "Eye of the Tiger",
-      "Survivor",
-      1982,
-      "btPJPFnesV4"
-    ],
-    [
-      "Gloria",
-      "Laura Branigan",
-      1982,
-      "nNEb2k_EmMg"
-    ],
-    [
-      "Hungry Like the Wolf",
-      "Duran Duran",
-      1982,
-      "oJL-lCzEXgI"
-    ],
-    [
-      "Little Red Corvette",
-      "Prince",
-      1982,
-      "v0KpfrJE4zw"
-    ],
-    [
-      "Mad World",
-      "Tears for Fears",
-      1982,
-      "u1ZvPSpLxCg"
-    ],
-    [
-      "Maneater",
-      "Hall & Oates",
-      1982,
-      "yRYFKcMa_Ek"
-    ],
-    [
-      "Rio",
-      "Duran Duran",
-      1982,
-      "nTizYn3-QN0"
-    ],
-    [
-      "Save a Prayer",
-      "Duran Duran",
-      1982,
-      "6Uxc9eFcZyM"
-    ],
-    [
-      "99 Luftballons",
-      "Nena",
-      1983,
-      "Fpu5a0Bl8eY"
-    ],
-    [
-      "All Night Long",
-      "Lionel Richie",
-      1983,
-      "nqAvFx3NxUM"
-    ],
-    [
-      "An Innocent Man",
-      "Billy Joel",
-      1983,
-      "WVT3UPrUWQM"
-    ],
-    [
-      "Beat It",
-      "Michael Jackson",
-      1983,
-      "oRdxUFDoQe0"
-    ],
-    [
       "Billie Jean",
       "Michael Jackson",
       1983,
       "Zi_XLOBDo_Y"
-    ],
-    [
-      "Cruel Summer",
-      "Bananarama",
-      1983,
-      "l9ml3nyww80"
-    ],
-    [
-      "Flashdance... What a Feeling",
-      "Irene Cara",
-      1983,
-      "ILWSp0m9G2U"
-    ],
-    [
-      "Girls Just Want to Have Fun",
-      "Cyndi Lauper",
-      1983,
-      "PIb6AZdTr-A"
-    ],
-    [
-      "Gold",
-      "Spandau Ballet",
-      1983,
-      "ntG50eXbBtc"
-    ],
-    [
-      "Here Comes the Rain Again",
-      "Eurythmics",
-      1983,
-      "TzFnYcIqj6I"
-    ],
-    [
-      "Holiday",
-      "Madonna",
-      1983,
-      "5Rswx2Z7SDw"
-    ],
-    [
-      "I'm Still Standing",
-      "Elton John",
-      1983,
-      "ZHwVBirqD2s"
-    ],
-    [
-      "Karma Chameleon",
-      "Culture Club",
-      1983,
-      "JmcA9LIIXWw"
-    ],
-    [
-      "Making Love Out of Nothing at All",
-      "Air Supply",
-      1983,
-      "JMKi9qVrGWM"
-    ],
-    [
-      "Stuck on You",
-      "Lionel Richie",
-      1983,
-      "eEjbcOe9hsc"
-    ],
-    [
-      "Sweet Dreams (Are Made of This)",
-      "Eurythmics",
-      1983,
-      "qeMFqkcPYcg"
-    ],
-    [
-      "Tell Her About It",
-      "Billy Joel",
-      1983,
-      "p0pM5dm--yQ"
-    ],
-    [
-      "The Reflex",
-      "Duran Duran",
-      1983,
-      "J5ebkj9x5Ko"
     ],
     [
       "Thriller",
@@ -289,376 +13,22 @@
       "sOnqjkJTMaA"
     ],
     [
-      "Total Eclipse of the Heart",
-      "Bonnie Tyler",
+      "Beat It",
+      "Michael Jackson",
       1983,
-      "lcOxhH8N3Bo"
+      "oRdxUFDoQe0"
     ],
     [
-      "True",
-      "Spandau Ballet",
-      1983,
-      "AR8D2yqgQ1U"
-    ],
-    [
-      "Uptown Girl",
-      "Billy Joel",
-      1983,
-      "hCuMWrfXG4E"
-    ],
-    [
-      "Against All Odds",
-      "Phil Collins",
-      1984,
-      "SWSQS06i7-w"
-    ],
-    [
-      "Big in Japan",
-      "Alphaville",
-      1984,
-      "x1hqXFIvZzA"
-    ],
-    [
-      "Careless Whisper",
-      "George Michael",
-      1984,
-      "izGwDsrQ1eQ"
-    ],
-    [
-      "Easy Lover",
-      "Phil Collins",
-      1984,
-      "JkRKT6T0QLg"
-    ],
-    [
-      "Footloose",
-      "Kenny Loggins",
-      1984,
-      "ltrMfT4Qz5Y"
-    ],
-    [
-      "Forever Young",
-      "Alphaville",
-      1984,
-      "FQ5vkgYPuJY"
-    ],
-    [
-      "Ghostbusters",
-      "Ray Parker Jr.",
-      1984,
-      "Fe93CLbHjxQ"
-    ],
-    [
-      "Hello",
-      "Lionel Richie",
-      1984,
-      "mHONNcZbwDY"
-    ],
-    [
-      "Holding Out for a Hero",
-      "Bonnie Tyler",
-      1984,
-      "bWcASV2sey0"
-    ],
-    [
-      "I Just Called to Say I Love You",
-      "Stevie Wonder",
-      1984,
-      "VtPLdL5GWDg"
-    ],
-    [
-      "Last Christmas",
-      "Wham!",
-      1984,
-      "E8gmARGvPlI"
-    ],
-    [
-      "Let's Go Crazy",
-      "Prince",
-      1984,
-      "aXJhDltzYVQ"
-    ],
-    [
-      "Like a Virgin",
-      "Madonna",
-      1984,
-      "s__rX_WL100"
-    ],
-    [
-      "Out of Touch",
-      "Hall & Oates",
-      1984,
-      "D00M2KZH1J0"
-    ],
-    [
-      "Purple Rain",
-      "Prince",
-      1984,
-      "TvnYmWpD_T8"
-    ],
-    [
-      "Self Control",
-      "Laura Branigan",
-      1984,
-      "RP0_8J7uxhs"
-    ],
-    [
-      "Shout",
-      "Tears for Fears",
-      1984,
-      "Ye7FKc1JQe4"
-    ],
-    [
-      "Time After Time",
-      "Cyndi Lauper",
-      1984,
-      "VdQY7BusJNU"
-    ],
-    [
-      "Wake Me Up Before You Go-Go",
-      "Wham!",
-      1984,
-      "pIgZ7gMze7A"
-    ],
-    [
-      "When Doves Cry",
-      "Prince",
-      1984,
-      "UG3VcCAlUgE"
-    ],
-    [
-      "A View to a Kill",
-      "Duran Duran",
-      1985,
-      "Fp4CR2HcHLQ"
-    ],
-    [
-      "Don't You (Forget About Me)",
-      "Simple Minds",
-      1985,
-      "CdqoNKCCt7A"
-    ],
-    [
-      "Every Time You Go Away",
-      "Paul Young",
-      1985,
-      "nfk6sCzRTbM"
-    ],
-    [
-      "Everybody Wants to Rule the World",
-      "Tears for Fears",
-      1985,
-      "aGCdLKXNF3w"
-    ],
-    [
-      "Head Over Heels",
-      "Tears for Fears",
-      1985,
-      "CsHiG-43Fzg"
-    ],
-    [
-      "How Will I Know",
-      "Whitney Houston",
-      1985,
-      "m3-hY-hlhBg"
-    ],
-    [
-      "Into the Groove",
-      "Madonna",
-      1985,
-      "52iW3lcpK5M"
-    ],
-    [
-      "Material Girl",
-      "Madonna",
-      1985,
-      "6p-lDYPR2P8"
-    ],
-    [
-      "Nikita",
-      "Elton John",
-      1985,
-      "Tg-Q-Acv4qs"
-    ],
-    [
-      "One More Night",
-      "Phil Collins",
-      1985,
-      "zKVq-P3z5Vg"
-    ],
-    [
-      "Part-Time Lover",
-      "Stevie Wonder",
-      1985,
-      "74mL5f7tr5w"
-    ],
-    [
-      "Raspberry Beret",
-      "Prince",
-      1985,
-      "l7vRSu_wsNc"
-    ],
-    [
-      "Saving All My Love for You",
-      "Whitney Houston",
-      1985,
-      "ewxmv2tyeRs"
-    ],
-    [
-      "Say You, Say Me",
-      "Lionel Richie",
-      1985,
-      "we0mk_J0zyc"
-    ],
-    [
-      "Take On Me",
-      "a-ha",
-      1985,
-      "djV11Xbc914"
-    ],
-    [
-      "The Sun Always Shines on T.V.",
-      "a-ha",
-      1985,
-      "a3ir9HC9vYg"
-    ],
-    [
-      "There Must Be an Angel",
-      "Eurythmics",
-      1985,
-      "RCdneDxFRYQ"
-    ],
-    [
-      "West End Girls",
-      "Pet Shop Boys",
-      1985,
-      "p3j2NYZ8FKs"
-    ],
-    [
-      "Would I Lie to You?",
-      "Eurythmics",
-      1985,
-      "Uhpu2N4rQZM"
-    ],
-    [
-      "(I Just) Died In Your Arms",
-      "Cutting Crew",
-      1986,
-      "6dOwHzCHfgA"
-    ],
-    [
-      "Dancing on the Ceiling",
-      "Lionel Richie",
-      1986,
-      "ovo6zwv6DX4"
-    ],
-    [
-      "Danger Zone",
-      "Kenny Loggins",
-      1986,
-      "siwpn14IE7E"
-    ],
-    [
-      "Greatest Love of All",
-      "Whitney Houston",
-      1986,
-      "IYzlVDlE72w"
-    ],
-    [
-      "Kiss",
-      "Prince",
-      1986,
-      "H9tEvfIsDyo"
-    ],
-    [
-      "Manic Monday",
-      "The Bangles",
-      1986,
-      "SsmVgoXDq2w"
-    ],
-    [
-      "Papa Don't Preach",
-      "Madonna",
-      1986,
-      "G333Is7VPOg"
-    ],
-    [
-      "Take My Breath Away",
-      "Berlin",
-      1986,
-      "Bx51eegLTY8"
-    ],
-    [
-      "The Lady in Red",
-      "Chris de Burgh",
-      1986,
-      "T9Jcs45GhxU"
-    ],
-    [
-      "True Colors",
-      "Cyndi Lauper",
-      1986,
-      "LPn0KFlbqX8"
-    ],
-    [
-      "Venus",
-      "Bananarama",
-      1986,
-      "d4-1ASpdT1Y"
-    ],
-    [
-      "Walk Like an Egyptian",
-      "The Bangles",
-      1986,
-      "Cv6tuzHUuuk"
-    ],
-    [
-      "(I've Had) The Time of My Life",
-      "Bill Medley & Jennifer Warnes",
-      1987,
-      "4BQLE_RrTSU"
+      "Smooth Criminal",
+      "Michael Jackson",
+      1988,
+      "h_D3VFfhvs4"
     ],
     [
       "Bad",
       "Michael Jackson",
       1987,
       "Sd4SJVsTulc"
-    ],
-    [
-      "Faith",
-      "George Michael",
-      1987,
-      "6Cs3Pvmmv0E"
-    ],
-    [
-      "I Wanna Dance with Somebody",
-      "Whitney Houston",
-      1987,
-      "eH3giaIzONA"
-    ],
-    [
-      "It's a Sin",
-      "Pet Shop Boys",
-      1987,
-      "dRHetRTOD1Q"
-    ],
-    [
-      "Never Gonna Give You Up",
-      "Rick Astley",
-      1987,
-      "dQw4w9WgXcQ"
-    ],
-    [
-      "Nothing's Gonna Stop Us Now",
-      "Starship",
-      1987,
-      "3wxyN3z9PL4"
-    ],
-    [
-      "The Living Daylights",
-      "a-ha",
-      1987,
-      "de2rBeWNgFo"
     ],
     [
       "The Way You Make Me Feel",
@@ -673,28 +43,22 @@
       "yUi_S6YWjZw"
     ],
     [
-      "Eternal Flame",
-      "The Bangles",
-      1988,
-      "PSoOFn3wQV4"
+      "Like a Virgin",
+      "Madonna",
+      1984,
+      "s__rX_WL100"
     ],
     [
-      "Smooth Criminal",
-      "Michael Jackson",
-      1988,
-      "h_D3VFfhvs4"
+      "Material Girl",
+      "Madonna",
+      1985,
+      "6p-lDYPR2P8"
     ],
     [
-      "Together Forever",
-      "Rick Astley",
-      1988,
-      "yPYZpwSpKmA"
-    ],
-    [
-      "Another Day in Paradise",
-      "Phil Collins",
-      1989,
-      "Qt2mbGP6vFI"
+      "Papa Don't Preach",
+      "Madonna",
+      1986,
+      "G333Is7VPOg"
     ],
     [
       "Like a Prayer",
@@ -703,10 +67,88 @@
       "79fzeNUqQbQ"
     ],
     [
-      "Right Here Waiting",
-      "Richard Marx",
-      1989,
-      "yW_vyiPWwq4"
+      "Holiday",
+      "Madonna",
+      1983,
+      "5Rswx2Z7SDw"
+    ],
+    [
+      "Into the Groove",
+      "Madonna",
+      1985,
+      "52iW3lcpK5M"
+    ],
+    [
+      "Take On Me",
+      "a-ha",
+      1985,
+      "djV11Xbc914"
+    ],
+    [
+      "The Sun Always Shines on T.V.",
+      "a-ha",
+      1985,
+      "a3ir9HC9vYg"
+    ],
+    [
+      "The Living Daylights",
+      "a-ha",
+      1987,
+      "de2rBeWNgFo"
+    ],
+    [
+      "Girls Just Want to Have Fun",
+      "Cyndi Lauper",
+      1983,
+      "PIb6AZdTr-A"
+    ],
+    [
+      "Time After Time",
+      "Cyndi Lauper",
+      1984,
+      "VdQY7BusJNU"
+    ],
+    [
+      "True Colors",
+      "Cyndi Lauper",
+      1986,
+      "LPn0KFlbqX8"
+    ],
+    [
+      "Karma Chameleon",
+      "Culture Club",
+      1983,
+      "JmcA9LIIXWw"
+    ],
+    [
+      "Do You Really Want to Hurt Me",
+      "Culture Club",
+      1982,
+      "2nXGPZaTKik"
+    ],
+    [
+      "Everybody Wants to Rule the World",
+      "Tears for Fears",
+      1985,
+      "aGCdLKXNF3w"
+    ],
+    [
+      "Shout",
+      "Tears for Fears",
+      1984,
+      "Ye7FKc1JQe4"
+    ],
+    [
+      "Head Over Heels",
+      "Tears for Fears",
+      1985,
+      "CsHiG-43Fzg"
+    ],
+    [
+      "Mad World",
+      "Tears for Fears",
+      1982,
+      "u1ZvPSpLxCg"
     ],
     [
       "Sowing the Seeds of Love",
@@ -715,84 +157,612 @@
       "VAtGOESO7W8"
     ],
     [
+      "Hungry Like the Wolf",
+      "Duran Duran",
+      1982,
+      "oJL-lCzEXgI"
+    ],
+    [
+      "The Reflex",
+      "Duran Duran",
+      1983,
+      "J5ebkj9x5Ko"
+    ],
+    [
+      "Rio",
+      "Duran Duran",
+      1982,
+      "nTizYn3-QN0"
+    ],
+    [
+      "Girls on Film",
+      "Duran Duran",
+      1981,
+      "KCjMZMxNr-0"
+    ],
+    [
+      "Save a Prayer",
+      "Duran Duran",
+      1982,
+      "6Uxc9eFcZyM"
+    ],
+    [
+      "A View to a Kill",
+      "Duran Duran",
+      1985,
+      "Fp4CR2HcHLQ"
+    ],
+    [
+      "Wake Me Up Before You Go-Go",
+      "Wham!",
+      1984,
+      "pIgZ7gMze7A"
+    ],
+    [
+      "Last Christmas",
+      "Wham!",
+      1984,
+      "E8gmARGvPlI"
+    ],
+    [
+      "Careless Whisper",
+      "George Michael",
+      1984,
+      "izGwDsrQ1eQ"
+    ],
+    [
+      "Faith",
+      "George Michael",
+      1987,
+      "6Cs3Pvmmv0E"
+    ],
+    [
+      "Father Figure",
+      "George Michael",
+      1988,
+      "m_9hfHvQSNo"
+    ],
+    [
+      "How Will I Know",
+      "Whitney Houston",
+      1985,
+      "m3-hY-hlhBg"
+    ],
+    [
+      "I Wanna Dance with Somebody",
+      "Whitney Houston",
+      1987,
+      "eH3giaIzONA"
+    ],
+    [
+      "Greatest Love of All",
+      "Whitney Houston",
+      1986,
+      "IYzlVDlE72w"
+    ],
+    [
+      "Saving All My Love for You",
+      "Whitney Houston",
+      1985,
+      "ewxmv2tyeRs"
+    ],
+    [
+      "When Doves Cry",
+      "Prince",
+      1984,
+      "UG3VcCAlUgE"
+    ],
+    [
+      "Kiss",
+      "Prince",
+      1986,
+      "H9tEvfIsDyo"
+    ],
+    [
+      "Purple Rain",
+      "Prince",
+      1984,
+      "TvnYmWpD_T8"
+    ],
+    [
+      "1999",
+      "Prince",
+      1982,
+      "rblt2EtFfC4"
+    ],
+    [
+      "Little Red Corvette",
+      "Prince",
+      1982,
+      "v0KpfrJE4zw"
+    ],
+    [
+      "Raspberry Beret",
+      "Prince",
+      1985,
+      "l7vRSu_wsNc"
+    ],
+    [
+      "Let's Go Crazy",
+      "Prince",
+      1984,
+      "aXJhDltzYVQ"
+    ],
+    [
+      "Sweet Dreams (Are Made of This)",
+      "Eurythmics",
+      1983,
+      "qeMFqkcPYcg"
+    ],
+    [
+      "Here Comes the Rain Again",
+      "Eurythmics",
+      1983,
+      "TzFnYcIqj6I"
+    ],
+    [
+      "Would I Lie to You?",
+      "Eurythmics",
+      1985,
+      "Uhpu2N4rQZM"
+    ],
+    [
+      "There Must Be an Angel",
+      "Eurythmics",
+      1985,
+      "RCdneDxFRYQ"
+    ],
+    [
+      "West End Girls",
+      "Pet Shop Boys",
+      1985,
+      "p3j2NYZ8FKs"
+    ],
+    [
+      "It's a Sin",
+      "Pet Shop Boys",
+      1987,
+      "dRHetRTOD1Q"
+    ],
+    [
+      "In the Air Tonight",
+      "Phil Collins",
+      1981,
+      "YkADj0TPrJA"
+    ],
+    [
+      "Against All Odds",
+      "Phil Collins",
+      1984,
+      "SWSQS06i7-w"
+    ],
+    [
+      "One More Night",
+      "Phil Collins",
+      1985,
+      "zKVq-P3z5Vg"
+    ],
+    [
+      "Another Day in Paradise",
+      "Phil Collins",
+      1989,
+      "Qt2mbGP6vFI"
+    ],
+    [
+      "Easy Lover",
+      "Phil Collins",
+      1984,
+      "JkRKT6T0QLg"
+    ],
+    [
+      "All Night Long",
+      "Lionel Richie",
+      1983,
+      "nqAvFx3NxUM"
+    ],
+    [
+      "Hello",
+      "Lionel Richie",
+      1984,
+      "mHONNcZbwDY"
+    ],
+    [
+      "Say You, Say Me",
+      "Lionel Richie",
+      1985,
+      "we0mk_J0zyc"
+    ],
+    [
+      "Stuck on You",
+      "Lionel Richie",
+      1983,
+      "eEjbcOe9hsc"
+    ],
+    [
+      "Dancing on the Ceiling",
+      "Lionel Richie",
+      1986,
+      "ovo6zwv6DX4"
+    ],
+    [
+      "Private Eyes",
+      "Hall & Oates",
+      1981,
+      "JsntlJZ9h1U"
+    ],
+    [
+      "I Can't Go for That (No Can Do)",
+      "Hall & Oates",
+      1981,
+      "ccenFp_3kq8"
+    ],
+    [
+      "Maneater",
+      "Hall & Oates",
+      1982,
+      "yRYFKcMa_Ek"
+    ],
+    [
+      "Out of Touch",
+      "Hall & Oates",
+      1984,
+      "D00M2KZH1J0"
+    ],
+    [
+      "Kiss on My List",
+      "Hall & Oates",
+      1981,
+      "lsHld-iArOc"
+    ],
+    [
+      "You Make My Dreams",
+      "Hall & Oates",
+      1980,
+      "EErSKhC0CZs"
+    ],
+    [
+      "Uptown Girl",
+      "Billy Joel",
+      1983,
+      "hCuMWrfXG4E"
+    ],
+    [
+      "Tell Her About It",
+      "Billy Joel",
+      1983,
+      "p0pM5dm--yQ"
+    ],
+    [
+      "An Innocent Man",
+      "Billy Joel",
+      1983,
+      "WVT3UPrUWQM"
+    ],
+    [
       "We Didn't Start the Fire",
       "Billy Joel",
       1989,
       "eFTLKWw542g"
+    ],
+    [
+      "Don't You Want Me",
+      "The Human League",
+      1981,
+      "uPudE8nDog0"
+    ],
+    [
+      "Tainted Love",
+      "Soft Cell",
+      1981,
+      "XZVpR3Pk-r8"
+    ],
+    [
+      "Africa",
+      "Toto",
+      1982,
+      "FTQbiNvZqaY"
+    ],
+    [
+      "Hold the Line",
+      "Toto",
+      1980,
+      "htgr3pvBr-I"
+    ],
+    [
+      "Never Gonna Give You Up",
+      "Rick Astley",
+      1987,
+      "dQw4w9WgXcQ"
+    ],
+    [
+      "Together Forever",
+      "Rick Astley",
+      1988,
+      "yPYZpwSpKmA"
+    ],
+    [
+      "Footloose",
+      "Kenny Loggins",
+      1984,
+      "ltrMfT4Qz5Y"
+    ],
+    [
+      "Danger Zone",
+      "Kenny Loggins",
+      1986,
+      "siwpn14IE7E"
+    ],
+    [
+      "Eye of the Tiger",
+      "Survivor",
+      1982,
+      "btPJPFnesV4"
+    ],
+    [
+      "Total Eclipse of the Heart",
+      "Bonnie Tyler",
+      1983,
+      "lcOxhH8N3Bo"
+    ],
+    [
+      "Holding Out for a Hero",
+      "Bonnie Tyler",
+      1984,
+      "bWcASV2sey0"
+    ],
+    [
+      "Flashdance... What a Feeling",
+      "Irene Cara",
+      1983,
+      "ILWSp0m9G2U"
+    ],
+    [
+      "Physical",
+      "Olivia Newton-John",
+      1981,
+      "vWz9VN40nCA"
+    ],
+    [
+      "I'm Still Standing",
+      "Elton John",
+      1983,
+      "ZHwVBirqD2s"
+    ],
+    [
+      "Nikita",
+      "Elton John",
+      1985,
+      "Tg-Q-Acv4qs"
+    ],
+    [
+      "I Just Called to Say I Love You",
+      "Stevie Wonder",
+      1984,
+      "VtPLdL5GWDg"
+    ],
+    [
+      "Part-Time Lover",
+      "Stevie Wonder",
+      1985,
+      "74mL5f7tr5w"
+    ],
+    [
+      "Ghostbusters",
+      "Ray Parker Jr.",
+      1984,
+      "Fe93CLbHjxQ"
+    ],
+    [
+      "Walk Like an Egyptian",
+      "The Bangles",
+      1986,
+      "Cv6tuzHUuuk"
+    ],
+    [
+      "Eternal Flame",
+      "The Bangles",
+      1988,
+      "PSoOFn3wQV4"
+    ],
+    [
+      "Manic Monday",
+      "The Bangles",
+      1986,
+      "SsmVgoXDq2w"
+    ],
+    [
+      "True",
+      "Spandau Ballet",
+      1983,
+      "AR8D2yqgQ1U"
+    ],
+    [
+      "Gold",
+      "Spandau Ballet",
+      1983,
+      "ntG50eXbBtc"
+    ],
+    [
+      "Don't You (Forget About Me)",
+      "Simple Minds",
+      1985,
+      "CdqoNKCCt7A"
+    ],
+    [
+      "Gloria",
+      "Laura Branigan",
+      1982,
+      "nNEb2k_EmMg"
+    ],
+    [
+      "Self Control",
+      "Laura Branigan",
+      1984,
+      "RP0_8J7uxhs"
+    ],
+    [
+      "Call Me",
+      "Blondie",
+      1980,
+      "StKVS0eI85I"
+    ],
+    [
+      "The Tide Is High",
+      "Blondie",
+      1980,
+      "fAb8Q9X2xAc"
+    ],
+    [
+      "Rapture",
+      "Blondie",
+      1980,
+      "pHCdS7O248g"
+    ],
+    [
+      "Upside Down",
+      "Diana Ross",
+      1980,
+      "Po0BbGMSX4g"
+    ],
+    [
+      "I'm Coming Out",
+      "Diana Ross",
+      1980,
+      "F-mjl63e0ms"
+    ],
+    [
+      "Venus",
+      "Bananarama",
+      1986,
+      "d4-1ASpdT1Y"
+    ],
+    [
+      "Cruel Summer",
+      "Bananarama",
+      1983,
+      "l9ml3nyww80"
+    ],
+    [
+      "99 Luftballons",
+      "Nena",
+      1983,
+      "Fpu5a0Bl8eY"
+    ],
+    [
+      "Down Under",
+      "Men at Work",
+      1981,
+      "XfR9iY5y94s"
+    ],
+    [
+      "Come On Eileen",
+      "Dexys Midnight Runners",
+      1982,
+      "oc-P8oDuS0Q"
+    ],
+    [
+      "Forever Young",
+      "Alphaville",
+      1984,
+      "oNjQXmoxiQ8"
+    ],
+    [
+      "Take My Breath Away",
+      "Berlin",
+      1986,
+      "Bx51eegLTY8"
+    ],
+    [
+      "(I Just) Died in Your Arms",
+      "Cutting Crew",
+      1986,
+      "6dOwHzCHfgA"
+    ],
+    [
+      "Nothing's Gonna Stop Us Now",
+      "Starship",
+      1987,
+      "3wxyN3z9PL4"
+    ],
+    [
+      "Right Here Waiting",
+      "Richard Marx",
+      1989,
+      "S_E2EHVxNAE"
+    ],
+    [
+      "Lady in Red",
+      "Chris de Burgh",
+      1986,
+      "T9Jcs45GhxU"
+    ],
+    [
+      "How Am I Supposed to Live Without You",
+      "Michael Bolton",
+      1989,
+      "YFood_bTOX4"
+    ],
+    [
+      "Everytime You Go Away",
+      "Paul Young",
+      1985,
+      "nfk6sCzRTbM"
+    ],
+    [
+      "Walking on Sunshine",
+      "Katrina and the Waves",
+      1985,
+      "iPUmE-tne5U"
+    ],
+    [
+      "(I've Had) The Time of My Life",
+      "Bill Medley & Jennifer Warnes",
+      1987,
+      "4BQLE_RrTSU"
+    ],
+    [
+      "Maniac",
+      "Michael Sembello",
+      1983,
+      "324it5DKoXU"
+    ],
+    [
+      "She's Like the Wind",
+      "Patrick Swayze",
+      1987,
+      "lU9p1WRfA9w"
+    ],
+    [
+      "Making Love Out of Nothing at All",
+      "Air Supply",
+      1983,
+      "ogoIxkPjRts"
     ]
   ],
   "Rock": [
     [
-      "Another One Bites the Dust",
-      "Queen",
-      1980,
-      "rY0WxgSXdEE"
+      "Sweet Child O' Mine",
+      "Guns N' Roses",
+      1987,
+      "1w7OgIMMRc4"
     ],
     [
-      "Any Way You Want It",
-      "Journey",
-      1980,
-      "atxUuldUcfI"
+      "Welcome to the Jungle",
+      "Guns N' Roses",
+      1987,
+      "o1tj2zJ2Wvg"
     ],
     [
-      "Back in Black",
-      "AC/DC",
-      1980,
-      "pAgnJDJN4VA"
+      "Paradise City",
+      "Guns N' Roses",
+      1987,
+      "Rbm6GXllBiw"
     ],
     [
-      "Crazy Little Thing Called Love",
-      "Queen",
-      1980,
-      "zO6D_BAuYCI"
-    ],
-    [
-      "Crazy Train",
-      "Ozzy Osbourne",
-      1980,
-      "FVovq9TGBw0"
-    ],
-    [
-      "Don't Stand So Close to Me",
-      "The Police",
-      1980,
-      "KNIZofPB8ZM"
-    ],
-    [
-      "Hit Me with Your Best Shot",
-      "Pat Benatar",
-      1980,
-      "0JRgHol94Xc"
-    ],
-    [
-      "Hungry Heart",
-      "Bruce Springsteen",
-      1980,
-      "0My2AqPFpFg"
-    ],
-    [
-      "Message in a Bottle",
-      "The Police",
-      1980,
-      "MbXWrmQW-OE"
-    ],
-    [
-      "Once in a Lifetime",
-      "Talking Heads",
-      1980,
-      "5IsSpAOD6K8"
-    ],
-    [
-      "You Shook Me All Night Long",
-      "AC/DC",
-      1980,
-      "Lo2qQmj0_h4"
-    ],
-    [
-      "Centerfold",
-      "The J. Geils Band",
-      1981,
-      "BqDjMZKf-wg"
+      "Patience",
+      "Guns N' Roses",
+      1988,
+      "ErvgV4P6Fzc"
     ],
     [
       "Don't Stop Believin'",
@@ -801,166 +771,10 @@
       "1k8craCGpgs"
     ],
     [
-      "Freeze-Frame",
-      "The J. Geils Band",
-      1981,
-      "wHo43B6nu60"
-    ],
-    [
-      "Open Arms",
+      "Any Way You Want It",
       "Journey",
-      1981,
-      "i5pUOVC50Y8"
-    ],
-    [
-      "Start Me Up",
-      "The Rolling Stones",
-      1981,
-      "SGyOaCXr8Lw"
-    ],
-    [
-      "Under Pressure",
-      "Queen & David Bowie",
-      1981,
-      "a01QQZyl-_I"
-    ],
-    [
-      "Do You Believe in Love",
-      "Huey Lewis and the News",
-      1982,
-      "cfYhG4Rd6jI"
-    ],
-    [
-      "Hurts So Good",
-      "John Mellencamp",
-      1982,
-      "4dOsbsuhYGQ"
-    ],
-    [
-      "Jack & Diane",
-      "John Mellencamp",
-      1982,
-      "h04CH9YZcpI"
-    ],
-    [
-      "Rock the Casbah",
-      "The Clash",
-      1982,
-      "bJ9r8LMU9bQ"
-    ],
-    [
-      "Run to the Hills",
-      "Iron Maiden",
-      1982,
-      "86URGgqONvA"
-    ],
-    [
-      "White Wedding",
-      "Billy Idol",
-      1982,
-      "AAZQaYKZMTI"
-    ],
-    [
-      "Bark at the Moon",
-      "Ozzy Osbourne",
-      1983,
-      "LplPi2CxNHI"
-    ],
-    [
-      "Burning Down the House",
-      "Talking Heads",
-      1983,
-      "_3eC35LoF4U"
-    ],
-    [
-      "Cum on Feel the Noize",
-      "Quiet Riot",
-      1983,
-      "uSM5MpKSnqE"
-    ],
-    [
-      "Every Breath You Take",
-      "The Police",
-      1983,
-      "OMOGaugKpzs"
-    ],
-    [
-      "Eyes Without a Face",
-      "Billy Idol",
-      1983,
-      "9JDzlhW3XTM"
-    ],
-    [
-      "Faithfully",
-      "Journey",
-      1983,
-      "OMD8hBsA-RI"
-    ],
-    [
-      "Gimme All Your Lovin'",
-      "ZZ Top",
-      1983,
-      "Ae829mFAGGE"
-    ],
-    [
-      "Heart and Soul",
-      "Huey Lewis and the News",
-      1983,
-      "8TdaXhpjHws"
-    ],
-    [
-      "Holy Diver",
-      "Dio",
-      1983,
-      "2lvs2FzF64o"
-    ],
-    [
-      "King of Pain",
-      "The Police",
-      1983,
-      "tFN5DveQH0o"
-    ],
-    [
-      "Love Is a Battlefield",
-      "Pat Benatar",
-      1983,
-      "IGVZOLV9SPo"
-    ],
-    [
-      "New Year's Day",
-      "U2",
-      1983,
-      "jeYCyCaK_5k"
-    ],
-    [
-      "Owner of a Lonely Heart",
-      "Yes",
-      1983,
-      "SVOuYquXuuc"
-    ],
-    [
-      "Photograph",
-      "Def Leppard",
-      1983,
-      "D4dHr8evt6k"
-    ],
-    [
-      "Pink Houses",
-      "John Mellencamp",
-      1983,
-      "qOfkpu6749w"
-    ],
-    [
-      "Rebel Yell",
-      "Billy Idol",
-      1983,
-      "VdphvuyaV_I"
-    ],
-    [
-      "Rock of Ages",
-      "Def Leppard",
-      1983,
-      "nhSdljm909Y"
+      1980,
+      "atxUuldUcfI"
     ],
     [
       "Separate Ways (Worlds Apart)",
@@ -969,10 +783,244 @@
       "LatorN4P9aA"
     ],
     [
-      "Sharp Dressed Man",
-      "ZZ Top",
+      "Open Arms",
+      "Journey",
+      1981,
+      "i5pUOVC50Y8"
+    ],
+    [
+      "Faithfully",
+      "Journey",
       1983,
-      "7wRHBLwpASw"
+      "OMD8hBsA-RI"
+    ],
+    [
+      "Livin' on a Prayer",
+      "Bon Jovi",
+      1986,
+      "lDK9QqIzhwk"
+    ],
+    [
+      "You Give Love a Bad Name",
+      "Bon Jovi",
+      1986,
+      "KrZHPOeOxQQ"
+    ],
+    [
+      "Wanted Dead or Alive",
+      "Bon Jovi",
+      1986,
+      "SRvCvsRp5ho"
+    ],
+    [
+      "Bad Medicine",
+      "Bon Jovi",
+      1988,
+      "eOUtsybozjg"
+    ],
+    [
+      "I'll Be There for You",
+      "Bon Jovi",
+      1988,
+      "mh8MIp2FOhc"
+    ],
+    [
+      "Another One Bites the Dust",
+      "Queen",
+      1980,
+      "rY0WxgSXdEE"
+    ],
+    [
+      "Under Pressure",
+      "Queen & David Bowie",
+      1981,
+      "a01QQZyl-_I"
+    ],
+    [
+      "Radio Ga Ga",
+      "Queen",
+      1984,
+      "azdwsXLmrHE"
+    ],
+    [
+      "I Want to Break Free",
+      "Queen",
+      1984,
+      "f4Mc-NYPHaQ"
+    ],
+    [
+      "Crazy Little Thing Called Love",
+      "Queen",
+      1980,
+      "zO6D_BAuYCI"
+    ],
+    [
+      "A Kind of Magic",
+      "Queen",
+      1986,
+      "0p_1QSUsbsM"
+    ],
+    [
+      "Back in Black",
+      "AC/DC",
+      1980,
+      "pAgnJDJN4VA"
+    ],
+    [
+      "You Shook Me All Night Long",
+      "AC/DC",
+      1980,
+      "Lo2qQmj0_h4"
+    ],
+    [
+      "Hells Bells",
+      "AC/DC",
+      1980,
+      "etAIpkdhU9Q"
+    ],
+    [
+      "Jump",
+      "Van Halen",
+      1984,
+      "SwYN7mTi6HM"
+    ],
+    [
+      "Panama",
+      "Van Halen",
+      1984,
+      "fuKDBPw8wQA"
+    ],
+    [
+      "Hot for Teacher",
+      "Van Halen",
+      1984,
+      "6M4_Ommfvv0"
+    ],
+    [
+      "Why Can't This Be Love",
+      "Van Halen",
+      1986,
+      "IONcKbWeyQM"
+    ],
+    [
+      "Pour Some Sugar on Me",
+      "Def Leppard",
+      1987,
+      "0UIB9Y4OFPs"
+    ],
+    [
+      "Photograph",
+      "Def Leppard",
+      1983,
+      "D4dHr8evt6k"
+    ],
+    [
+      "Rock of Ages",
+      "Def Leppard",
+      1983,
+      "nhSdljm909Y"
+    ],
+    [
+      "Animal",
+      "Def Leppard",
+      1987,
+      "NSH1mOtc9-8"
+    ],
+    [
+      "Love Bites",
+      "Def Leppard",
+      1987,
+      "W4XiSFyYRE8"
+    ],
+    [
+      "Here I Go Again",
+      "Whitesnake",
+      1987,
+      "WpYeekQkAdc"
+    ],
+    [
+      "Is This Love",
+      "Whitesnake",
+      1987,
+      "GOJk0HW_hJw"
+    ],
+    [
+      "Owner of a Lonely Heart",
+      "Yes",
+      1983,
+      "SVOuYquXuuc"
+    ],
+    [
+      "Every Breath You Take",
+      "The Police",
+      1983,
+      "OMOGaugKpzs"
+    ],
+    [
+      "King of Pain",
+      "The Police",
+      1983,
+      "tFN5DveQH0o"
+    ],
+    [
+      "Wrapped Around Your Finger",
+      "The Police",
+      1983,
+      "svWINSRhQU0"
+    ],
+    [
+      "Every Little Thing She Does Is Magic",
+      "The Police",
+      1981,
+      "aENX1Sf3fgQ"
+    ],
+    [
+      "Message in a Bottle",
+      "The Police",
+      1980,
+      "MbXWrmQW-OE"
+    ],
+    [
+      "Don't Stand So Close to Me",
+      "The Police",
+      1980,
+      "KNIZofPB8ZM"
+    ],
+    [
+      "Money for Nothing",
+      "Dire Straits",
+      1985,
+      "wTP2RUD_cL0"
+    ],
+    [
+      "Walk of Life",
+      "Dire Straits",
+      1985,
+      "kd9TlGDZGkI"
+    ],
+    [
+      "With or Without You",
+      "U2",
+      1987,
+      "ujNeHIo7oTE"
+    ],
+    [
+      "I Still Haven't Found What I'm Looking For",
+      "U2",
+      1987,
+      "e3-5YC_oHjE"
+    ],
+    [
+      "Where the Streets Have No Name",
+      "U2",
+      1987,
+      "GzZWSrr5wFI"
+    ],
+    [
+      "Pride (In the Name of Love)",
+      "U2",
+      1984,
+      "LHcP4MWABGY"
     ],
     [
       "Sunday Bloody Sunday",
@@ -981,16 +1029,370 @@
       "EM4vblG6BVQ"
     ],
     [
+      "New Year's Day",
+      "U2",
+      1983,
+      "jeYCyCaK_5k"
+    ],
+    [
+      "We Belong",
+      "Pat Benatar",
+      1984,
+      "qxZInIyOBXk"
+    ],
+    [
+      "Love Is a Battlefield",
+      "Pat Benatar",
+      1983,
+      "IGVZOLV9SPo"
+    ],
+    [
+      "Hit Me with Your Best Shot",
+      "Pat Benatar",
+      1980,
+      "0JRgHol94Xc"
+    ],
+    [
+      "Jack & Diane",
+      "John Mellencamp",
+      1982,
+      "h04CH9YZcpI"
+    ],
+    [
+      "Hurts So Good",
+      "John Mellencamp",
+      1982,
+      "4dOsbsuhYGQ"
+    ],
+    [
+      "Pink Houses",
+      "John Mellencamp",
+      1983,
+      "qOfkpu6749w"
+    ],
+    [
+      "Small Town",
+      "John Mellencamp",
+      1985,
+      "0CVLVaBECuc"
+    ],
+    [
+      "Start Me Up",
+      "The Rolling Stones",
+      1981,
+      "SGyOaCXr8Lw"
+    ],
+    [
+      "Harlem Shuffle",
+      "The Rolling Stones",
+      1986,
+      "nAkMTu6q2pY"
+    ],
+    [
+      "Mixed Emotions",
+      "The Rolling Stones",
+      1989,
+      "loNey3n6uuE"
+    ],
+    [
+      "Rebel Yell",
+      "Billy Idol",
+      1983,
+      "VdphvuyaV_I"
+    ],
+    [
+      "White Wedding",
+      "Billy Idol",
+      1982,
+      "AAZQaYKZMTI"
+    ],
+    [
+      "Eyes Without a Face",
+      "Billy Idol",
+      1983,
+      "9JDzlhW3XTM"
+    ],
+    [
+      "Mony Mony",
+      "Billy Idol",
+      1987,
+      "sYYAv-QW38Q"
+    ],
+    [
+      "Sharp Dressed Man",
+      "ZZ Top",
+      1983,
+      "7wRHBLwpASw"
+    ],
+    [
+      "Legs",
+      "ZZ Top",
+      1984,
+      "eUDcTLaWJuo"
+    ],
+    [
+      "Gimme All Your Lovin'",
+      "ZZ Top",
+      1983,
+      "Ae829mFAGGE"
+    ],
+    [
+      "Cum on Feel the Noize",
+      "Quiet Riot",
+      1983,
+      "uSM5MpKSnqE"
+    ],
+    [
+      "We're Not Gonna Take It",
+      "Twisted Sister",
+      1984,
+      "4xmckWVPRaI"
+    ],
+    [
+      "I Wanna Rock",
+      "Twisted Sister",
+      1984,
+      "SRwrg0db_zY"
+    ],
+    [
+      "Round and Round",
+      "Ratt",
+      1984,
+      "0u8teXR8VE4"
+    ],
+    [
+      "Nothin' but a Good Time",
+      "Poison",
+      1988,
+      "_88L-CU7PD4"
+    ],
+    [
+      "Every Rose Has Its Thorn",
+      "Poison",
+      1988,
+      "j2r2nDhTzO4"
+    ],
+    [
+      "The Final Countdown",
+      "Europe",
+      1986,
+      "9jK-NcRmVcw"
+    ],
+    [
+      "Carrie",
+      "Europe",
+      1986,
+      "KmWE9UBFwtY"
+    ],
+    [
+      "Rock You Like a Hurricane",
+      "Scorpions",
+      1984,
+      "6yP1tcy9a10"
+    ],
+    [
+      "Still Loving You",
+      "Scorpions",
+      1984,
+      "7pOr3dBFAeY"
+    ],
+    [
+      "Free Fallin'",
+      "Tom Petty",
+      1989,
+      "1lWJXDG2i0A"
+    ],
+    [
+      "I Won't Back Down",
+      "Tom Petty",
+      1989,
+      "nvlTJrNJ5lA"
+    ],
+    [
+      "Runnin' Down a Dream",
+      "Tom Petty",
+      1989,
+      "Y1D3a5eDJIs"
+    ],
+    [
+      "Centerfold",
+      "The J. Geils Band",
+      1981,
+      "BqDjMZKf-wg"
+    ],
+    [
+      "Freeze-Frame",
+      "The J. Geils Band",
+      1981,
+      "wHo43B6nu60"
+    ],
+    [
+      "She Sells Sanctuary",
+      "The Cult",
+      1985,
+      "ZCOSPtyZAPA"
+    ],
+    [
+      "Crazy Train",
+      "Ozzy Osbourne",
+      1980,
+      "FVovq9TGBw0"
+    ],
+    [
+      "Bark at the Moon",
+      "Ozzy Osbourne",
+      1983,
+      "LplPi2CxNHI"
+    ],
+    [
+      "Kickstart My Heart",
+      "Mötley Crüe",
+      1989,
+      "CmXWkMlKFkI"
+    ],
+    [
+      "Girls, Girls, Girls",
+      "Mötley Crüe",
+      1987,
+      "d2XdmyBtCRQ"
+    ],
+    [
+      "Home Sweet Home",
+      "Mötley Crüe",
+      1985,
+      "Gmrh42foUsg"
+    ],
+    [
+      "Hungry Like the Wolf",
+      "Duran Duran",
+      1982,
+      "oJL-lCzEXgI"
+    ],
+    [
+      "Jesse's Girl",
+      "Rick Springfield",
+      1981,
+      "qYkbTyHXwbs"
+    ],
+    [
+      "Addicted to Love",
+      "Robert Palmer",
+      1986,
+      "XcATvu5f9vE"
+    ],
+    [
+      "Hungry Eyes",
+      "Eric Carmen",
+      1987,
+      "2ssCL292DQA"
+    ],
+    [
+      "Burning Down the House",
+      "Talking Heads",
+      1983,
+      "_3eC35LoF4U"
+    ],
+    [
+      "Once in a Lifetime",
+      "Talking Heads",
+      1980,
+      "5IsSpAOD6K8"
+    ],
+    [
+      "Simply Irresistible",
+      "Robert Palmer",
+      1988,
+      "SoHpSY3IoAI"
+    ],
+    [
+      "Stuck with You",
+      "Huey Lewis and the News",
+      1986,
+      "J08ZwySCoJ8"
+    ],
+    [
+      "Heart and Soul",
+      "Huey Lewis and the News",
+      1983,
+      "8TdaXhpjHws"
+    ],
+    [
+      "R.O.C.K. in the U.S.A.",
+      "John Mellencamp",
+      1985,
+      "SgtmStUrXMQ"
+    ],
+    [
+      "One",
+      "Metallica",
+      1988,
+      "WM8bTdBs-cw"
+    ],
+    [
+      "Breaking the Law",
+      "Judas Priest",
+      1980,
+      "L397TWLwrUU"
+    ],
+    [
+      "Ace of Spades",
+      "Motörhead",
+      1980,
+      "3mbvWn1EY6g"
+    ],
+    [
+      "Run to the Hills",
+      "Iron Maiden",
+      1982,
+      "86URGgqONvA"
+    ],
+    [
       "The Trooper",
       "Iron Maiden",
       1983,
       "X4bgXH3sJ2Q"
     ],
     [
-      "Wrapped Around Your Finger",
-      "The Police",
+      "Livin' After Midnight",
+      "Judas Priest",
+      1980,
+      "9VVFNgbsDC4"
+    ],
+    [
+      "Holy Diver",
+      "Dio",
       1983,
-      "svWINSRhQU0"
+      "2lvs2FzF64o"
+    ],
+    [
+      "Rock the Casbah",
+      "The Clash",
+      1982,
+      "bJ9r8LMU9bQ"
+    ],
+    [
+      "Cult of Personality",
+      "Living Colour",
+      1988,
+      "7xxgRUyzgs0"
+    ],
+    [
+      "Who Wants to Live Forever",
+      "Queen",
+      1986,
+      "_Jtpf8N5IDE"
+    ],
+    [
+      "Hammer to Fall",
+      "Queen",
+      1984,
+      "JU5LMG3WFBw"
+    ],
+    [
+      "I Want It All",
+      "Queen",
+      1989,
+      "hFDcoX7s6rE"
     ],
     [
       "Born in the U.S.A.",
@@ -1005,112 +1407,10 @@
       "129kuDCQtHs"
     ],
     [
-      "Hammer to Fall",
-      "Queen",
-      1984,
-      "JU5LMG3WFBw"
-    ],
-    [
-      "Hot for Teacher",
-      "Van Halen",
-      1984,
-      "6M4_Ommfvv0"
-    ],
-    [
-      "I Wanna Rock",
-      "Twisted Sister",
-      1984,
-      "SRwrg0db_zY"
-    ],
-    [
-      "I Want to Break Free",
-      "Queen",
-      1984,
-      "f4Mc-NYPHaQ"
-    ],
-    [
       "I'm on Fire",
       "Bruce Springsteen",
       1984,
       "lrpXArn3hII"
-    ],
-    [
-      "If This Is It",
-      "Huey Lewis and the News",
-      1984,
-      "OoHO2OAlqFw"
-    ],
-    [
-      "Jump",
-      "Van Halen",
-      1984,
-      "SwYN7mTi6HM"
-    ],
-    [
-      "Legs",
-      "ZZ Top",
-      1984,
-      "eUDcTLaWJuo"
-    ],
-    [
-      "Panama",
-      "Van Halen",
-      1984,
-      "fuKDBPw8wQA"
-    ],
-    [
-      "Pride (In the Name of Love)",
-      "U2",
-      1984,
-      "LHcP4MWABGY"
-    ],
-    [
-      "Radio Ga Ga",
-      "Queen",
-      1984,
-      "azdwsXLmrHE"
-    ],
-    [
-      "Rock You Like a Hurricane",
-      "Scorpions",
-      1984,
-      "6yP1tcy9a10"
-    ],
-    [
-      "Round and Round",
-      "Ratt",
-      1984,
-      "0u8teXR8VE4"
-    ],
-    [
-      "Run To You",
-      "Bryan Adams",
-      1984,
-      "nCBASt507WA"
-    ],
-    [
-      "Still Loving You",
-      "Scorpions",
-      1984,
-      "7pOr3dBFAeY"
-    ],
-    [
-      "We Belong",
-      "Pat Benatar",
-      1984,
-      "qxZInIyOBXk"
-    ],
-    [
-      "We're Not Gonna Take It",
-      "Twisted Sister",
-      1984,
-      "4xmckWVPRaI"
-    ],
-    [
-      "And She Was",
-      "Talking Heads",
-      1985,
-      "Q4W8RY3fxdI"
     ],
     [
       "Glory Days",
@@ -1119,142 +1419,10 @@
       "6vQpW9XRiyM"
     ],
     [
-      "Home Sweet Home",
-      "Mötley Crüe",
-      1985,
-      "Gmrh42foUsg"
-    ],
-    [
-      "Kayleigh",
-      "Marillion",
-      1985,
-      "FiM0JiE0h5I"
-    ],
-    [
-      "Money for Nothing",
-      "Dire Straits",
-      1985,
-      "wTP2RUD_cL0"
-    ],
-    [
-      "R.O.C.K. in the U.S.A.",
-      "John Mellencamp",
-      1985,
-      "SgtmStUrXMQ"
-    ],
-    [
-      "Road to Nowhere",
-      "Talking Heads",
-      1985,
-      "LQiOA7euaYA"
-    ],
-    [
-      "She Sells Sanctuary",
-      "The Cult",
-      1985,
-      "ZCOSPtyZAPA"
-    ],
-    [
-      "Small Town",
-      "John Mellencamp",
-      1985,
-      "0CVLVaBECuc"
-    ],
-    [
-      "The Power of Love",
-      "Huey Lewis and the News",
-      1985,
-      "wBl2QGAIx1s"
-    ],
-    [
-      "Walk of Life",
-      "Dire Straits",
-      1985,
-      "kd9TlGDZGkI"
-    ],
-    [
-      "A Kind of Magic",
-      "Queen",
-      1986,
-      "0p_1QSUsbsM"
-    ],
-    [
-      "Addicted to Love",
-      "Robert Palmer",
-      1986,
-      "XcATvu5f9vE"
-    ],
-    [
-      "Carrie",
-      "Europe",
-      1986,
-      "KmWE9UBFwtY"
-    ],
-    [
-      "Harlem Shuffle",
-      "The Rolling Stones",
-      1986,
-      "nAkMTu6q2pY"
-    ],
-    [
-      "Jacob's Ladder",
-      "Huey Lewis and the News",
-      1986,
-      "atiJkXBEJks"
-    ],
-    [
-      "Livin' on a Prayer",
-      "Bon Jovi",
-      1986,
-      "lDK9QqIzhwk"
-    ],
-    [
-      "Stuck with You",
-      "Huey Lewis and the News",
-      1986,
-      "J08ZwySCoJ8"
-    ],
-    [
-      "The Final Countdown",
-      "Europe",
-      1986,
-      "9jK-NcRmVcw"
-    ],
-    [
-      "Wanted Dead or Alive",
-      "Bon Jovi",
-      1986,
-      "SRvCvsRp5ho"
-    ],
-    [
-      "Who Wants to Live Forever",
-      "Queen",
-      1986,
-      "_Jtpf8N5IDE"
-    ],
-    [
-      "Why Can't This Be Love",
-      "Van Halen",
-      1986,
-      "IONcKbWeyQM"
-    ],
-    [
-      "Wild Wild Life",
-      "Talking Heads",
-      1986,
-      "616-QGQyx-I"
-    ],
-    [
-      "You Give Love a Bad Name",
-      "Bon Jovi",
-      1986,
-      "KrZHPOeOxQQ"
-    ],
-    [
-      "Animal",
-      "Def Leppard",
-      1987,
-      "NSH1mOtc9-8"
+      "Hungry Heart",
+      "Bruce Springsteen",
+      1980,
+      "0My2AqPFpFg"
     ],
     [
       "Brilliant Disguise",
@@ -1263,124 +1431,16 @@
       "idnJnjV_8rg"
     ],
     [
-      "Girls, Girls, Girls",
-      "Mötley Crüe",
-      1987,
-      "d2XdmyBtCRQ"
-    ],
-    [
-      "Here I Go Again",
-      "Whitesnake",
-      1987,
-      "WpYeekQkAdc"
-    ],
-    [
-      "I Still Haven't Found What I'm Looking For",
-      "U2",
-      1987,
-      "e3-5YC_oHjE"
-    ],
-    [
-      "Is This Love",
-      "Whitesnake",
-      1987,
-      "GOJk0HW_hJw"
-    ],
-    [
-      "Love Bites",
-      "Def Leppard",
-      1987,
-      "W4XiSFyYRE8"
-    ],
-    [
-      "Mony Mony",
-      "Billy Idol",
-      1987,
-      "sYYAv-QW38Q"
-    ],
-    [
-      "Paradise City",
-      "Guns N' Roses",
-      1987,
-      "Rbm6GXllBiw"
-    ],
-    [
-      "Pour Some Sugar on Me",
-      "Def Leppard",
-      1987,
-      "0UIB9Y4OFPs"
-    ],
-    [
-      "Some Kind of Wonderful",
+      "The Power of Love",
       "Huey Lewis and the News",
-      1987,
-      "NiaVYUdfAow"
+      1985,
+      "wBl2QGAIx1s"
     ],
     [
-      "Sweet Child O' Mine",
-      "Guns N' Roses",
-      1987,
-      "1w7OgIMMRc4"
-    ],
-    [
-      "Welcome to the Jungle",
-      "Guns N' Roses",
-      1987,
-      "o1tj2zJ2Wvg"
-    ],
-    [
-      "Where the Streets Have No Name",
-      "U2",
-      1987,
-      "GzZWSrr5wFI"
-    ],
-    [
-      "With or Without You",
-      "U2",
-      1987,
-      "ujNeHIo7oTE"
-    ],
-    [
-      "Every Rose Has Its Thorn",
-      "Poison",
-      1988,
-      "j2r2nDhTzO4"
-    ],
-    [
-      "Nothin' but a Good Time",
-      "Poison",
-      1988,
-      "_88L-CU7PD4"
-    ],
-    [
-      "One",
-      "Metallica",
-      1988,
-      "WM8bTdBs-cw"
-    ],
-    [
-      "Simply Irresistible",
-      "Robert Palmer",
-      1988,
-      "SoHpSY3IoAI"
-    ],
-    [
-      "Crossfire",
-      "Stevie Ray Vaughan",
-      1989,
-      "F73EcycGCO8"
-    ],
-    [
-      "Free Fallin'",
-      "Tom Petty",
-      1989,
-      "1lWJXDG2i0A"
-    ],
-    [
-      "I Won't Back Down",
-      "Tom Petty",
-      1989,
-      "nvlTJrNJ5lA"
+      "Kayleigh",
+      "Marillion",
+      1985,
+      "FiM0JiE0h5I"
     ]
   ],
   "Hip-Hop / Rap": [
@@ -1391,16 +1451,22 @@
       "H8yUxDOHlh8"
     ],
     [
+      "The Message",
+      "Grandmaster Flash & The Furious Five",
+      1982,
+      "gYMkEMCHtJ4"
+    ],
+    [
       "The Breaks",
       "Kurtis Blow",
       1980,
       "zyjK1CpM8JQ"
     ],
     [
-      "The Message",
-      "Grandmaster Flash & The Furious Five",
+      "Planet Rock",
+      "Afrika Bambaataa & The Soulsonic Force",
       1982,
-      "gYMkEMCHtJ4"
+      "9J3lwZjHenA"
     ],
     [
       "It's Like That",
@@ -1409,28 +1475,10 @@
       "TLGWQfK-6DY"
     ],
     [
-      "Sucker M.C.'s",
-      "Run-D.M.C.",
-      1983,
-      "iOKMWSR2Aio"
-    ],
-    [
-      "White Lines",
-      "Grandmaster Flash & Melle Mel",
-      1983,
-      "DwRXI-y6M9o"
-    ],
-    [
       "Rock Box",
       "Run-D.M.C.",
       1984,
       "GND7sPNwWko"
-    ],
-    [
-      "I Can't Live Without My Radio",
-      "LL Cool J",
-      1985,
-      "ZFPScl2yFu0"
     ],
     [
       "King of Rock",
@@ -1439,52 +1487,10 @@
       "qXzWlPL_TKw"
     ],
     [
-      "Rock the Bells",
-      "LL Cool J",
-      1985,
-      "5xB727Efeo0"
-    ],
-    [
-      "Brass Monkey",
-      "Beastie Boys",
+      "Walk This Way",
+      "Run-D.M.C.",
       1986,
-      "s0dxhSPoBjY"
-    ],
-    [
-      "Eric B. Is President",
-      "Eric B. & Rakim",
-      1986,
-      "0pwoIFyWE1M"
-    ],
-    [
-      "Fight for Your Right",
-      "Beastie Boys",
-      1986,
-      "eBShN8qT4lk"
-    ],
-    [
-      "Girls",
-      "Beastie Boys",
-      1986,
-      "lg_PNKah1ow"
-    ],
-    [
-      "Go See the Doctor",
-      "Kool Moe Dee",
-      1986,
-      "Cv-wMlx-vls"
-    ],
-    [
-      "Hold It Now, Hit It",
-      "Beastie Boys",
-      1986,
-      "oB0NM6reiRE"
-    ],
-    [
-      "Holiday Rap",
-      "MC Miker G & DJ Sven",
-      1986,
-      "Ics05z-GG6Y"
+      "4B_UYYPb-Gk"
     ],
     [
       "It's Tricky",
@@ -1493,40 +1499,46 @@
       "l-O5IHVhWj0"
     ],
     [
-      "My Adidas",
-      "Run-D.M.C.",
-      1986,
-      "Qx0huz6TiLo"
+      "Push It",
+      "Salt-N-Pepa",
+      1987,
+      "vCadcBR95oU"
     ],
     [
-      "No Sleep Till Brooklyn",
-      "Beastie Boys",
-      1986,
-      "07Y0cy-nvAg"
+      "Expression",
+      "Salt-N-Pepa",
+      1989,
+      "ej6pQFfA_fo"
     ],
     [
-      "Paul Revere",
-      "Beastie Boys",
-      1986,
-      "Mcm3P1McN1I"
+      "Parents Just Don't Understand",
+      "DJ Jazzy Jeff & The Fresh Prince",
+      1988,
+      "jW3PFC86UNI"
     ],
     [
-      "The New Style",
-      "Beastie Boys",
-      1986,
-      "QbGnU96ByYQ"
+      "Children's Story",
+      "Slick Rick",
+      1988,
+      "HjNTu8jdukA"
     ],
     [
-      "Walk This Way",
-      "Run-D.M.C.",
-      1986,
-      "4B_UYYPb-Gk"
+      "La Di Da Di",
+      "Slick Rick & Doug E. Fresh",
+      1985,
+      "taBFnWMSeAc"
     ],
     [
-      "You Be Illin'",
-      "Run-D.M.C.",
-      1986,
-      "19tjJ0G-8V4"
+      "Fight the Power",
+      "Public Enemy",
+      1989,
+      "mmo3HFa2vjg"
+    ],
+    [
+      "Don't Believe the Hype",
+      "Public Enemy",
+      1988,
+      "9vQaVIoEjOM"
     ],
     [
       "Bring the Noise",
@@ -1535,46 +1547,16 @@
       "FQ3WZaKjHNQ"
     ],
     [
-      "Dopeman",
-      "N.W.A",
-      1987,
-      "A6cMfyu-vvw"
+      "It Takes Two",
+      "Rob Base & DJ E-Z Rock",
+      1988,
+      "phOW-CZJWT0"
     ],
     [
-      "How Ya Like Me Now",
-      "Kool Moe Dee",
-      1987,
-      "A9_nAZ3VEA0"
-    ],
-    [
-      "I Ain't No Joke",
+      "Eric B. Is President",
       "Eric B. & Rakim",
-      1987,
-      "2TN-kDEKxF0"
-    ],
-    [
-      "I Know You Got Soul",
-      "Eric B. & Rakim",
-      1987,
-      "b_HPERIjAhU"
-    ],
-    [
-      "I Need Love",
-      "LL Cool J",
-      1987,
-      "NEUX-HYRtUA"
-    ],
-    [
-      "I'm Bad",
-      "LL Cool J",
-      1987,
-      "oVDfyc2lh4Q"
-    ],
-    [
-      "My Melody",
-      "Eric B. & Rakim",
-      1987,
-      "Mnl60DoIMk4"
+      1986,
+      "0pwoIFyWE1M"
     ],
     [
       "Paid in Full",
@@ -1583,16 +1565,70 @@
       "E7t8eoA_1jQ"
     ],
     [
-      "Push It",
-      "Salt-N-Pepa",
-      1987,
-      "vCadcBR95oU"
+      "Ain't No Half-Steppin'",
+      "Big Daddy Kane",
+      1988,
+      "RNVefp-SxvE"
+    ],
+    [
+      "Just a Friend",
+      "Biz Markie",
+      1989,
+      "9aofoBrFNdg"
+    ],
+    [
+      "Fight for Your Right",
+      "Beastie Boys",
+      1986,
+      "eBShN8qT4lk"
+    ],
+    [
+      "White Lines",
+      "Grandmaster Flash & Melle Mel",
+      1983,
+      "DwRXI-y6M9o"
+    ],
+    [
+      "The Show",
+      "Doug E. Fresh & The Get Fresh Crew",
+      1985,
+      "UfSonfmtKsM"
     ],
     [
       "Rebel Without a Pause",
       "Public Enemy",
       1987,
       "-fN5RX15Zhw"
+    ],
+    [
+      "Joy and Pain",
+      "Rob Base & DJ E-Z Rock",
+      1988,
+      "jEMr3MVnAU8"
+    ],
+    [
+      "I Know You Got Soul",
+      "Eric B. & Rakim",
+      1987,
+      "b_HPERIjAhU"
+    ],
+    [
+      "Follow the Leader",
+      "Eric B. & Rakim",
+      1988,
+      "95gP3m-uBHA"
+    ],
+    [
+      "Microphone Fiend",
+      "Eric B. & Rakim",
+      1988,
+      "uPfIIn5V_LQ"
+    ],
+    [
+      "Raw",
+      "Big Daddy Kane",
+      1988,
+      "nZAOqSUWctQ"
     ],
     [
       "South Bronx",
@@ -1607,58 +1643,124 @@
       "UXhyNMryitk"
     ],
     [
-      "Tramp",
-      "Salt-N-Pepa",
+      "My Philosophy",
+      "Boogie Down Productions",
+      1988,
+      "h1vKOchATXs"
+    ],
+    [
+      "Stop the Violence",
+      "Boogie Down Productions",
+      1988,
+      "Up3UW04N8IE"
+    ],
+    [
+      "You Gots to Chill",
+      "EPMD",
+      1988,
+      "fAugOjG4qOc"
+    ],
+    [
+      "Strictly Business",
+      "EPMD",
+      1988,
+      "5aCYQ1fRQc8"
+    ],
+    [
+      "How Ya Like Me Now",
+      "Kool Moe Dee",
       1987,
-      "PrL3XMUMjVU"
+      "A9_nAZ3VEA0"
     ],
     [
-      "Ain't No Half-Steppin'",
-      "Big Daddy Kane",
+      "Wild Wild West",
+      "Kool Moe Dee",
       1988,
-      "RNVefp-SxvE"
+      "auhwI00iKWg"
     ],
     [
-      "Don't Believe the Hype",
-      "Public Enemy",
-      1988,
-      "9vQaVIoEjOM"
+      "Roxanne, Roxanne",
+      "UTFO",
+      1984,
+      "KOTp3-jEMjQ"
     ],
     [
-      "Follow the Leader",
-      "Eric B. & Rakim",
-      1988,
-      "95gP3m-uBHA"
+      "No Sleep Till Brooklyn",
+      "Beastie Boys",
+      1986,
+      "07Y0cy-nvAg"
     ],
     [
-      "It Takes Two",
-      "Rob Base & DJ E-Z Rock",
-      1988,
-      "phOW-CZJWT0"
+      "Brass Monkey",
+      "Beastie Boys",
+      1986,
+      "s0dxhSPoBjY"
     ],
     [
-      "Joy and Pain",
-      "Rob Base & DJ E-Z Rock",
-      1988,
-      "jEMr3MVnAU8"
+      "Paul Revere",
+      "Beastie Boys",
+      1986,
+      "Mcm3P1McN1I"
     ],
     [
-      "Microphone Fiend",
-      "Eric B. & Rakim",
-      1988,
-      "uPfIIn5V_LQ"
+      "Girls",
+      "Beastie Boys",
+      1986,
+      "lg_PNKah1ow"
     ],
     [
-      "Parents Just Don't Understand",
-      "DJ Jazzy Jeff & The Fresh Prince",
-      1988,
-      "jW3PFC86UNI"
+      "Hey Ladies",
+      "Beastie Boys",
+      1989,
+      "Naf5uJYGoiU"
     ],
     [
-      "Straight Outta Compton",
-      "N.W.A",
+      "Jam On It",
+      "Newcleus",
+      1984,
+      "uAEw_sX7CFA"
+    ],
+    [
+      "I Can't Live Without My Radio",
+      "LL Cool J",
+      1985,
+      "ZFPScl2yFu0"
+    ],
+    [
+      "Rock the Bells",
+      "LL Cool J",
+      1985,
+      "5xB727Efeo0"
+    ],
+    [
+      "I Need Love",
+      "LL Cool J",
+      1987,
+      "NEUX-HYRtUA"
+    ],
+    [
+      "Going Back to Cali",
+      "LL Cool J",
       1988,
-      "TMZi25Pq3T8"
+      "FdizL4on-Rc"
+    ],
+    [
+      "I'm Bad",
+      "LL Cool J",
+      1987,
+      "oVDfyc2lh4Q"
+    ],
+    [
+      "Funky Cold Medina",
+      "Tone Lōc",
+      1989,
+      "rzw5TWtEE-E"
+    ],
+    [
+      "Wild Thing",
+      "Tone Lōc",
+      1988,
+      "387ZDGSKVSg"
     ],
     [
       "Bust a Move",
@@ -1667,36 +1769,72 @@
       "0-x1nZqhoHs"
     ],
     [
-      "Expression",
-      "Salt-N-Pepa",
-      1989,
-      "ej6pQFfA_fo"
+      "Express Yourself",
+      "N.W.A",
+      1988,
+      "u31FO_4d9TY"
     ],
     [
-      "Fight the Power",
-      "Public Enemy",
+      "Straight Outta Compton",
+      "N.W.A",
+      1988,
+      "TMZi25Pq3T8"
+    ],
+    [
+      "Fuck tha Police",
+      "N.W.A",
+      1988,
+      "1WbQeDj74kc"
+    ],
+    [
+      "Gangsta Gangsta",
+      "N.W.A",
+      1988,
+      "GUb2qo5XF3U"
+    ],
+    [
+      "Self Destruction",
+      "The Stop the Violence Movement",
       1989,
-      "mmo3HFa2vjg"
+      "MmX5TgWsfEQ"
     ]
   ],
   "R&B": [
     [
-      "Burn Rubber on Me",
-      "The Gap Band",
-      1980,
-      "z9FZ0l_P1NE"
-    ],
-    [
-      "Don't Stop 'Til You Get Enough",
+      "Billie Jean",
       "Michael Jackson",
-      1980,
-      "yURRmWtbTbo"
+      1983,
+      "Zi_XLOBDo_Y"
     ],
     [
-      "Give Me the Night",
-      "George Benson",
-      1980,
-      "FIF7wKJb2iU"
+      "Thriller",
+      "Michael Jackson",
+      1983,
+      "sOnqjkJTMaA"
+    ],
+    [
+      "Beat It",
+      "Michael Jackson",
+      1983,
+      "oRdxUFDoQe0"
+    ],
+    [
+      "The Way You Make Me Feel",
+      "Michael Jackson",
+      1987,
+      "HzZ_urpj4As"
+    ],
+    [
+      "Smooth Criminal",
+      "Michael Jackson",
+      1988,
+      "h_D3VFfhvs4"
+    ],
+    [
+      "Bad",
+      "Michael Jackson",
+      1987,
+      "Sd4SJVsTulc"
     ],
     [
       "Rock with You",
@@ -1705,76 +1843,52 @@
       "5X-Mrc2l1d0"
     ],
     [
-      "Endless Love",
-      "Lionel Richie & Diana Ross",
-      1981,
-      "UsqDoz2Co4o"
+      "Don't Stop 'Til You Get Enough",
+      "Michael Jackson",
+      1980,
+      "yURRmWtbTbo"
     ],
     [
-      "Never Too Much",
-      "Luther Vandross",
-      1981,
-      "pNj9bXKGOiI"
+      "When Doves Cry",
+      "Prince",
+      1984,
+      "UG3VcCAlUgE"
     ],
     [
-      "One Hundred Ways",
-      "James Ingram",
-      1981,
-      "OJmbfD34pLk"
+      "Kiss",
+      "Prince",
+      1986,
+      "H9tEvfIsDyo"
     ],
     [
-      "Turn Your Love Around",
-      "George Benson",
-      1981,
-      "96GE-aj9jhg"
+      "Purple Rain",
+      "Prince",
+      1984,
+      "TvnYmWpD_T8"
     ],
     [
-      "Baby, Come to Me",
-      "Patti Austin & James Ingram",
+      "1999",
+      "Prince",
       1982,
-      "mHyxPIh3c5w"
+      "rblt2EtFfC4"
     ],
     [
-      "Early in the Morning",
-      "The Gap Band",
+      "Little Red Corvette",
+      "Prince",
       1982,
-      "aobIboK_z34"
+      "v0KpfrJE4zw"
     ],
     [
-      "Forget Me Nots",
-      "Patrice Rushen",
-      1982,
-      "jtMHsNhQBvI"
+      "Raspberry Beret",
+      "Prince",
+      1985,
+      "l7vRSu_wsNc"
     ],
     [
-      "I Keep Forgettin'",
-      "Michael McDonald",
-      1982,
-      "9gbQVj4MR3M"
-    ],
-    [
-      "I'm So Excited",
-      "The Pointer Sisters",
-      1982,
-      "8iwBM_YB1sE"
-    ],
-    [
-      "Love Come Down",
-      "Evelyn Champagne King",
-      1982,
-      "ASiqxSwHpQ8"
-    ],
-    [
-      "On the Wings of Love",
-      "Jeffrey Osborne",
-      1982,
-      "hzOQPy05EAY"
-    ],
-    [
-      "Outstanding",
-      "The Gap Band",
-      1982,
-      "pSnJ5MV5T84"
+      "Let's Go Crazy",
+      "Prince",
+      1984,
+      "aXJhDltzYVQ"
     ],
     [
       "Sexual Healing",
@@ -1783,112 +1897,88 @@
       "rjlSiASsUIs"
     ],
     [
-      "That Girl",
-      "Stevie Wonder",
-      1982,
-      "4a0cmyOL9s8"
+      "How Will I Know",
+      "Whitney Houston",
+      1985,
+      "m3-hY-hlhBg"
     ],
     [
-      "Truly",
+      "I Wanna Dance with Somebody",
+      "Whitney Houston",
+      1987,
+      "eH3giaIzONA"
+    ],
+    [
+      "Greatest Love of All",
+      "Whitney Houston",
+      1986,
+      "IYzlVDlE72w"
+    ],
+    [
+      "Saving All My Love for You",
+      "Whitney Houston",
+      1985,
+      "ewxmv2tyeRs"
+    ],
+    [
+      "So Emotional",
+      "Whitney Houston",
+      1987,
+      "0YjSHbA6HQQ"
+    ],
+    [
+      "Where Do Broken Hearts Go",
+      "Whitney Houston",
+      1988,
+      "wa3tfVjGCQ8"
+    ],
+    [
+      "Hello",
       "Lionel Richie",
-      1982,
-      "7e72sMIsKdg"
+      1984,
+      "mHONNcZbwDY"
     ],
     [
-      "You Dropped a Bomb on Me",
-      "The Gap Band",
-      1982,
-      "17lkdqoLt44"
+      "Say You, Say Me",
+      "Lionel Richie",
+      1985,
+      "we0mk_J0zyc"
     ],
     [
-      "Ain't Nobody",
-      "Chaka Khan",
+      "Stuck on You",
+      "Lionel Richie",
       1983,
-      "BNirQXe8HOA"
+      "eEjbcOe9hsc"
     ],
     [
-      "Between the Sheets",
-      "The Isley Brothers",
-      1983,
-      "Pf_si60K9nM"
+      "Endless Love",
+      "Lionel Richie & Diana Ross",
+      1981,
+      "UsqDoz2Co4o"
     ],
     [
-      "Candy Girl",
-      "New Edition",
-      1983,
-      "0AZqPl46HcU"
+      "Upside Down",
+      "Diana Ross",
+      1980,
+      "Po0BbGMSX4g"
     ],
     [
-      "She Works Hard for the Money",
-      "Donna Summer",
-      1983,
-      "N8EkGUm9q_A"
+      "I'm Coming Out",
+      "Diana Ross",
+      1980,
+      "F-mjl63e0ms"
     ],
     [
-      "Yah Mo B There",
-      "James Ingram & Michael McDonald",
-      1983,
-      "8SPYSrcxhzY"
-    ],
-    [
-      "Automatic",
-      "The Pointer Sisters",
+      "I Just Called to Say I Love You",
+      "Stevie Wonder",
       1984,
-      "hsA2UR42Pbw"
+      "VtPLdL5GWDg"
     ],
     [
-      "Caribbean Queen",
-      "Billy Ocean",
-      1984,
-      "uxX2gA18grk"
-    ],
-    [
-      "Cool It Now",
-      "New Edition",
-      1984,
-      "RZUq6N7Gx1c"
-    ],
-    [
-      "I Feel for You",
-      "Chaka Khan",
-      1984,
-      "YW0sxgYAmLM"
-    ],
-    [
-      "Jump (For My Love)",
-      "The Pointer Sisters",
-      1984,
-      "uyTVyCp7xrw"
-    ],
-    [
-      "Mr. Telephone Man",
-      "New Edition",
-      1984,
-      "YTdxdr9pNnw"
-    ],
-    [
-      "Neutron Dance",
-      "The Pointer Sisters",
-      1984,
-      "i-jdhorGtQI"
-    ],
-    [
-      "Private Dancer",
-      "Tina Turner",
-      1984,
-      "d4QnalIHlVc"
-    ],
-    [
-      "Solid",
-      "Ashford & Simpson",
-      1984,
-      "w3PoTnkLfxE"
-    ],
-    [
-      "Through the Fire",
-      "Chaka Khan",
-      1984,
-      "TjWmw-8-OEk"
+      "Part-Time Lover",
+      "Stevie Wonder",
+      1985,
+      "74mL5f7tr5w"
     ],
     [
       "What's Love Got to Do with It",
@@ -1897,28 +1987,28 @@
       "oGpFcHTxjZs"
     ],
     [
-      "Freeway of Love",
-      "Aretha Franklin",
-      1985,
-      "Ip_pjb5_fgA"
+      "All Night Long",
+      "Lionel Richie",
+      1983,
+      "nqAvFx3NxUM"
     ],
     [
-      "Holding Back the Years",
-      "Simply Red",
-      1985,
-      "yG07WSu7Q9w"
+      "Dancing on the Ceiling",
+      "Lionel Richie",
+      1986,
+      "ovo6zwv6DX4"
     ],
     [
-      "Overjoyed",
-      "Stevie Wonder",
-      1985,
-      "678STgx-Esw"
+      "Truly",
+      "Lionel Richie",
+      1982,
+      "7e72sMIsKdg"
     ],
     [
-      "Rock Me Tonight",
-      "Freddie Jackson",
-      1985,
-      "R8HjwlUWuLU"
+      "Private Dancer",
+      "Tina Turner",
+      1984,
+      "d4QnalIHlVc"
     ],
     [
       "We Don't Need Another Hero",
@@ -1927,46 +2017,76 @@
       "Gcm-tOGiva0"
     ],
     [
+      "The Best",
+      "Tina Turner",
+      1989,
+      "GC5E8ie2pdM"
+    ],
+    [
+      "Caribbean Queen",
+      "Billy Ocean",
+      1984,
+      "uxX2gA18grk"
+    ],
+    [
       "When the Going Gets Tough",
       "Billy Ocean",
       1985,
       "-n3sUWR4FV4"
     ],
     [
-      "Who's Zoomin' Who",
-      "Aretha Franklin",
-      1985,
-      "eYmmFf6M40Y"
-    ],
-    [
-      "You Are My Lady",
-      "Freddie Jackson",
-      1985,
-      "o_agTfortjY"
-    ],
-    [
-      "Caught Up in the Rapture",
-      "Anita Baker",
+      "There'll Be Sad Songs",
+      "Billy Ocean",
       1986,
-      "Oz-b86LZ21c"
+      "KLjpJZbxkAU"
     ],
     [
-      "Control",
-      "Janet Jackson",
-      1986,
-      "LH8xbDGv7oY"
+      "Get Outta My Dreams, Get into My Car",
+      "Billy Ocean",
+      1988,
+      "zNgcYGgtf8M"
     ],
     [
-      "Give Me the Reason",
+      "I Feel for You",
+      "Chaka Khan",
+      1984,
+      "YW0sxgYAmLM"
+    ],
+    [
+      "Ain't Nobody",
+      "Chaka Khan",
+      1983,
+      "BNirQXe8HOA"
+    ],
+    [
+      "Forget Me Nots",
+      "Patrice Rushen",
+      1982,
+      "jtMHsNhQBvI"
+    ],
+    [
+      "Give Me the Night",
+      "George Benson",
+      1980,
+      "FIF7wKJb2iU"
+    ],
+    [
+      "Turn Your Love Around",
+      "George Benson",
+      1981,
+      "96GE-aj9jhg"
+    ],
+    [
+      "Never Too Much",
       "Luther Vandross",
-      1986,
-      "LtIhcbR7COw"
+      1981,
+      "pNj9bXKGOiI"
     ],
     [
-      "Nasty",
-      "Janet Jackson",
-      1986,
-      "ujnq2v6R02U"
+      "Here and Now",
+      "Luther Vandross",
+      1989,
+      "0u_u4nlYmNs"
     ],
     [
       "Stop to Love",
@@ -1981,130 +2101,16 @@
       "5Y9DYGiDL1o"
     ],
     [
-      "There'll Be Sad Songs",
-      "Billy Ocean",
-      1986,
-      "KLjpJZbxkAU"
-    ],
-    [
-      "Typical Male",
-      "Tina Turner",
-      1986,
-      "mTkR_a3d8Eo"
-    ],
-    [
-      "What Have You Done for Me Lately",
-      "Janet Jackson",
-      1986,
-      "r9uizdKZAGE"
-    ],
-    [
-      "When I Think of You",
-      "Janet Jackson",
-      1986,
-      "EaleKN9GQ54"
-    ],
-    [
-      "I Knew You Were Waiting (For Me)",
-      "Aretha Franklin & George Michael",
-      1987,
-      "fDxzQJaA228"
-    ],
-    [
-      "Let's Wait Awhile",
-      "Janet Jackson",
-      1987,
-      "5cZ7IOApdfg"
-    ],
-    [
-      "So Emotional",
-      "Whitney Houston",
-      1987,
-      "0YjSHbA6HQQ"
-    ],
-    [
-      "The Pleasure Principle",
-      "Janet Jackson",
-      1987,
-      "jXInTVW5h4Y"
-    ],
-    [
-      "Any Love",
-      "Luther Vandross",
-      1988,
-      "GZvksUQ7XWc"
-    ],
-    [
-      "Can You Stand the Rain",
-      "New Edition",
-      1988,
-      "7flrKMGfwjw"
-    ],
-    [
-      "Don't Be Cruel",
-      "Bobby Brown",
-      1988,
-      "pd7dCbEfTs4"
-    ],
-    [
-      "Get Outta My Dreams, Get into My Car",
-      "Billy Ocean",
-      1988,
-      "zNgcYGgtf8M"
-    ],
-    [
       "Giving You the Best That I Got",
       "Anita Baker",
       1988,
       "aQiMhAUJNMo"
     ],
     [
-      "If It Isn't Love",
-      "New Edition",
-      1988,
-      "ReI6gvzVP0Y"
-    ],
-    [
-      "Just Because",
-      "Anita Baker",
-      1988,
-      "IGVZb4fT2XA"
-    ],
-    [
-      "My Prerogative",
-      "Bobby Brown",
-      1988,
-      "5cDLZqe735k"
-    ],
-    [
-      "Roni",
-      "Bobby Brown",
-      1988,
-      "tGySW4HMdRE"
-    ],
-    [
-      "Where Do Broken Hearts Go",
-      "Whitney Houston",
-      1988,
-      "wa3tfVjGCQ8"
-    ],
-    [
-      "Escapade",
-      "Janet Jackson",
-      1989,
-      "UFX3gQHIroU"
-    ],
-    [
-      "Every Little Step",
-      "Bobby Brown",
-      1989,
-      "P0FKzPfsxA4"
-    ],
-    [
-      "Here and Now",
-      "Luther Vandross",
-      1989,
-      "0u_u4nlYmNs"
+      "Holding Back the Years",
+      "Simply Red",
+      1985,
+      "yG07WSu7Q9w"
     ],
     [
       "If You Don't Know Me by Now",
@@ -2113,10 +2119,82 @@
       "zTcu7MCtuTs"
     ],
     [
-      "Miss You Much",
-      "Janet Jackson",
+      "Jump (For My Love)",
+      "The Pointer Sisters",
+      1984,
+      "uyTVyCp7xrw"
+    ],
+    [
+      "I'm So Excited",
+      "The Pointer Sisters",
+      1982,
+      "8iwBM_YB1sE"
+    ],
+    [
+      "Automatic",
+      "The Pointer Sisters",
+      1984,
+      "hsA2UR42Pbw"
+    ],
+    [
+      "Neutron Dance",
+      "The Pointer Sisters",
+      1984,
+      "i-jdhorGtQI"
+    ],
+    [
+      "Cool It Now",
+      "New Edition",
+      1984,
+      "RZUq6N7Gx1c"
+    ],
+    [
+      "Can You Stand the Rain",
+      "New Edition",
+      1988,
+      "7flrKMGfwjw"
+    ],
+    [
+      "If It Isn't Love",
+      "New Edition",
+      1988,
+      "ReI6gvzVP0Y"
+    ],
+    [
+      "Outstanding",
+      "The Gap Band",
+      1982,
+      "pSnJ5MV5T84"
+    ],
+    [
+      "You Dropped a Bomb on Me",
+      "The Gap Band",
+      1982,
+      "17lkdqoLt44"
+    ],
+    [
+      "Early in the Morning",
+      "The Gap Band",
+      1982,
+      "aobIboK_z34"
+    ],
+    [
+      "My Prerogative",
+      "Bobby Brown",
+      1988,
+      "5cDLZqe735k"
+    ],
+    [
+      "Every Little Step",
+      "Bobby Brown",
       1989,
-      "IVF0zcqr9Dg"
+      "P0FKzPfsxA4"
+    ],
+    [
+      "Don't Be Cruel",
+      "Bobby Brown",
+      1988,
+      "pd7dCbEfTs4"
     ],
     [
       "On Our Own",
@@ -2131,96 +2209,210 @@
       "OAwaNWGLM0c"
     ],
     [
-      "The Best",
-      "Tina Turner",
+      "Miss You Much",
+      "Janet Jackson",
       1989,
-      "GC5E8ie2pdM"
+      "IVF0zcqr9Dg"
+    ],
+    [
+      "Control",
+      "Janet Jackson",
+      1986,
+      "LH8xbDGv7oY"
+    ],
+    [
+      "Nasty",
+      "Janet Jackson",
+      1986,
+      "ujnq2v6R02U"
+    ],
+    [
+      "What Have You Done for Me Lately",
+      "Janet Jackson",
+      1986,
+      "r9uizdKZAGE"
+    ],
+    [
+      "When I Think of You",
+      "Janet Jackson",
+      1986,
+      "EaleKN9GQ54"
+    ],
+    [
+      "Straight Up",
+      "Paula Abdul",
+      1988,
+      "El1kgCqD7Xk"
+    ],
+    [
+      "Forever Your Girl",
+      "Paula Abdul",
+      1989,
+      "0pyxKqdtrH8"
+    ],
+    [
+      "Cold Hearted",
+      "Paula Abdul",
+      1989,
+      "o7aShcmEksw"
+    ],
+    [
+      "Opposites Attract",
+      "Paula Abdul",
+      1989,
+      "xweiQukBM_k"
+    ],
+    [
+      "Let's Hear It for the Boy",
+      "Deniece Williams",
+      1984,
+      "gI7YHZVc7mM"
+    ],
+    [
+      "Baby, Come to Me",
+      "Patti Austin & James Ingram",
+      1982,
+      "mHyxPIh3c5w"
+    ],
+    [
+      "Yah Mo B There",
+      "James Ingram & Michael McDonald",
+      1983,
+      "8SPYSrcxhzY"
+    ],
+    [
+      "I Keep Forgettin'",
+      "Michael McDonald",
+      1982,
+      "9gbQVj4MR3M"
+    ],
+    [
+      "She Works Hard for the Money",
+      "Donna Summer",
+      1983,
+      "N8EkGUm9q_A"
     ],
     [
       "This Time I Know It's for Real",
       "Donna Summer",
       1989,
       "U4_X2p6rPJI"
+    ],
+    [
+      "Freeway of Love",
+      "Aretha Franklin",
+      1985,
+      "Ip_pjb5_fgA"
+    ],
+    [
+      "Who's Zoomin' Who",
+      "Aretha Franklin",
+      1985,
+      "eYmmFf6M40Y"
+    ],
+    [
+      "I Knew You Were Waiting (For Me)",
+      "Aretha Franklin & George Michael",
+      1987,
+      "fDxzQJaA228"
     ]
   ],
   "Electronic / Dance": [
     [
-      "Ashes to Ashes",
-      "David Bowie",
-      1980,
-      "HyMm4rJemtI"
-    ],
-    [
-      "Atmosphere",
-      "Joy Division",
-      1980,
-      "1EdUjlawLJM"
-    ],
-    [
-      "Atomic",
-      "Blondie",
-      1980,
-      "O_WLw_0DFQQ"
-    ],
-    [
-      "Cars",
-      "Gary Numan",
-      1980,
-      "Im3JzxlatUs"
-    ],
-    [
-      "Chase",
-      "Giorgio Moroder",
-      1980,
-      "mpW3C_k0WMY"
-    ],
-    [
-      "Enola Gay",
-      "Orchestral Manoeuvres in the Dark",
-      1980,
-      "d5XJ2GiR6Bo"
-    ],
-    [
-      "Fade to Grey",
-      "Visage",
-      1980,
-      "UMPC8QJF6sI"
-    ],
-    [
-      "Fame",
-      "Irene Cara",
-      1980,
-      "UYj8EvuTxmM"
-    ],
-    [
-      "Love Will Tear Us Apart",
-      "Joy Division",
-      1980,
-      "zuuObGsB0No"
-    ],
-    [
-      "Radioactivity",
-      "Kraftwerk",
-      1980,
-      "X--F5b5IdqU"
-    ],
-    [
-      "Video Killed the Radio Star",
-      "The Buggles",
-      1980,
-      "W8r-tXRLazs"
-    ],
-    [
-      "Ceremony",
+      "Blue Monday",
       "New Order",
-      1981,
-      "Vyyu4UYZfLE"
+      1983,
+      "FYH8DsU2WCk"
     ],
     [
-      "Computer Love",
-      "Kraftwerk",
+      "Bizarre Love Triangle",
+      "New Order",
+      1986,
+      "tkOr12AQpnU"
+    ],
+    [
+      "True Faith",
+      "New Order",
+      1987,
+      "mfI1S0PKJR8"
+    ],
+    [
+      "West End Girls",
+      "Pet Shop Boys",
+      1985,
+      "p3j2NYZ8FKs"
+    ],
+    [
+      "It's a Sin",
+      "Pet Shop Boys",
+      1987,
+      "dRHetRTOD1Q"
+    ],
+    [
+      "Always on My Mind",
+      "Pet Shop Boys",
+      1987,
+      "bDMCwSP5nf0"
+    ],
+    [
+      "Tainted Love",
+      "Soft Cell",
       1981,
-      "QVKs1gIIjyk"
+      "XZVpR3Pk-r8"
+    ],
+    [
+      "Don't You Want Me",
+      "The Human League",
+      1981,
+      "uPudE8nDog0"
+    ],
+    [
+      "Human",
+      "The Human League",
+      1986,
+      "s1ysoohV_zA"
+    ],
+    [
+      "Sweet Dreams (Are Made of This)",
+      "Eurythmics",
+      1983,
+      "qeMFqkcPYcg"
+    ],
+    [
+      "Here Comes the Rain Again",
+      "Eurythmics",
+      1983,
+      "TzFnYcIqj6I"
+    ],
+    [
+      "Would I Lie to You?",
+      "Eurythmics",
+      1985,
+      "Uhpu2N4rQZM"
+    ],
+    [
+      "There Must Be an Angel",
+      "Eurythmics",
+      1985,
+      "RCdneDxFRYQ"
+    ],
+    [
+      "Take On Me",
+      "a-ha",
+      1985,
+      "djV11Xbc914"
+    ],
+    [
+      "The Sun Always Shines on T.V.",
+      "a-ha",
+      1985,
+      "a3ir9HC9vYg"
+    ],
+    [
+      "The Living Daylights",
+      "a-ha",
+      1987,
+      "de2rBeWNgFo"
     ],
     [
       "Just Can't Get Enough",
@@ -2229,40 +2421,100 @@
       "_6FBfAQ-NDE"
     ],
     [
-      "Kids in America",
-      "Kim Wilde",
-      1981,
-      "80TfG7C9azA"
+      "Personal Jesus",
+      "Depeche Mode",
+      1989,
+      "u1xrNaTO1bI"
     ],
     [
-      "Souvenir",
+      "Video Killed the Radio Star",
+      "The Buggles",
+      1980,
+      "W8r-tXRLazs"
+    ],
+    [
+      "Call Me",
+      "Blondie",
+      1980,
+      "StKVS0eI85I"
+    ],
+    [
+      "Rapture",
+      "Blondie",
+      1980,
+      "pHCdS7O248g"
+    ],
+    [
+      "The Tide Is High",
+      "Blondie",
+      1980,
+      "fAb8Q9X2xAc"
+    ],
+    [
+      "Flashdance... What a Feeling",
+      "Irene Cara",
+      1983,
+      "ILWSp0m9G2U"
+    ],
+    [
+      "What Have I Done to Deserve This?",
+      "Pet Shop Boys",
+      1987,
+      "Wn9E5i7l-Eg"
+    ],
+    [
+      "Heart",
+      "Pet Shop Boys",
+      1988,
+      "vlIsU7ImU0w"
+    ],
+    [
+      "Domino Dancing",
+      "Pet Shop Boys",
+      1988,
+      "ik2YF05iX2w"
+    ],
+    [
+      "(Keep Feeling) Fascination",
+      "The Human League",
+      1983,
+      "QqqBs6kkzHE"
+    ],
+    [
+      "People Are People",
+      "Depeche Mode",
+      1984,
+      "DTYsElEGswc"
+    ],
+    [
+      "Never Let Me Down Again",
+      "Depeche Mode",
+      1987,
+      "snILjFUkk_A"
+    ],
+    [
+      "Strangelove",
+      "Depeche Mode",
+      1987,
+      "MHRabky4Ajc"
+    ],
+    [
+      "Enola Gay",
       "Orchestral Manoeuvres in the Dark",
-      1981,
-      "xEL5R8Z7ziw"
+      1980,
+      "d5XJ2GiR6Bo"
     ],
     [
-      "The Model",
-      "Kraftwerk",
-      1981,
-      "GEnx9xS79Lc"
+      "If You Leave",
+      "Orchestral Manoeuvres in the Dark",
+      1986,
+      "EPmTGFg06zA"
     ],
     [
       "Don't Go",
       "Yazoo",
       1982,
       "_sQGwDeambg"
-    ],
-    [
-      "Maid of Orleans",
-      "Orchestral Manoeuvres in the Dark",
-      1982,
-      "d6dEwhd9lok"
-    ],
-    [
-      "Mirror Man",
-      "The Human League",
-      1982,
-      "I4JJ_cU3Pi8"
     ],
     [
       "Only You",
@@ -2277,34 +2529,226 @@
       "_erd8-u8BE8"
     ],
     [
-      "Temptation",
-      "New Order",
+      "Relax",
+      "Frankie Goes to Hollywood",
+      1983,
+      "Yem_iEHiyJ0"
+    ],
+    [
+      "Two Tribes",
+      "Frankie Goes to Hollywood",
+      1984,
+      "pO1HC8pHZw0"
+    ],
+    [
+      "The Power of Love",
+      "Frankie Goes to Hollywood",
+      1984,
+      "WtdRv6GT9Zg"
+    ],
+    [
+      "Pump Up the Volume",
+      "M|A|R|R|S",
+      1987,
+      "w9gOQgfPW4Y"
+    ],
+    [
+      "Theme from S'Express",
+      "S'Express",
+      1988,
+      "IpeRShWMdYM"
+    ],
+    [
+      "Buffalo Stance",
+      "Neneh Cherry",
+      1988,
+      "JWsRz3TJDEY"
+    ],
+    [
+      "Kids in America",
+      "Kim Wilde",
+      1981,
+      "80TfG7C9azA"
+    ],
+    [
+      "You Keep Me Hangin' On",
+      "Kim Wilde",
+      1986,
+      "xJZF-skCY-M"
+    ],
+    [
+      "Cars",
+      "Gary Numan",
+      1980,
+      "Im3JzxlatUs"
+    ],
+    [
+      "Atomic",
+      "Blondie",
+      1980,
+      "O_WLw_0DFQQ"
+    ],
+    [
+      "Hungry Like the Wolf",
+      "Duran Duran",
       1982,
-      "xxDv_RTdLQo"
+      "oJL-lCzEXgI"
     ],
     [
-      "(Keep Feeling) Fascination",
-      "The Human League",
+      "The Reflex",
+      "Duran Duran",
       1983,
-      "QqqBs6kkzHE"
+      "J5ebkj9x5Ko"
     ],
     [
-      "Blue Monday",
-      "New Order",
-      1983,
-      "FYH8DsU2WCk"
+      "Rio",
+      "Duran Duran",
+      1982,
+      "nTizYn3-QN0"
     ],
     [
-      "China Girl",
-      "David Bowie",
-      1983,
-      "_YC3sTbAPcU"
+      "Girls on Film",
+      "Duran Duran",
+      1981,
+      "KCjMZMxNr-0"
     ],
     [
-      "Everything Counts",
-      "Depeche Mode",
+      "Save a Prayer",
+      "Duran Duran",
+      1982,
+      "6Uxc9eFcZyM"
+    ],
+    [
+      "A View to a Kill",
+      "Duran Duran",
+      1985,
+      "Fp4CR2HcHLQ"
+    ],
+    [
+      "Notorious",
+      "Duran Duran",
+      1986,
+      "Z9z0e1Wm64M"
+    ],
+    [
+      "The Wild Boys",
+      "Duran Duran",
+      1984,
+      "M43wsiNBwmo"
+    ],
+    [
+      "Everybody Wants to Rule the World",
+      "Tears for Fears",
+      1985,
+      "aGCdLKXNF3w"
+    ],
+    [
+      "Shout",
+      "Tears for Fears",
+      1984,
+      "Ye7FKc1JQe4"
+    ],
+    [
+      "Head Over Heels",
+      "Tears for Fears",
+      1985,
+      "CsHiG-43Fzg"
+    ],
+    [
+      "Mad World",
+      "Tears for Fears",
+      1982,
+      "u1ZvPSpLxCg"
+    ],
+    [
+      "Sowing the Seeds of Love",
+      "Tears for Fears",
+      1989,
+      "VAtGOESO7W8"
+    ],
+    [
+      "Karma Chameleon",
+      "Culture Club",
       1983,
-      "Q9T3SB-L_ik"
+      "JmcA9LIIXWw"
+    ],
+    [
+      "Do You Really Want to Hurt Me",
+      "Culture Club",
+      1982,
+      "2nXGPZaTKik"
+    ],
+    [
+      "True",
+      "Spandau Ballet",
+      1983,
+      "AR8D2yqgQ1U"
+    ],
+    [
+      "Gold",
+      "Spandau Ballet",
+      1983,
+      "ntG50eXbBtc"
+    ],
+    [
+      "Don't You (Forget About Me)",
+      "Simple Minds",
+      1985,
+      "CdqoNKCCt7A"
+    ],
+    [
+      "Alive and Kicking",
+      "Simple Minds",
+      1985,
+      "ljIQo1OHkTI"
+    ],
+    [
+      "Love Will Tear Us Apart",
+      "Joy Division",
+      1980,
+      "zuuObGsB0No"
+    ],
+    [
+      "Sledgehammer",
+      "Peter Gabriel",
+      1986,
+      "OJWJE0x7T4Q"
+    ],
+    [
+      "Owner of a Lonely Heart",
+      "Yes",
+      1983,
+      "SVOuYquXuuc"
+    ],
+    [
+      "The Model",
+      "Kraftwerk",
+      1981,
+      "GEnx9xS79Lc"
+    ],
+    [
+      "Computer Love",
+      "Kraftwerk",
+      1981,
+      "QVKs1gIIjyk"
+    ],
+    [
+      "Axel F",
+      "Harold Faltermeyer",
+      1984,
+      "Qx2gvHjNhQ0"
+    ],
+    [
+      "Together in Electric Dreams",
+      "Philip Oakey & Giorgio Moroder",
+      1984,
+      "PE1lzqJCeJ0"
+    ],
+    [
+      "Fame",
+      "Irene Cara",
+      1980,
+      "UYj8EvuTxmM"
     ],
     [
       "Let's Dance",
@@ -2319,166 +2763,22 @@
       "HivQqTtiHVw"
     ],
     [
-      "Relax",
-      "Frankie Goes to Hollywood",
+      "Ashes to Ashes",
+      "David Bowie",
+      1980,
+      "HyMm4rJemtI"
+    ],
+    [
+      "China Girl",
+      "David Bowie",
       1983,
-      "Yem_iEHiyJ0"
+      "_YC3sTbAPcU"
     ],
     [
-      "This Charming Man",
-      "The Smiths",
-      1983,
-      "UpjaTtNVwEs"
-    ],
-    [
-      "Tour de France",
-      "Kraftwerk",
-      1983,
-      "invtIKKl2Hw"
-    ],
-    [
-      "Axel F",
-      "Harold Faltermeyer",
-      1984,
-      "Qx2gvHjNhQ0"
-    ],
-    [
-      "Master and Servant",
-      "Depeche Mode",
-      1984,
-      "IsvfofcIE1Q"
-    ],
-    [
-      "People Are People",
-      "Depeche Mode",
-      1984,
-      "DTYsElEGswc"
-    ],
-    [
-      "The Power of Love",
-      "Frankie Goes to Hollywood",
-      1984,
-      "WtdRv6GT9Zg"
-    ],
-    [
-      "The Wild Boys",
-      "Duran Duran",
-      1984,
-      "M43wsiNBwmo"
-    ],
-    [
-      "Together in Electric Dreams",
-      "Philip Oakey & Giorgio Moroder",
-      1984,
-      "PE1lzqJCeJ0"
-    ],
-    [
-      "Two Tribes",
-      "Frankie Goes to Hollywood",
-      1984,
-      "pO1HC8pHZw0"
-    ],
-    [
-      "Alive and Kicking",
-      "Simple Minds",
-      1985,
-      "ljIQo1OHkTI"
-    ],
-    [
-      "How Soon Is Now?",
-      "The Smiths",
-      1985,
-      "4PIi1LWkfDE"
-    ],
-    [
-      "The Perfect Kiss",
-      "New Order",
-      1985,
-      "BTGKzXWgJFY"
-    ],
-    [
-      "Welcome to the Pleasuredome",
-      "Frankie Goes to Hollywood",
-      1985,
-      "XcSLxE_a-H8"
-    ],
-    [
-      "What You Need",
-      "INXS",
-      1985,
-      "FoEPrbdfmT4"
-    ],
-    [
-      "Big Time",
-      "Peter Gabriel",
-      1986,
-      "V8sbKOZuw2Q"
-    ],
-    [
-      "Bizarre Love Triangle",
-      "New Order",
-      1986,
-      "tkOr12AQpnU"
-    ],
-    [
-      "Human",
-      "The Human League",
-      1986,
-      "s1ysoohV_zA"
-    ],
-    [
-      "If You Leave",
-      "Orchestral Manoeuvres in the Dark",
-      1986,
-      "EPmTGFg06zA"
-    ],
-    [
-      "In Your Eyes",
-      "Peter Gabriel",
-      1986,
-      "SQ5ual6Jwp8"
-    ],
-    [
-      "Missionary Man",
-      "Eurythmics",
-      1986,
-      "0-Q3cp3cp88"
-    ],
-    [
-      "Notorious",
-      "Duran Duran",
-      1986,
-      "Z9z0e1Wm64M"
-    ],
-    [
-      "Sledgehammer",
-      "Peter Gabriel",
-      1986,
-      "OJWJE0x7T4Q"
-    ],
-    [
-      "There Is a Light That Never Goes Out",
-      "The Smiths",
-      1986,
-      "siO6dkqidc4"
-    ],
-    [
-      "You Keep Me Hangin' On",
-      "Kim Wilde",
-      1986,
-      "xJZF-skCY-M"
-    ],
-    [
-      "Always on My Mind",
-      "Pet Shop Boys",
-      1987,
-      "bDMCwSP5nf0"
-    ],
-    [
-      "Devil Inside",
-      "INXS",
-      1987,
-      "hv_zJrO_ptk"
+      "Under Pressure",
+      "Queen & David Bowie",
+      1981,
+      "a01QQZyl-_I"
     ],
     [
       "Need You Tonight",
@@ -2487,46 +2787,10 @@
       "w-rv2BQa2OU"
     ],
     [
-      "Never Let Me Down Again",
-      "Depeche Mode",
-      1987,
-      "snILjFUkk_A"
-    ],
-    [
       "New Sensation",
       "INXS",
       1987,
       "azfG5H-pCVg"
-    ],
-    [
-      "Strangelove",
-      "Depeche Mode",
-      1987,
-      "MHRabky4Ajc"
-    ],
-    [
-      "True Faith",
-      "New Order",
-      1987,
-      "mfI1S0PKJR8"
-    ],
-    [
-      "What Have I Done to Deserve This?",
-      "Pet Shop Boys",
-      1987,
-      "Wn9E5i7l-Eg"
-    ],
-    [
-      "Domino Dancing",
-      "Pet Shop Boys",
-      1988,
-      "ik2YF05iX2w"
-    ],
-    [
-      "Heart",
-      "Pet Shop Boys",
-      1988,
-      "vlIsU7ImU0w"
     ],
     [
       "Never Tear Us Apart",
@@ -2535,22 +2799,16 @@
       "AIBv2GEnXlc"
     ],
     [
-      "You Came",
-      "Kim Wilde",
-      1988,
-      "kmDRx4Bg1RA"
-    ],
-    [
-      "Personal Jesus",
-      "Depeche Mode",
-      1989,
-      "u1xrNaTO1bI"
-    ],
-    [
-      "Pump Up The Jam",
+      "Pump Up the Jam",
       "Technotronic",
       1989,
       "9EcjWd-O4jI"
+    ],
+    [
+      "Big in Japan",
+      "Alphaville",
+      1984,
+      "tl6u2NASUzU"
     ]
   ],
   "Jazz": [
@@ -2559,9 +2817,45 @@
       "Herbie Hancock",
       1983,
       "GHhD4PD75zY"
+    ],
+    [
+      "We're in This Love Together",
+      "Al Jarreau",
+      1981,
+      "otVH5cv9z1A"
+    ],
+    [
+      "Give Me the Night",
+      "George Benson",
+      1980,
+      "FIF7wKJb2iU"
+    ],
+    [
+      "Turn Your Love Around",
+      "George Benson",
+      1981,
+      "96GE-aj9jhg"
+    ],
+    [
+      "Rise",
+      "Herb Alpert",
+      1980,
+      "q7O3eYJptTc"
+    ],
+    [
+      "Songbird",
+      "Kenny G",
+      1987,
+      "QN2RnjFHmNY"
     ]
   ],
   "Country": [
+    [
+      "Islands in the Stream",
+      "Kenny Rogers & Dolly Parton",
+      1983,
+      "HQW7I62TNOw"
+    ],
     [
       "9 to 5",
       "Dolly Parton",
@@ -2569,10 +2863,16 @@
       "UbxUSsFXYo4"
     ],
     [
-      "Bette Davis Eyes",
-      "Kim Carnes",
-      1981,
-      "EPOIS5taqA8"
+      "Lady",
+      "Kenny Rogers",
+      1980,
+      "IArxapKwXLM"
+    ],
+    [
+      "Islands in the Stream",
+      "Dolly Parton",
+      1983,
+      "HQW7I62TNOw"
     ],
     [
       "Always on My Mind",
@@ -2581,28 +2881,10 @@
       "R7f189Z0v0Y"
     ],
     [
-      "Bobbie Sue",
-      "The Oak Ridge Boys",
-      1982,
-      "aAB5rjr__-U"
-    ],
-    [
-      "You and I",
-      "Eddie Rabbitt & Crystal Gayle",
-      1982,
-      "C_lm_stCNP4"
-    ],
-    [
-      "Islands in the Stream",
-      "Kenny Rogers & Dolly Parton",
-      1983,
-      "HQW7I62TNOw"
-    ],
-    [
-      "Islands in the Stream",
-      "Dolly Parton",
-      1983,
-      "HQW7I62TNOw"
+      "On the Road Again",
+      "Willie Nelson",
+      1980,
+      "Gdlyi5mckg0"
     ],
     [
       "To All the Girls I've Loved Before",
@@ -2611,10 +2893,28 @@
       "rVq0ONrSH-Q"
     ],
     [
-      "On the Other Hand",
-      "Randy Travis",
-      1985,
-      "pJgV-TGkFeU"
+      "Elvira",
+      "The Oak Ridge Boys",
+      1981,
+      "hKEpqTPfV7s"
+    ],
+    [
+      "I Love a Rainy Night",
+      "Eddie Rabbitt",
+      1980,
+      "mMZ4amjbqhU"
+    ],
+    [
+      "Drivin' My Life Away",
+      "Eddie Rabbitt",
+      1980,
+      "Pu82VMf8enI"
+    ],
+    [
+      "Bette Davis Eyes",
+      "Kim Carnes",
+      1981,
+      "EPOIS5taqA8"
     ],
     [
       "Forever and Ever, Amen",
@@ -2629,38 +2929,38 @@
       "Vangelis",
       1981,
       "8a-HfNE3EIo"
+    ],
+    [
+      "Olympic Fanfare and Theme",
+      "John Williams",
+      1984,
+      "XKs48vlV5yw"
+    ],
+    [
+      "Raiders March",
+      "John Williams",
+      1981,
+      "VVYFvL5S7nU"
+    ],
+    [
+      "Imperial March",
+      "John Williams",
+      1980,
+      "vsMWVW4xtwI"
+    ],
+    [
+      "E.T. Theme",
+      "John Williams",
+      1982,
+      "Ps1-YlB1TIQ"
     ]
   ],
   "Reggae": [
-    [
-      "A Message to You Rudy",
-      "The Specials",
-      1980,
-      "D6ONesFHXWE"
-    ],
     [
       "Could You Be Loved",
       "Bob Marley & The Wailers",
       1980,
       "1ti2YCFgCoI"
-    ],
-    [
-      "Is This Love",
-      "Bob Marley & The Wailers",
-      1980,
-      "69RdQFDuYPI"
-    ],
-    [
-      "Jamming",
-      "Bob Marley & The Wailers",
-      1980,
-      "oqVy6eRXc7Q"
-    ],
-    [
-      "No Woman, No Cry",
-      "Bob Marley & The Wailers",
-      1980,
-      "IT8XvzIfi4U"
     ],
     [
       "Redemption Song",
@@ -2669,46 +2969,16 @@
       "yv5xonFSC4c"
     ],
     [
-      "Stepping Out of Babylon",
-      "Marcia Griffiths",
-      1980,
-      "siuoJHmghEM"
-    ],
-    [
       "Three Little Birds",
       "Bob Marley & The Wailers",
       1980,
       "LanCLS_hIo4"
     ],
     [
-      "Ghost Town",
-      "The Specials",
-      1981,
-      "RZ2oXzrnti4"
-    ],
-    [
-      "Cool Down the Pace",
-      "Gregory Isaacs",
-      1982,
-      "2r5V-__Xs8w"
-    ],
-    [
-      "Feel Like Jumping",
-      "Marcia Griffiths",
-      1982,
-      "_qvvZcSWaW4"
-    ],
-    [
-      "Love Is All Is Alright",
-      "UB40",
-      1982,
-      "FBhelKbYNdU"
-    ],
-    [
-      "Night Nurse",
-      "Gregory Isaacs",
-      1982,
-      "ec9KwGWvSpM"
+      "Buffalo Soldier",
+      "Bob Marley & The Wailers",
+      1983,
+      "uMUQMSXLlHM"
     ],
     [
       "Pass the Dutchie",
@@ -2717,94 +2987,22 @@
       "EsyUa63NM1E"
     ],
     [
-      "So Here I Am",
-      "UB40",
-      1982,
-      "fE_1k2Gw8pw"
-    ],
-    [
-      "Youth of Today",
-      "Musical Youth",
-      1982,
-      "w_jImS22Ivs"
-    ],
-    [
-      "Blackman Redemption",
-      "Bob Marley & The Wailers",
-      1983,
-      "yv5xonFSC4c"
-    ],
-    [
-      "Buffalo Soldier",
-      "Bob Marley & The Wailers",
-      1983,
-      "QiESgCu9Ehw"
-    ],
-    [
-      "Many Rivers to Cross",
-      "UB40",
-      1983,
-      "0U1OAaHNsKk"
-    ],
-    [
-      "Nobody Move, Nobody Get Hurt",
-      "Yellowman",
-      1983,
-      "0g73fhu8TAg"
-    ],
-    [
-      "Rastaman Live Up!",
-      "Bob Marley & The Wailers",
-      1983,
-      "1wUDX3g8iYk"
-    ],
-    [
-      "Red Red Wine",
-      "UB40",
-      1983,
-      "zXt56MB-3vc"
-    ],
-    [
-      "Zungguzungguguzungguzeng",
-      "Yellowman",
-      1983,
-      "Rm2n6Enl2vY"
-    ],
-    [
-      "If It Happens Again",
-      "UB40",
-      1984,
-      "hHSolrq3Djg"
-    ],
-    [
       "One Love / People Get Ready",
       "Bob Marley & The Wailers",
       1984,
       "IN0KkGeEURw"
     ],
     [
-      "Don't Break My Heart",
-      "UB40",
-      1985,
-      "SmBFDkVakvg"
+      "Is This Love",
+      "Bob Marley & The Wailers",
+      1980,
+      "69RdQFDuYPI"
     ],
     [
-      "I Got You Babe",
-      "UB40",
-      1985,
-      "2aP4GaAruws"
-    ],
-    [
-      "Sing Our Own Song",
-      "UB40",
-      1986,
-      "OiE1Ir0Gnxc"
-    ],
-    [
-      "(I Can't Help) Falling in Love With You",
-      "UB40",
-      1989,
-      "vUdloUqZa7w"
+      "Night Nurse",
+      "Gregory Isaacs",
+      1982,
+      "ec9KwGWvSpM"
     ],
     [
       "Electric Boogie",
@@ -2813,96 +3011,48 @@
       "1vF84LABHm0"
     ],
     [
+      "Red Red Wine",
+      "UB40",
+      1983,
+      "zXt56MB-3vc"
+    ],
+    [
+      "I Got You Babe",
+      "UB40",
+      1985,
+      "2aP4GaAruws"
+    ],
+    [
+      "(I Can't Help) Falling in Love With You",
+      "UB40",
+      1989,
+      "vUdloUqZa7w"
+    ],
+    [
+      "Food for Thought",
+      "UB40",
+      1980,
+      "oplp8pkQdso"
+    ],
+    [
       "Kingston Town",
       "UB40",
       1989,
       "8Ikz-51w3mo"
+    ],
+    [
+      "Ghost Town",
+      "The Specials",
+      1981,
+      "RZ2oXzrnti4"
     ]
   ],
   "Latin Music": [
-    [
-      "Amor",
-      "Julio Iglesias",
-      1982,
-      "Dr5U3K5O5VE"
-    ],
-    [
-      "Borderline",
-      "Madonna",
-      1984,
-      "rSaC-YbSDpo"
-    ],
-    [
-      "Hang On to Your Love",
-      "Sade",
-      1984,
-      "kxNJV83EMJw"
-    ],
-    [
-      "Smooth Operator",
-      "Sade",
-      1984,
-      "4TYv2PhG89A"
-    ],
-    [
-      "To All the Girls I've Loved Before",
-      "Julio Iglesias & Willie Nelson",
-      1984,
-      "rVq0ONrSH-Q"
-    ],
-    [
-      "Your Love Is King",
-      "Sade",
-      1984,
-      "k1ljpLQ1V6Y"
-    ],
     [
       "Conga",
       "Gloria Estefan & Miami Sound Machine",
       1985,
       "54ItEmCnP80"
-    ],
-    [
-      "The Sweetest Taboo",
-      "Sade",
-      1985,
-      "kcPc18SG6uA"
-    ],
-    [
-      "Is It a Crime",
-      "Sade",
-      1986,
-      "FrD01XVOl80"
-    ],
-    [
-      "Words Get in the Way",
-      "Gloria Estefan & Miami Sound Machine",
-      1986,
-      "jL6P8_tiDBs"
-    ],
-    [
-      "Bamboleo",
-      "Gipsy Kings",
-      1987,
-      "7qbEt_lSib4"
-    ],
-    [
-      "Come On, Let's Go",
-      "Los Lobos",
-      1987,
-      "PE3_1Xl4jE0"
-    ],
-    [
-      "La Bamba",
-      "Los Lobos",
-      1987,
-      "nLAWPrCUQQ0"
-    ],
-    [
-      "La Isla Bonita",
-      "Madonna",
-      1987,
-      "zpzdgmqIHOQ"
     ],
     [
       "Rhythm Is Gonna Get You",
@@ -2911,102 +3061,72 @@
       "CZkjeJKBI0M"
     ],
     [
-      "Who's That Girl",
+      "1-2-3",
+      "Gloria Estefan & Miami Sound Machine",
+      1988,
+      "T4IWlFutwXo"
+    ],
+    [
+      "Don't Wanna Lose You",
+      "Gloria Estefan",
+      1989,
+      "J1x1WGtePSE"
+    ],
+    [
+      "Anything for You",
+      "Gloria Estefan & Miami Sound Machine",
+      1988,
+      "4uLl8aA95zA"
+    ],
+    [
+      "La Bamba",
+      "Los Lobos",
+      1987,
+      "nLAWPrCUQQ0"
+    ],
+    [
+      "Bamboleo",
+      "Gipsy Kings",
+      1987,
+      "7qbEt_lSib4"
+    ],
+    [
+      "Smooth Operator",
+      "Sade",
+      1984,
+      "4TYv2PhG89A"
+    ],
+    [
+      "Your Love Is King",
+      "Sade",
+      1984,
+      "k1ljpLQ1V6Y"
+    ],
+    [
+      "The Sweetest Taboo",
+      "Sade",
+      1985,
+      "kcPc18SG6uA"
+    ],
+    [
+      "La Isla Bonita",
       "Madonna",
       1987,
-      "r0qDBYiOBrc"
+      "zpzdgmqIHOQ"
+    ],
+    [
+      "To All the Girls I've Loved Before",
+      "Julio Iglesias & Willie Nelson",
+      1984,
+      "rVq0ONrSH-Q"
     ]
   ],
   "Metal": [
     [
-      "Living After Midnight",
-      "Judas Priest",
-      1980,
-      "9VVFNgbsDC4"
-    ],
-    [
-      "Mr. Crowley",
-      "Ozzy Osbourne",
-      1980,
-      "DnueGxT8XUk"
-    ],
-    [
-      "The Chase Is Better Than the Catch",
-      "Motörhead",
-      1980,
-      "8TzxaWtra1A"
-    ],
-    [
-      "Iron Fist",
-      "Motörhead",
-      1982,
-      "N1LrnaHiDeQ"
-    ],
-    [
-      "No One Like You",
-      "Scorpions",
-      1982,
-      "6VwbyBGbqPY"
-    ],
-    [
-      "The Number of the Beast",
-      "Iron Maiden",
-      1982,
-      "WxnN05vOuSM"
-    ],
-    [
-      "You've Got Another Thing Comin'",
-      "Judas Priest",
-      1982,
-      "coA75uoMF40"
-    ],
-    [
-      "Jump in the Fire",
+      "Master of Puppets",
       "Metallica",
-      1983,
-      "9_DSE3FSalM"
-    ],
-    [
-      "Rainbow in the Dark",
-      "Dio",
-      1983,
-      "PrBUjXaRSUQ"
-    ],
-    [
-      "Seek & Destroy",
-      "Metallica",
-      1983,
-      "FLTchCiC0T0"
-    ],
-    [
-      "Whiplash",
-      "Metallica",
-      1983,
-      "fEMTKRKA4mM"
-    ],
-    [
-      "2 Minutes to Midnight",
-      "Iron Maiden",
-      1984,
-      "9qbRHY1l0vc"
-    ],
-    [
-      "Aces High",
-      "Iron Maiden",
-      1984,
-      "Xg9aQvjMS60"
-    ],
-    [
-      "Big City Nights",
-      "Scorpions",
-      1984,
-      "LBJQEJKBq-k"
-    ],
-    [
-      "Creeping Death",
-      "Metallica",
-      1984,
-      "X8OeBZQn3_w"
+      1986,
+      "gSGgap6mUPo"
     ],
     [
       "Fade to Black",
@@ -3021,78 +3141,150 @@
       "17HRV8k1YMw"
     ],
     [
-      "Killed by Death",
-      "Motörhead",
-      1984,
-      "LZ5fIKmn1ok"
-    ],
-    [
-      "The Last in Line",
-      "Dio",
-      1984,
-      "360xvnsduDg"
-    ],
-    [
-      "Battery",
+      "One",
       "Metallica",
-      1986,
-      "a_ITtP033RI"
+      1988,
+      "WM8bTdBs-cw"
     ],
     [
-      "Master of Puppets",
-      "Metallica",
-      1986,
-      "gSGgap6mUPo"
-    ],
-    [
-      "Shot in the Dark",
+      "Crazy Train",
       "Ozzy Osbourne",
-      1986,
-      "Mzyz2egx_0c"
+      1980,
+      "FVovq9TGBw0"
     ],
     [
-      "Turbo Lover",
+      "Bark at the Moon",
+      "Ozzy Osbourne",
+      1983,
+      "LplPi2CxNHI"
+    ],
+    [
+      "Holy Diver",
+      "Dio",
+      1983,
+      "2lvs2FzF64o"
+    ],
+    [
+      "Rainbow in the Dark",
+      "Dio",
+      1983,
+      "PrBUjXaRSUQ"
+    ],
+    [
+      "Ace of Spades",
+      "Motörhead",
+      1980,
+      "3mbvWn1EY6g"
+    ],
+    [
+      "Breaking the Law",
       "Judas Priest",
-      1986,
-      "JhY9GOhFwN4"
+      1980,
+      "L397TWLwrUU"
     ],
     [
-      "Wasted Years",
+      "Living After Midnight",
+      "Judas Priest",
+      1980,
+      "9VVFNgbsDC4"
+    ],
+    [
+      "You've Got Another Thing Comin'",
+      "Judas Priest",
+      1982,
+      "coA75uoMF40"
+    ],
+    [
+      "The Number of the Beast",
       "Iron Maiden",
-      1986,
-      "ht6xAMil8oU"
+      1982,
+      "WxnN05vOuSM"
     ],
     [
-      "Welcome Home (Sanitarium)",
-      "Metallica",
-      1986,
-      "ZiIc0HuJ78Q"
-    ],
-    [
-      "Can I Play with Madness",
+      "Run to the Hills",
       "Iron Maiden",
-      1988,
-      "Kvqr366Op3k"
+      1982,
+      "86URGgqONvA"
     ],
     [
-      "Rhythm of Love",
-      "Scorpions",
-      1988,
-      "ETUX412wNmA"
+      "The Trooper",
+      "Iron Maiden",
+      1983,
+      "X4bgXH3sJ2Q"
     ],
     [
-      "Wind of Change",
+      "2 Minutes to Midnight",
+      "Iron Maiden",
+      1984,
+      "9qbRHY1l0vc"
+    ],
+    [
+      "Rock You Like a Hurricane",
       "Scorpions",
-      1989,
-      "n4RjJKxsamQ"
+      1984,
+      "6yP1tcy9a10"
+    ],
+    [
+      "Still Loving You",
+      "Scorpions",
+      1984,
+      "7pOr3dBFAeY"
+    ],
+    [
+      "No One Like You",
+      "Scorpions",
+      1982,
+      "6VwbyBGbqPY"
     ]
   ],
   "Soul / Funk": [
     [
-      "After the Love Has Gone",
+      "Let's Groove",
       "Earth, Wind & Fire",
+      1981,
+      "Lrle0x_DHBM"
+    ],
+    [
+      "Sexual Healing",
+      "Marvin Gaye",
+      1982,
+      "rjlSiASsUIs"
+    ],
+    [
+      "Give Me the Night",
+      "George Benson",
       1980,
-      "CUCLNPOjPZw"
+      "FIF7wKJb2iU"
+    ],
+    [
+      "Ain't Nobody",
+      "Chaka Khan",
+      1983,
+      "BNirQXe8HOA"
+    ],
+    [
+      "I Feel for You",
+      "Chaka Khan",
+      1984,
+      "YW0sxgYAmLM"
+    ],
+    [
+      "Forget Me Nots",
+      "Patrice Rushen",
+      1982,
+      "jtMHsNhQBvI"
+    ],
+    [
+      "You Dropped a Bomb on Me",
+      "The Gap Band",
+      1982,
+      "17lkdqoLt44"
+    ],
+    [
+      "Early in the Morning",
+      "The Gap Band",
+      1982,
+      "aobIboK_z34"
     ],
     [
       "And the Beat Goes On",
@@ -3101,94 +3293,16 @@
       "pEmX5HR9ZxU"
     ],
     [
+      "Rock Steady",
+      "The Whispers",
+      1987,
+      "01P3ST-mAA0"
+    ],
+    [
       "Boogie Wonderland",
       "Earth, Wind & Fire",
       1980,
       "god7hAPv8f0"
-    ],
-    [
-      "Fantasy",
-      "Earth, Wind & Fire",
-      1980,
-      "r58GQYFZeLE"
-    ],
-    [
-      "It's a Love Thing",
-      "The Whispers",
-      1980,
-      "tcTL8nDomdM"
-    ],
-    [
-      "Mary Jane",
-      "Rick James",
-      1980,
-      "xBD6aStamvo"
-    ],
-    [
-      "Never Knew Love Like This Before",
-      "Stephanie Mills",
-      1980,
-      "3z-pWWr92rM"
-    ],
-    [
-      "September",
-      "Earth, Wind & Fire",
-      1980,
-      "131OjWrdYwc"
-    ],
-    [
-      "Fire and Desire",
-      "Rick James & Teena Marie",
-      1981,
-      "GqGWCyIsl5A"
-    ],
-    [
-      "Give It to Me Baby",
-      "Rick James",
-      1981,
-      "1dNIQVYGXbM"
-    ],
-    [
-      "I'm in Love",
-      "Evelyn Champagne King",
-      1981,
-      "DQjKCrQcbbw"
-    ],
-    [
-      "Let's Groove",
-      "Earth, Wind & Fire",
-      1981,
-      "Lrle0x_DHBM"
-    ],
-    [
-      "Square Biz",
-      "Teena Marie",
-      1981,
-      "ymzftNzqQM0"
-    ],
-    [
-      "Super Freak",
-      "Rick James",
-      1981,
-      "QYHxGBH6o4M"
-    ],
-    [
-      "Yearning for Your Love",
-      "The Gap Band",
-      1981,
-      "afqzUbvi7D8"
-    ],
-    [
-      "Dance Wit' Me",
-      "Rick James",
-      1982,
-      "NOOjyr_w64o"
-    ],
-    [
-      "Cold Blooded",
-      "Rick James",
-      1983,
-      "DKRjwZgbZts"
     ],
     [
       "Juicy Fruit",
@@ -3197,10 +3311,16 @@
       "EYE5QEBOMA8"
     ],
     [
-      "Keep on Lovin' Me",
-      "The Whispers",
-      1983,
-      "gbo4GYTbn5Q"
+      "Never Knew Love Like This Before",
+      "Stephanie Mills",
+      1980,
+      "3z-pWWr92rM"
+    ],
+    [
+      "Square Biz",
+      "Teena Marie",
+      1981,
+      "ymzftNzqQM0"
     ],
     [
       "Lovergirl",
@@ -3209,90 +3329,54 @@
       "1fyWgjhe_Zg"
     ],
     [
-      "Glow",
+      "Super Freak",
       "Rick James",
-      1985,
-      "BFe4BMgcSd0"
+      1981,
+      "QYHxGBH6o4M"
     ],
     [
-      "I Have Learned to Respect the Power of Love",
-      "Stephanie Mills",
-      1985,
-      "TCGPzyfhHy4"
+      "Give It to Me Baby",
+      "Rick James",
+      1981,
+      "1dNIQVYGXbM"
     ],
     [
-      "Rock Steady",
-      "The Whispers",
-      1987,
-      "01P3ST-mAA0"
-    ],
-    [
-      "Ooo La La La",
-      "Teena Marie",
-      1988,
-      "80oMTlEZl7g"
+      "Cold Blooded",
+      "Rick James",
+      1983,
+      "DKRjwZgbZts"
     ]
   ],
   "Indie / Alternative": [
     [
-      "The Lovecats",
-      "The Cure",
-      1983,
-      "NMjw7_UB-PI"
-    ],
-    [
-      "This Must Be the Place",
-      "Talking Heads",
-      1983,
-      "Fb2q141rMNE"
-    ],
-    [
-      "Close to Me",
-      "The Cure",
+      "How Soon Is Now?",
+      "The Smiths",
       1985,
-      "BjvfIJstWeg"
+      "hnpILIIo9ek"
     ],
     [
-      "In Between Days",
-      "The Cure",
-      1985,
-      "scif2vfg1ug"
+      "This Charming Man",
+      "The Smiths",
+      1983,
+      "cJRP3LRcUFg"
     ],
     [
-      "Ask",
+      "There Is a Light That Never Goes Out",
       "The Smiths",
       1986,
-      "zoo9Vu1a9bU"
+      "icXQxumuHAE"
     ],
     [
-      "Bigmouth Strikes Again",
-      "The Smiths",
-      1986,
-      "PtzhvJh9NRY"
-    ],
-    [
-      "Panic",
-      "The Smiths",
-      1986,
-      "os90HyZBSUY"
-    ],
-    [
-      "Girlfriend in a Coma",
-      "The Smiths",
-      1987,
-      "3GhoWZ5qTwI"
+      "Love Will Tear Us Apart",
+      "Joy Division",
+      1980,
+      "zuuObGsB0No"
     ],
     [
       "Just Like Heaven",
       "The Cure",
       1987,
       "n3nPiBai66M"
-    ],
-    [
-      "Where Is My Mind?",
-      "Pixies",
-      1988,
-      "GrHl0wpagFc"
     ],
     [
       "Lovesong",
@@ -3305,6 +3389,78 @@
       "The Cure",
       1989,
       "ijxk-fgcg7c"
+    ],
+    [
+      "In Between Days",
+      "The Cure",
+      1985,
+      "scif2vfg1ug"
+    ],
+    [
+      "Close to Me",
+      "The Cure",
+      1985,
+      "BjvfIJstWeg"
+    ],
+    [
+      "Once in a Lifetime",
+      "Talking Heads",
+      1980,
+      "5IsSpAOD6K8"
+    ],
+    [
+      "Burning Down the House",
+      "Talking Heads",
+      1983,
+      "_3eC35LoF4U"
+    ],
+    [
+      "Everybody Wants to Rule the World",
+      "Tears for Fears",
+      1985,
+      "aGCdLKXNF3w"
+    ],
+    [
+      "Shout",
+      "Tears for Fears",
+      1984,
+      "Ye7FKc1JQe4"
+    ],
+    [
+      "Mad World",
+      "Tears for Fears",
+      1982,
+      "u1ZvPSpLxCg"
+    ],
+    [
+      "Don't You (Forget About Me)",
+      "Simple Minds",
+      1985,
+      "CdqoNKCCt7A"
+    ],
+    [
+      "Alive and Kicking",
+      "Simple Minds",
+      1985,
+      "ljIQo1OHkTI"
+    ],
+    [
+      "Under the Milky Way",
+      "The Church",
+      1988,
+      "pWxJEIz7sSA"
+    ],
+    [
+      "Where Is My Mind?",
+      "Pixies",
+      1988,
+      "GrHl0wpagFc"
+    ],
+    [
+      "Here Comes Your Man",
+      "Pixies",
+      1989,
+      "LKVrRzr6CM4"
     ]
   ],
   "Blues": [
@@ -3313,6 +3469,42 @@
       "Stevie Ray Vaughan",
       1983,
       "kfjXp4KTTY8"
+    ],
+    [
+      "Crossfire",
+      "Stevie Ray Vaughan",
+      1989,
+      "F73EcycGCO8"
+    ],
+    [
+      "The House Is Rockin'",
+      "Stevie Ray Vaughan",
+      1989,
+      "-G84P5K-W1c"
+    ],
+    [
+      "Cold Shot",
+      "Stevie Ray Vaughan",
+      1984,
+      "m2ou-WIxfLY"
+    ],
+    [
+      "Pretending",
+      "Eric Clapton",
+      1989,
+      "zm2PvnM7Vds"
+    ],
+    [
+      "Bad Love",
+      "Eric Clapton",
+      1989,
+      "9vUpZFRPFIY"
+    ],
+    [
+      "Forever Man",
+      "Eric Clapton",
+      1985,
+      "0gDvR1sZ6I4"
     ]
   ],
   "Gospel / Christian": [
@@ -3323,10 +3515,40 @@
       "9AjkUyX0rVw"
     ],
     [
+      "That's What Friends Are For",
+      "Dionne & Friends",
+      1985,
+      "HyTpu6BmE88"
+    ],
+    [
       "Higher Love",
       "Steve Winwood",
       1986,
       "k9olaIio3l8"
+    ],
+    [
+      "Lean on Me",
+      "Club Nouveau",
+      1987,
+      "kbyjaUJWWmk"
+    ],
+    [
+      "I Knew You Were Waiting (For Me)",
+      "Aretha Franklin & George Michael",
+      1987,
+      "fDxzQJaA228"
+    ],
+    [
+      "One Moment in Time",
+      "Whitney Houston",
+      1988,
+      "96aAx0kxVSA"
+    ],
+    [
+      "Put a Little Love in Your Heart",
+      "Annie Lennox & Al Green",
+      1988,
+      "S3J_3mcOwdQ"
     ],
     [
       "Man in the Mirror",
@@ -3337,25 +3559,16 @@
   ],
   "Afrobeat / Amapiano": [
     [
+      "Don't Go Lose It Baby",
+      "Hugh Masekela",
+      1984,
+      "ZmkUMYHswj8"
+    ],
+    [
       "Graceland",
       "Paul Simon",
       1986,
       "0VTcBO4q5kY"
-    ]
-  ],
-  "K-Pop": [],
-  "Folk / Acoustic": [
-    [
-      "Hard to Say I'm Sorry",
-      "Chicago",
-      1982,
-      "kNlVIMrUU6w"
-    ],
-    [
-      "You're the Inspiration",
-      "Chicago",
-      1984,
-      "MA7OioRqgHw"
     ],
     [
       "You Can Call Me Al",
@@ -3364,72 +3577,87 @@
       "uq-gYOrU8bA"
     ],
     [
+      "Diamonds on the Soles of Her Shoes",
+      "Paul Simon",
+      1986,
+      "-I_T3XvzPaM"
+    ],
+    [
+      "The Boy in the Bubble",
+      "Paul Simon",
+      1986,
+      "Uy5T6s25XK4"
+    ],
+    [
+      "Homeless",
+      "Paul Simon & Ladysmith Black Mambazo",
+      1986,
+      "TQPx7oiizxs"
+    ],
+    [
+      "Yé ké yé ké",
+      "Mory Kanté",
+      1987,
+      "n_Cmv2K07R0"
+    ]
+  ],
+  "K-Pop": [],
+  "Folk / Acoustic": [
+    [
       "Fast Car",
       "Tracy Chapman",
       1988,
       "AIOAlaACuv4"
+    ],
+    [
+      "Talkin' 'bout a Revolution",
+      "Tracy Chapman",
+      1988,
+      "Xv8FBjo1Y8I"
+    ],
+    [
+      "Baby Can I Hold You",
+      "Tracy Chapman",
+      1988,
+      "DqoLMGSBGYc"
+    ],
+    [
+      "Graceland",
+      "Paul Simon",
+      1986,
+      "0VTcBO4q5kY"
+    ],
+    [
+      "You Can Call Me Al",
+      "Paul Simon",
+      1986,
+      "uq-gYOrU8bA"
+    ],
+    [
+      "Luka",
+      "Suzanne Vega",
+      1987,
+      "VZt7J0iaUD0"
+    ],
+    [
+      "Tom's Diner",
+      "Suzanne Vega",
+      1987,
+      "j4jtIDaeaWI"
     ]
   ],
   "Disco": [
     [
-      "Daddy Cool",
-      "Boney M.",
-      1976,
-      "FYGTT7YhywA"
+      "Upside Down",
+      "Diana Ross",
+      1980,
+      "Po0BbGMSX4g"
     ],
     [
-      "How Deep Is Your Love",
-      "Bee Gees",
-      1977,
-      "XpqqjU7u5Yc"
-    ],
-    [
-      "Ma Baker",
-      "Boney M.",
-      1977,
-      "f3XcNskAxp0"
-    ],
-    [
-      "Stayin' Alive",
-      "Bee Gees",
-      1977,
-      "I_izvAbhExY"
-    ],
-    [
-      "Brown Girl in the Ring",
-      "Boney M.",
-      1978,
-      "15nMlfogITw"
-    ],
-    [
-      "Mary's Boy Child / Oh My Lord",
-      "Boney M.",
-      1978,
-      "cmm1gt_2SkQ"
-    ],
-    [
-      "Rasputin",
-      "Boney M.",
-      1978,
-      "Nl_Eo2QzqU4"
-    ],
-    [
-      "Rivers of Babylon",
-      "Boney M.",
-      1978,
-      "l3QxT-w3WMo"
-    ],
-    [
-      "Gotta Go Home",
-      "Boney M.",
-      1979,
-      "qxggltjIVFI"
-    ],
-    [
-      "Voulez-Vous",
-      "ABBA",
-      1979,
-      "tmhFWw6tiAo"
+      "I'm Coming Out",
+      "Diana Ross",
+      1980,
+      "F-mjl63e0ms"
     ],
     [
       "Celebration",
@@ -3438,160 +3666,10 @@
       "3GwjfUFyY6M"
     ],
     [
-      "Funky Town",
-      "Lipps Inc.",
-      1980,
-      "uhzy7JaU2Zc"
-    ],
-    [
-      "Funkytown",
-      "Lipps Inc.",
-      1980,
-      "Z6dqIYKIBSU"
-    ],
-    [
-      "Good Times",
-      "Chic",
-      1980,
-      "iGKQapswGaY"
-    ],
-    [
-      "Hangin' Out",
-      "Cameo",
-      1980,
-      "jUgsmsvSYow"
-    ],
-    [
-      "He's the Greatest Dancer",
-      "Sister Sledge",
-      1980,
-      "fLLSwHaYk6k"
-    ],
-    [
-      "I Want Your Love",
-      "Chic",
-      1980,
-      "rpuPCcw-cDU"
-    ],
-    [
-      "I Will Survive",
-      "Gloria Gaynor",
-      1980,
-      "FHhZPp08s74"
-    ],
-    [
-      "Ladies' Night",
-      "Kool & the Gang",
-      1980,
-      "PVWqSWmzgYA"
-    ],
-    [
-      "Last Dance",
-      "Donna Summer",
-      1980,
-      "A8xv1MXrwNc"
-    ],
-    [
-      "Le Freak",
-      "Chic",
-      1980,
-      "aXgSHL7efKg"
-    ],
-    [
-      "Lost in Music",
-      "Sister Sledge",
-      1980,
-      "qAggOG1YEyI"
-    ],
-    [
-      "On the Radio",
-      "Donna Summer",
-      1980,
-      "qqi-8nv5ngk"
-    ],
-    [
-      "Take Your Time (Do It Right)",
-      "The S.O.S. Band",
-      1980,
-      "bs8dp2ofgyo"
-    ],
-    [
-      "Thinking of You",
-      "Sister Sledge",
-      1980,
-      "StrVKEisHnc"
-    ],
-    [
-      "Too Hot",
-      "Kool & the Gang",
-      1980,
-      "ZI0F1KDvfBI"
-    ],
-    [
-      "We Are Family",
-      "Sister Sledge",
-      1980,
-      "uyGY2NfYpeE"
-    ],
-    [
-      "Genius of Love",
-      "Tom Tom Club",
-      1981,
-      "aCWCF19nUhA"
-    ],
-    [
       "Get Down on It",
       "Kool & the Gang",
       1981,
       "qchPLaiKocI"
-    ],
-    [
-      "Wordy Rappinghood",
-      "Tom Tom Club",
-      1981,
-      "apZ7likn3no"
-    ],
-    [
-      "Love Is in Control",
-      "Donna Summer",
-      1982,
-      "N64GhOkDBx0"
-    ],
-    [
-      "State of Independence",
-      "Donna Summer",
-      1982,
-      "Ms8llcSJNyw"
-    ],
-    [
-      "Joanna",
-      "Kool & the Gang",
-      1983,
-      "hsklsxReSe0"
-    ],
-    [
-      "Just Be Good to Me",
-      "The S.O.S. Band",
-      1983,
-      "rhbvUiYROpM"
-    ],
-    [
-      "Tell Me If You Still Care",
-      "The S.O.S. Band",
-      1983,
-      "PRrIBCSoMFc"
-    ],
-    [
-      "Fresh",
-      "Kool & the Gang",
-      1984,
-      "sTJ1XwGDcA4"
-    ],
-    [
-      "Weekend Girl",
-      "The S.O.S. Band",
-      1984,
-      "O2AMcxhWdh0"
     ],
     [
       "Cherish",
@@ -3600,30 +3678,84 @@
       "s09LuDYX12g"
     ],
     [
-      "Single Life",
-      "Cameo",
-      1985,
-      "oRsmpQRbeuM"
+      "Funky Town",
+      "Lipps Inc.",
+      1980,
+      "uhzy7JaU2Zc"
     ],
     [
-      "Candy",
-      "Cameo",
-      1986,
-      "sn8KYD1Vco0"
+      "She Works Hard for the Money",
+      "Donna Summer",
+      1983,
+      "N8EkGUm9q_A"
+    ],
+    [
+      "This Time I Know It's for Real",
+      "Donna Summer",
+      1989,
+      "U4_X2p6rPJI"
+    ],
+    [
+      "Genius of Love",
+      "Tom Tom Club",
+      1981,
+      "aCWCF19nUhA"
+    ],
+    [
+      "Another One Bites the Dust",
+      "Queen",
+      1980,
+      "rY0WxgSXdEE"
+    ],
+    [
+      "Let's Groove",
+      "Earth, Wind & Fire",
+      1981,
+      "Lrle0x_DHBM"
+    ],
+    [
+      "Boogie Wonderland",
+      "Earth, Wind & Fire",
+      1980,
+      "god7hAPv8f0"
+    ],
+    [
+      "Take Your Time (Do It Right)",
+      "The S.O.S. Band",
+      1980,
+      "bs8dp2ofgyo"
+    ],
+    [
+      "Just Be Good to Me",
+      "The S.O.S. Band",
+      1983,
+      "rhbvUiYROpM"
+    ],
+    [
+      "Forget Me Nots",
+      "Patrice Rushen",
+      1982,
+      "jtMHsNhQBvI"
     ],
     [
       "Word Up!",
       "Cameo",
       1986,
       "MZjAantupsA"
+    ],
+    [
+      "Candy",
+      "Cameo",
+      1986,
+      "sn8KYD1Vco0"
     ]
   ],
   "New Age / Ambient": [
     [
-      "Oxygène Part 4",
-      "Jean-Michel Jarre",
-      1980,
-      "kSIMVnPA994"
+      "Chariots of Fire",
+      "Vangelis",
+      1981,
+      "8a-HfNE3EIo"
     ],
     [
       "Moonlight Shadow",
@@ -3636,6 +3768,18 @@
       "Enya",
       1988,
       "LTrk4X9ACtw"
+    ],
+    [
+      "Oxygène Part 4",
+      "Jean-Michel Jarre",
+      1980,
+      "kSIMVnPA994"
+    ],
+    [
+      "Fourth Rendez-Vous",
+      "Jean-Michel Jarre",
+      1986,
+      "vCLEZM_N0K8"
     ]
   ]
 }
