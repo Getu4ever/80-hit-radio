@@ -19,8 +19,7 @@ import {
 import dynamic from "next/dynamic";
 import {
   applyBroadcastQuality,
-  BROADCAST_PLAYER_HEIGHT,
-  BROADCAST_PLAYER_WIDTH,
+  broadcastPlayerSize,
   installYoutubeIframeApiPatch,
   patchYoutubeVolumeSafe,
   syncPlayerAudioState,
@@ -30,8 +29,10 @@ import {
 import {
   flushPendingMediaPlay,
   forcePlayMedia,
+  registerBroadcastResume,
   registerMediaPlayNow,
   registerPersistentAdvance,
+  resumeBroadcastPlayback,
   startSilentKeepAlive,
 } from "@/lib/mediaPlayback";
 import {
@@ -67,26 +68,32 @@ const PREFETCH_WINDOW_SEC = 90;
 /** Warm the next track from halfway — late prefetch causes cold-load gaps. */
 const GAPLESS_PREFETCH_RATIO = 0.55;
 /** Promote a bit early so unmute + buffer catch up before the old track ends. */
-const EARLY_HANDOFF_SEC = 1.75;
+const EARLY_HANDOFF_SEC = 2.25;
 /** Start promote early in hidden tabs — timeupdate/ended often freeze. */
-const HIDDEN_HANDOFF_SEC = 8;
+const HIDDEN_HANDOFF_SEC = 10;
 const DEADLINE_OVERDUE_MS = 500;
 const ERROR_SKIP_COOLDOWN_MS = 800;
 const MAX_CONSECUTIVE_ERRORS = 8;
 const PROGRESS_UI_INTERVAL_MS = 400;
 const MUTED_WARM_LOOP_SEC = 2.5;
 const MUTED_WARM_MIN_BUFFER_SEC = 3;
-const PLAYBACK_WATCHDOG_MS = 2_500;
+const PLAYBACK_WATCHDOG_MS = 2_000;
 /** Force-resume if live media makes no progress for this long. */
-const STALL_RESUME_MS = 3_000;
+const STALL_RESUME_MS = 2_500;
 /** Auto-advance if stalled this long near the end (or already ended). */
-const STALL_PROMOTE_MS = 7_000;
+const STALL_PROMOTE_MS = 6_000;
+/** Mid-track "isPlaying but silence" — skip after this many ms without progress. */
+const STALL_ZOMBIE_MS = 12_000;
 /** Treat as "near end" for stall → promote. */
-const NEAR_END_FOR_STALL_SEC = 15;
+const NEAR_END_FOR_STALL_SEC = 18;
 /** Clear stuck handoff locks so promote can run again. */
-const HANDOFF_LOCK_MAX_MS = 6_000;
+const HANDOFF_LOCK_MAX_MS = 5_000;
 /** If standby drifts past this while muted, seek back to 0 for instant handoff. */
-const STANDBY_MAX_AHEAD_SEC = 4;
+const STANDBY_MAX_AHEAD_SEC = 3;
+/** YouTube iframe API states used by the watchdog. */
+const YT_ENDED = 0;
+const YT_PAUSED = 2;
+const YT_CUED = 5;
 
 function youtubeSrc(youtubeId: string) {
   return `https://www.youtube.com/watch?v=${youtubeId}`;
@@ -133,7 +140,10 @@ function resetStandbyToStart(media: HTMLMediaElement | null) {
   const yt = media as YoutubePlayerElement;
   try {
     const t = media.currentTime;
-    if (Number.isFinite(t) && t > STANDBY_MAX_AHEAD_SEC) {
+    const ended =
+      media.ended ||
+      yt.api?.getPlayerState?.() === YT_ENDED;
+    if (ended || (Number.isFinite(t) && t > STANDBY_MAX_AHEAD_SEC)) {
       media.currentTime = 0;
       yt.api?.seekTo?.(0, true);
     }
@@ -150,7 +160,7 @@ function playMuted(media: HTMLMediaElement | null) {
   if (!media) return;
   patchYoutubeVolumeSafe(media as YoutubePlayerElement);
   syncPlayerAudioState(media as YoutubePlayerElement, { volume: 0, muted: true });
-  forcePlayMedia(media);
+  forcePlayMedia(media, { preferMuted: true });
 }
 
 function playAudible(media: HTMLMediaElement | null, volume: number) {
@@ -160,23 +170,41 @@ function playAudible(media: HTMLMediaElement | null, volume: number) {
     volume,
     muted: false,
   });
-  forcePlayMedia(media);
+  forcePlayMedia(media, { preferMuted: false });
 }
 
-/** Hard-silence a slot before the other becomes audible (avoids dual-audio crackle). */
+/**
+ * Mute-only silence before the other slot becomes audible.
+ * Avoid pauseVideo — pausing drops the continuous media session on mobile
+ * WebViews and makes the demoted slot hard to re-warm for song 3+.
+ */
 function silenceSlot(media: HTMLMediaElement | null) {
   if (!media) return;
   patchYoutubeVolumeSafe(media as YoutubePlayerElement);
   syncPlayerAudioState(media as YoutubePlayerElement, { volume: 0, muted: true });
-  try {
-    media.pause();
-  } catch {
-    // ignore
+}
+
+/** Schedule play retries — mobile YouTube often rejects the first unmute. */
+function retryAudible(
+  getMedia: () => HTMLMediaElement | null,
+  delaysMs: number[] = [80, 250, 700],
+) {
+  for (const delay of delaysMs) {
+    window.setTimeout(() => {
+      if (!useAudioStore.getState().isPlaying) return;
+      playAudible(getMedia(), useAudioStore.getState().volume);
+      applyBroadcastQuality(getMedia() as YoutubePlayerElement | null);
+    }, delay);
   }
+}
+
+function readYtState(media: HTMLMediaElement | null): number | null {
+  if (!media) return null;
   try {
-    (media as YoutubePlayerElement).api?.pauseVideo?.();
+    const state = (media as YoutubePlayerElement).api?.getPlayerState?.();
+    return typeof state === "number" ? state : null;
   } catch {
-    // ignore
+    return null;
   }
 }
 
@@ -267,8 +295,24 @@ export default function AudioEngine({
     const standby = otherSlot(liveSlotRef.current);
     const media = slotRef(standby).current;
     if (!media) return;
-    // Keep near the start so handoff is instant unmute, not mid-track.
-    resetStandbyToStart(media);
+    const ytState = readYtState(media);
+    // Ended / cued / paused standby cannot be promoted — force a muted restart.
+    if (
+      media.ended ||
+      media.paused ||
+      ytState === YT_ENDED ||
+      ytState === YT_PAUSED ||
+      ytState === YT_CUED
+    ) {
+      try {
+        media.currentTime = 0;
+        (media as YoutubePlayerElement).api?.seekTo?.(0, true);
+      } catch {
+        // ignore
+      }
+    } else {
+      resetStandbyToStart(media);
+    }
     playMuted(media);
   }, [slotRef, streamingAllowed]);
 
@@ -420,6 +464,7 @@ export default function AudioEngine({
             playAudible(slotRef(standby).current, useAudioStore.getState().volume);
             syncSlotAudio(standby);
             syncSlotAudio(demoted);
+            retryAudible(() => slotRef(liveSlotRef.current).current);
           });
         } else {
           // Standby not ready — load next onto current live node as last resort,
@@ -463,22 +508,7 @@ export default function AudioEngine({
             playMuted(slotRef(demoted).current);
             resetStandbyToStart(slotRef(demoted).current);
             playAudible(slotRef(live).current, useAudioStore.getState().volume);
-            // Background retries — YouTube may reject the first play().
-            window.setTimeout(() => {
-              playAudible(
-                slotRef(liveSlotRef.current).current,
-                useAudioStore.getState().volume,
-              );
-            }, 120);
-            window.setTimeout(() => {
-              playAudible(
-                slotRef(liveSlotRef.current).current,
-                useAudioStore.getState().volume,
-              );
-              applyBroadcastQuality(
-                slotRef(liveSlotRef.current).current as YoutubePlayerElement | null,
-              );
-            }, 500);
+            retryAudible(() => slotRef(liveSlotRef.current).current);
             syncAllAudio();
           });
         }
@@ -514,7 +544,20 @@ export default function AudioEngine({
       if (!media) return;
 
       const onEnded = () => {
-        if (slot !== liveSlotRef.current) return;
+        if (slot !== liveSlotRef.current) {
+          // Standby drained while muted — snap back so promote stays unmute-only.
+          if (useAudioStore.getState().isPlaying || allowMutedWarmRef.current) {
+            const media = slotRef(slot).current;
+            try {
+              if (media) media.currentTime = 0;
+              (media as YoutubePlayerElement | null)?.api?.seekTo?.(0, true);
+            } catch {
+              // ignore
+            }
+            playMuted(media);
+          }
+          return;
+        }
         if (!streamingAllowed) return;
         if (endingRef.current || handoffFiredRef.current) return;
         if (useAudioStore.getState().newsBulletinActive) return;
@@ -608,6 +651,68 @@ export default function AudioEngine({
     registerPersistentAdvance((reason) => promoteRef.current(reason));
     return () => registerPersistentAdvance(null);
   }, []);
+
+  // Capacitor / visibility resume — reassert keep-alive + live/standby play.
+  useEffect(() => {
+    const onResume = () => {
+      if (!streamingAllowed) return;
+      startSilentKeepAlive();
+      requestBroadcastWakeLock();
+      reassertBroadcastWakeLock();
+
+      const state = useAudioStore.getState();
+      if (!state.isPlaying) return;
+
+      // Clear a stuck handoff lock so promote can run after long background.
+      if (endingRef.current || handoffFiredRef.current) {
+        const lockedAt = handoffLockedAtRef.current;
+        if (!lockedAt || Date.now() - lockedAt > HANDOFF_LOCK_MAX_MS) {
+          clearHandoffLock();
+        }
+      }
+
+      const deadline = trackDeadlineAtRef.current;
+      const deadlineTrack = trackDeadlineIdRef.current;
+      if (
+        deadline &&
+        deadlineTrack === state.currentTrack?.id &&
+        Date.now() >= deadline + DEADLINE_OVERDUE_MS
+      ) {
+        promoteRef.current("resume-overdue");
+        return;
+      }
+
+      const media = slotRef(liveSlotRef.current).current;
+      const dur = durationRef.current;
+      const ytState = readYtState(media);
+      if (
+        media &&
+        (media.ended ||
+          ytState === YT_ENDED ||
+          (dur > 0 &&
+            Number.isFinite(media.currentTime) &&
+            dur - media.currentTime <= HIDDEN_HANDOFF_SEC))
+      ) {
+        promoteRef.current("resume-ended");
+        return;
+      }
+
+      flushPendingMediaPlay();
+      playAudible(media, useAudioStore.getState().volume);
+      retryAudible(() => slotRef(liveSlotRef.current).current, [120, 400]);
+      keepStandbyHot();
+      syncAllAudio();
+    };
+
+    registerBroadcastResume(onResume);
+    return () => registerBroadcastResume(null);
+  }, [
+    clearHandoffLock,
+    keepStandbyHot,
+    slotRef,
+    streamingAllowed,
+    syncAllAudio,
+  ]);
 
   // Bind live + standby ids when current/upcoming change — never unmount nodes.
   useEffect(() => {
@@ -782,6 +887,7 @@ export default function AudioEngine({
 
       const now = Date.now();
       const t = Number.isFinite(live.currentTime) ? live.currentTime : 0;
+      const ytState = readYtState(live);
       const dur =
         durationRef.current > 0
           ? durationRef.current
@@ -794,7 +900,7 @@ export default function AudioEngine({
       const progressed =
         prevT === 0 || Math.abs(t - prevT) >= 0.12 || t < prevT - 0.5;
 
-      if (progressed) {
+      if (progressed && ytState !== YT_ENDED && ytState !== YT_PAUSED) {
         watchdogMediaTimeRef.current = t;
         stallSinceRef.current = now;
       } else if (!stallSinceRef.current) {
@@ -807,6 +913,7 @@ export default function AudioEngine({
       const nearEnd = dur > 0 && dur - t <= NEAR_END_FOR_STALL_SEC;
       const ended =
         live.ended ||
+        ytState === YT_ENDED ||
         (dur > 0 && Number.isFinite(t) && t >= dur - 0.35);
 
       if (ended) {
@@ -815,8 +922,18 @@ export default function AudioEngine({
         return;
       }
 
-      if (live.paused || stalledFor >= STALL_RESUME_MS) {
+      if (
+        live.paused ||
+        ytState === YT_PAUSED ||
+        ytState === YT_CUED ||
+        stalledFor >= STALL_RESUME_MS
+      ) {
         playAudible(live, useAudioStore.getState().volume);
+        // Re-assert unmute in case the iframe stayed muted after promote.
+        syncPlayerAudioState(live as YoutubePlayerElement, {
+          volume: useAudioStore.getState().volume,
+          muted: false,
+        });
       }
 
       // Stuck at end (or never leaving the last seconds) → advance.
@@ -827,8 +944,15 @@ export default function AudioEngine({
       }
 
       // Stuck at the start after a cold handoff — force play, then advance.
-      if (stalledFor >= STALL_PROMOTE_MS + 3_000 && t < 1.5) {
+      if (stalledFor >= STALL_PROMOTE_MS + 2_000 && t < 1.5) {
         promoteRef.current("watchdog-start-stall");
+        stallSinceRef.current = 0;
+        return;
+      }
+
+      // Mid-track zombie: isPlaying true, no progress despite resume attempts.
+      if (stalledFor >= STALL_ZOMBIE_MS && t >= 1.5 && !nearEnd) {
+        promoteRef.current("watchdog-zombie");
         stallSinceRef.current = 0;
       }
     }, PLAYBACK_WATCHDOG_MS);
@@ -952,46 +1076,19 @@ export default function AudioEngine({
         syncQueueHeartbeat(undefined, true);
         return;
       }
-      if (!streamingAllowed) return;
-
-      const state = useAudioStore.getState();
-      if (!state.isPlaying) return;
-
-      const deadline = trackDeadlineAtRef.current;
-      const deadlineTrack = trackDeadlineIdRef.current;
-      if (
-        deadline &&
-        deadlineTrack === state.currentTrack?.id &&
-        Date.now() >= deadline + DEADLINE_OVERDUE_MS
-      ) {
-        promoteRef.current("visibility-overdue");
-        return;
-      }
-
-      const media = slotRef(liveSlotRef.current).current;
-      const dur = durationRef.current;
-      if (
-        media &&
-        dur > 0 &&
-        (media.ended ||
-          (Number.isFinite(media.currentTime) &&
-            dur - media.currentTime <= HIDDEN_HANDOFF_SEC))
-      ) {
-        promoteRef.current("visibility");
-      } else {
-        flushPendingMediaPlay();
-        playAudible(media, useAudioStore.getState().volume);
-        keepStandbyHot();
-      }
+      // Foreground / pageshow — full resume path (also used by Capacitor).
+      resumeBroadcastPlayback();
     };
 
     document.addEventListener("visibilitychange", onVisibility);
     window.addEventListener("focus", onVisibility);
     window.addEventListener("pageshow", onVisibility);
+    document.addEventListener("resume", onVisibility);
     return () => {
       document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("focus", onVisibility);
       window.removeEventListener("pageshow", onVisibility);
+      document.removeEventListener("resume", onVisibility);
       heartbeat.dispose();
       heartbeatRef.current = null;
     };
@@ -1210,6 +1307,8 @@ export default function AudioEngine({
     return null;
   }
 
+  const playerSize = broadcastPlayerSize();
+
   const renderSlot = (slot: PlayerSlot) => {
     const trackId = slot === "a" ? slotAId : slotBId;
     const track = resolveTrack(trackId);
@@ -1245,8 +1344,8 @@ export default function AudioEngine({
         src={src}
         playing={playingProp}
         muted={slotMuted}
-        width={BROADCAST_PLAYER_WIDTH}
-        height={BROADCAST_PLAYER_HEIGHT}
+        width={playerSize.width}
+        height={playerSize.height}
         controls={false}
         playsInline
         preload="auto"
@@ -1288,8 +1387,8 @@ export default function AudioEngine({
       <div
         className="absolute left-0 top-0"
         style={{
-          width: BROADCAST_PLAYER_WIDTH,
-          height: BROADCAST_PLAYER_HEIGHT,
+          width: playerSize.width,
+          height: playerSize.height,
         }}
       >
         {renderSlot("a")}

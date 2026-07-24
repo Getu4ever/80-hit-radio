@@ -368,6 +368,26 @@ export function applyBroadcastEnhancement(
 export const BROADCAST_PLAYER_WIDTH = 1920;
 export const BROADCAST_PLAYER_HEIGHT = 1080;
 
+/**
+ * Mobile / Capacitor: smaller embeds cut WebView memory pressure so dual
+ * iframes survive past song 2→3. Desktop keeps full HD sizing.
+ */
+export function broadcastPlayerSize(): { width: number; height: number } {
+  if (typeof window === "undefined") {
+    return { width: BROADCAST_PLAYER_WIDTH, height: BROADCAST_PLAYER_HEIGHT };
+  }
+  try {
+    const coarse = window.matchMedia("(pointer: coarse)").matches;
+    const narrow = window.matchMedia("(max-width: 900px)").matches;
+    if (coarse || narrow) {
+      return { width: 854, height: 480 };
+    }
+  } catch {
+    // fall through
+  }
+  return { width: BROADCAST_PLAYER_WIDTH, height: BROADCAST_PLAYER_HEIGHT };
+}
+
 export const YOUTUBE_PLAYER_CONFIG = {
   rel: 0,
   iv_load_policy: 3,

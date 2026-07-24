@@ -75,7 +75,8 @@ function unique(rows) {
     if (!Array.isArray(row) || row.length < 4) continue;
     const [title, artist, year, youtubeId] = row;
     if (typeof title !== "string" || typeof artist !== "string") continue;
-    if (typeof year !== "number" || year < 1980 || year > 1989) continue;
+    // Late-70s golden hits + 80s A-list (curate-top600.mjs enforces quality).
+    if (typeof year !== "number" || year < 1975 || year > 1989) continue;
     if (typeof youtubeId !== "string" || youtubeId.length < 6) continue;
     const key = `${title.toLowerCase()}|${artist.toLowerCase()}`;
     if (seen.has(key)) continue;

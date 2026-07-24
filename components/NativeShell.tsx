@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { isNativeApp } from "@/lib/native/capacitor";
 import {
-  flushPendingMediaPlay,
+  resumeBroadcastPlayback,
   startSilentKeepAlive,
 } from "@/lib/mediaPlayback";
 import { reassertBroadcastWakeLock } from "@/lib/wakeLock";
@@ -43,16 +43,22 @@ export default function NativeShell() {
         if (cancelled) return;
 
         const resumeRadio = () => {
+          // Always pulse keep-alive; when playing, reassert live+standby slots
+          // (flushPendingMediaPlay alone is a no-op without a fresh tap token).
           startSilentKeepAlive();
           reassertBroadcastWakeLock();
-          const { isPlaying } = useAudioStore.getState();
-          if (isPlaying) {
-            flushPendingMediaPlay();
+          if (useAudioStore.getState().isPlaying) {
+            resumeBroadcastPlayback();
           }
         };
 
         const stateHandle = await App.addListener("appStateChange", (state) => {
-          if (state.isActive) resumeRadio();
+          if (state.isActive) {
+            resumeRadio();
+          } else {
+            // Best-effort pulse before the WebView suspends timers.
+            startSilentKeepAlive();
+          }
         });
         cleanups.push(() => {
           void stateHandle.remove();

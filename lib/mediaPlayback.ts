@@ -8,6 +8,7 @@
  */
 
 type PlayNowFn = () => boolean;
+type ResumeFn = () => void;
 
 type MediaLike = {
   muted?: boolean;
@@ -21,6 +22,7 @@ type MediaLike = {
 };
 
 let playNowHandler: PlayNowFn | null = null;
+let resumeHandler: ResumeFn | null = null;
 /** Epoch ms — retries remain valid briefly after a tap (iOS gesture grace). */
 let gestureUnlockUntil = 0;
 /** True until a successful playCurrentInGesture or the unlock window expires. */
@@ -41,7 +43,7 @@ let visibilityBound = false;
 const GESTURE_WINDOW_MS = 6_000;
 const RETRY_INTERVAL_MS = 32;
 const MAX_RETRIES = 60;
-const KEEP_ALIVE_WATCHDOG_MS = 2_000;
+const KEEP_ALIVE_WATCHDOG_MS = 1_500;
 
 function onVisibilityPulse() {
   if (!keepAliveActive) return;
@@ -53,10 +55,33 @@ function bindVisibilityWatch() {
   visibilityBound = true;
   document.addEventListener("visibilitychange", onVisibilityPulse);
   window.addEventListener("pageshow", onVisibilityPulse);
+  window.addEventListener("focus", onVisibilityPulse);
+  // Page Lifecycle API — WebViews fire these around suspend/resume.
+  document.addEventListener("freeze", onVisibilityPulse);
+  document.addEventListener("resume", onVisibilityPulse);
 }
 
 export function registerMediaPlayNow(fn: PlayNowFn | null): void {
   playNowHandler = fn;
+}
+
+/** AudioEngine registers full live+standby reassert for Capacitor / visibility. */
+export function registerBroadcastResume(fn: ResumeFn | null): void {
+  resumeHandler = fn;
+}
+
+/**
+ * Re-kick keep-alive + registered players after app resume / foreground.
+ * Unlike flushPendingMediaPlay, this does not require a recent tap token.
+ */
+export function resumeBroadcastPlayback(): void {
+  if (typeof window === "undefined") return;
+  startSilentKeepAlive();
+  try {
+    resumeHandler?.();
+  } catch {
+    // Engine may be unmounted mid-resume.
+  }
 }
 
 function clearRetryTimer() {
@@ -231,10 +256,15 @@ export function unlockMediaGesture(): void {
 /**
  * Force-play a media element (YouTube slot wrapper). On NotAllowedError /
  * autoplay rejection, instantly re-assert keep-alive and retry play + YT API.
+ * Pass preferMuted for standby warm plays — never unmute a muted slot on retry.
  */
-export function forcePlayMedia(media: unknown): boolean {
+export function forcePlayMedia(
+  media: unknown,
+  opts?: { preferMuted?: boolean },
+): boolean {
   if (!media || typeof media !== "object") return false;
   const el = media as MediaLike;
+  const preferMuted = opts?.preferMuted === true || el.muted === true;
   startSilentKeepAlive();
 
   const attempt = (): boolean => {
@@ -259,7 +289,10 @@ export function forcePlayMedia(media: unknown): boolean {
               // Fallback: re-assert keep-alive then native play + iframe API.
               startSilentKeepAlive();
               try {
-                if (typeof el.muted === "boolean") el.muted = false;
+                if (typeof el.muted === "boolean") {
+                  // Standby must stay muted; unmuting breaks dual-slot radio.
+                  el.muted = preferMuted;
+                }
               } catch {
                 // ignore
               }
